@@ -191,11 +191,28 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         # This part might not go that well with drivers like HPEs cciss ...
         # However UEFI booting is present since Gen8 (AFAIK), and cciss drivers were replaced by hpsa long time ago,
         # so it looks like impossible configuration, lets wait ...
-        efi_disk_part=$( grep -w /boot/efi /proc/mounts | awk '{print $1}' )
-        efi_disk=$( echo $efi_disk_part | sed -e 's/[0-9]//g' )
+
+        # read in efi disk name (like '/dev/sda' or '/dev/mapper/mpd_boot_1') and efi disk partition (like '/dev/sda1' or '/dev/mapper/mpd_boot_1p1')
+        # the 'sort -u' is because there might be redundant paths and so multiple boot hdds
+        efi_disk_part=$( lsblk -nrpo PKNAME,KNAME,MOUNTPOINT | grep '/boot/efi'|sort -u )
+
+        # read in efi disk
+        efi_disk=$( echo $efi_disk_part | awk '{print $1}' )
+        # now we do have the name of the disk. In case of multipath we need to convert the 'dm-0' name to the '/dev/mapper/XX' name. This does function get_device_name.
+        efi_disk=$( get_device_name $efi_disk )
         test $efi_disk || LogPrintError "efi_disk '$efi_disk' empty or more than one word"
-        efi_part=$( echo $efi_disk_part | sed -e 's/[^0-9]//g' )
+
+        # read in efi partition
+        efi_part=$( echo $efi_disk_part | awk '{print $2}' )
+        # now we do have the name of the partition. In case of multipath we need to convert the 'dm-1' name to the '/dev/mapper/XX' name. This does function get_device_name.
+        efi_part=$( get_device_name $efi_part )
+        # to get the partition number (which is what efibootmgr needs) we extract the last digits from the partition
+        # e.g.
+        # /dev/mapper/mpd_boot_1p1 -> 1
+        # /dev/sda2 -> 2
+        efi_part=$( echo $efi_part | grep -Eo '[0-9]+$' )
         test $efi_part || LogPrintError "efi_part '$efi_part' empty or more than one word"
+
         # Save current BootOrder, as during `efibootmgr -c ...' phase (creating of 'Relax-and-Recover' UEFI boot entry),
         # newly created entry will be set as primary, which is not something we don't really want
         efi_boot_order=$( efibootmgr | grep "BootOrder" | cut -d ":" -f2 )

@@ -54,7 +54,7 @@ test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 # Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
 local esp_proc_mounts_line=()
 # The output of
-#   egrep ' /boot/efi | /boot ' /proc/mounts
+#   grep -E ' /boot/efi | /boot ' /proc/mounts
 # may look like the following examples
 # on a openSUSE Leap 15.0 system
 #   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro 0 0

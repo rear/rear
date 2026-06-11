@@ -12,10 +12,10 @@ test "$ISO_MAX_SIZE" || return 0
 # When the backup is split on multiple ISOs, then "rear mkrescue" would destroy it
 # because in the first ISO that is named "rear-HOSTNAME.iso" there is
 # in case of "rear mkbackup" the (bootable) ReaR recovery system
-# plus the first part of the splitted backup (usually named "backup.tar.gz.00")
-# plus the backup.splitted file that contains information about the splitted backup.
+# plus the first part of the split backup (usually named "backup.tar.gz.00")
+# plus the backup.splitted file that contains information about the split backup.
 # But "rear mkrescue" would overwrite that first ISO with one that contains only
-# the new ReaR recovery system but no longer the first part of the splitted backup
+# the new ReaR recovery system but no longer the first part of the split backup
 # nor the backup.splitted file so that then "rear recover" fails with
 # "ERROR: Backup archive 'backup.tar.gz' not found"
 # see https://github.com/rear/rear/issues/1545
@@ -25,13 +25,13 @@ test "$ISO_MAX_SIZE" || return 0
 # a "rear mkrescue" would overwrite an existing ISO that contains a backup.
 test "mkrescue" = "$WORKFLOW" && Error "The mkrescue workflow is forbidden when ISO_MAX_SIZE is set"
 
-local backup_path=$( url_path $BACKUP_URL )
+local backup_path="$( url_path "$BACKUP_URL" )"
 
 # The backuparchive variable value is set in prep/NETFS/default/070_set_backup_archive.sh
 # which is skipped in case of the mkrescue workflow but the mkrescue workflow is forbidden
 # when ISO_MAX_SIZE is set and this script is skipped when ISO_MAX_SIZE is not set
 # see https://github.com/rear/rear/pull/2063#issuecomment-469222487
-local isofs_path=$( dirname $backuparchive )
+local isofs_path="$( dirname "$backuparchive" )"
 
 # Because usr/sbin/rear sets 'shopt -s nullglob' the 'echo -n' command
 # outputs nothing if nothing matches the bash globbing pattern '$backuparchive.??'

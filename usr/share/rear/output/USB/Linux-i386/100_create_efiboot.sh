@@ -56,7 +56,7 @@ mkdir -p $efi_dst || Error "Failed to create directory '$efi_dst'"
 # https://github.com/rear/rear/pull/3025#issuecomment-1635876186
 # but not with USB, cf.
 # https://github.com/rear/rear/pull/3025#issuecomment-1643774477
-# so I tried to re-use the ISO Secure Boot code for USB
+# so I tried to reuse the ISO Secure Boot code for USB
 # which made Secure Boot "just work" for me with USB
 # but I had to do some (minor) adaptions to make it work
 # within the existing USB code, cf.
@@ -147,7 +147,7 @@ EOF
         (2)
             DebugPrint "Configuring GRUB2 for EFI boot"
             # We need to set the GRUB environment variable 'root' to the partition device with label $efi_label (hardcoded "REAR-EFI")
-            # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk but neither kernel
+            # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk but neither kernel
             # nor initrd are located on the ramdisk but on the partition device with label $efi_label.
             # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
             # Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
@@ -170,8 +170,13 @@ EOF
 fi
 
 # Cleanup of EFI temporary mount point:
-if umount $efi_mpt ; then
-    rmdir $efi_mpt || LogPrintError "Could not remove temporary directory '$efi_mpt' (you should do it manually)"
+local what_is_mounted="EFI partition '$efi_part' on '$efi_mpt'"
+# When umounting the EFI partition fails it is no hard error so only inform the user
+# so he can understand why later cleanup_build_area_and_end_program() may show
+# "Could not remove build area" (when lazy umount could not clean up things until then)
+# cf. https://github.com/rear/rear/issues/3397
+if umount_mountpoint_retry_lazy "$efi_mpt" "$what_is_mounted" ; then
+    rmdir "$efi_mpt" || LogPrintError "Could not remove temporary directory '$efi_mpt' (you should do it manually)"
 else
-    LogPrintError "Could not umount EFI partition '$efi_part' at '$efi_mpt' (you should do it manually)"
+    LogPrintError "Could not umount $what_is_mounted' (you should do it manually)"
 fi

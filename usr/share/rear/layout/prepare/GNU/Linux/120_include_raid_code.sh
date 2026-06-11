@@ -104,7 +104,7 @@ EOF
 # Make sure device nodes are visible (eg. in RHEL4)
 my_udevtrigger
 my_udevsettle
-# Clean up transient partitions and resize shrinked ones
+# Clean up transient partitions and resize shrunk ones
 delete_dummy_partitions_and_resize_real_ones
 #
 # End of code handling Software RAID $raiddevice

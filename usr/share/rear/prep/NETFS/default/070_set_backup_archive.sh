@@ -22,12 +22,12 @@ fi
 local backup_file_suffix="$BACKUP_PROG_SUFFIX$BACKUP_PROG_COMPRESS_SUFFIX"
 local backup_file_name="$BACKUP_PROG_ARCHIVE$backup_file_suffix"
 
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
 case "$scheme" in
     (file|iso)
         # Define the output path according to the scheme
-        local outputpath=$( backup_path $scheme $path )
+        local outputpath="$( backup_path "$scheme" "$path" )"
         backuparchive="$outputpath/$backup_file_name"
         LogPrint "Using backup archive '$backuparchive'"
         return
@@ -35,7 +35,7 @@ case "$scheme" in
     (tape)
         # TODO: Check if that case is really needed.
         # Perhaps prep/default/030_translate_tape.sh does already all what is needed.
-        backuparchive=$path
+        backuparchive="$path"
         LogPrint "Using backup archive '$backuparchive'"
         return
         ;;
@@ -99,7 +99,7 @@ fi
 # a small probability that e.g. weekday, YYYY-MM-DD, HHMM do not match
 # one single point in time (in particular when midnight passes in between).
 # Therefore the output of one single 'date' call is storend in an array and
-# the array elements are then assinged to individual variables as needed:
+# the array elements are then assigned to individual variables as needed:
 local current_date_output=( $( date '+%a %Y-%m-%d %H%M' ) )
 local current_weekday="${current_date_output[0]}"
 local current_yyyy_mm_dd="${current_date_output[1]}"

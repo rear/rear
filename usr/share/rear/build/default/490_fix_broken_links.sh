@@ -66,7 +66,7 @@ pushd $ROOTFS_DIR
             # finalize/GNU/Linux/250_migrate_lun_wwid.sh
             # finalize/GNU/Linux/280_migrate_uuid_tags.sh
             # finalize/GNU/Linux/320_migrate_network_configuration_files.sh
-            if echo $link_target | egrep -q '^/(proc|sys|dev|run)/' ; then
+            if echo $link_target | grep -Eq '^/(proc|sys|dev|run)/' ; then
                 DebugPrint "Skip copying broken symlink '$broken_symlink' target '$link_target' on /proc/ /sys/ /dev/ or /run/"
                 continue
             fi

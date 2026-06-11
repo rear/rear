@@ -3,7 +3,7 @@
 # (so the normal automatisms in ReaR may not include a kernel module for the USB filesystem in the recovery system)
 # we append a USB filesystem kernel module to the MODULES and MODULES_LOAD arrays if such a kernel module exists.
 # Modules in MODULES_LOAD are written to /etc/modules in the recovery system via build/GNU/Linux/400_copy_modules.sh and
-# moduels in /etc/modules get loaded during recovery system startup via .../system-setup.d/40-start-udev-or-load-modules.sh
+# modules in /etc/modules get loaded during recovery system startup via .../system-setup.d/40-start-udev-or-load-modules.sh
 
 local usb_fs
 # TODO: When 'lsblk' is not too old (it must support the needed options like '-o FSTYPE')

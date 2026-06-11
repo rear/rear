@@ -1,0 +1,574 @@
+# rear(8) -- bare metal disaster recovery and system migration tool
+
+
+## SYNOPSIS
+
+`rear` [`-h|--help`] [`-V|--version`] [`-dsSv`] [`-D|--debugscripts` _SET_] [`-c` _DIR_] [`-C` _CONFIG_] [`-r` _KERNEL_] [`-n|--non-interactive`] [`-e|--expose-secrets`] [--] _COMMAND_ [_ARGS_...]
+
+
+## DESCRIPTION
+
+Relax-and-Recover (abbreviated ReaR) is the de facto standard disaster recovery framework on Linux.
+
+It is in particular used on enterprise Linux distributions like Red Hat Enterprise Linux (RHEL)
+and SUSE Linux Enterprise Server (SLES).
+
+ReaR is a system administrator tool and framework to create a bootable disaster recovery system image
+for bare metal disaster recovery with data backup restore on physical or virtual replacement hardware.
+
+For bare metal disaster recovery the ReaR recovery system is booted on pristine replacement hardware.
+On replacement hardware first the storage setup/layout is recreated (disk partitioning, filesystems, mount points),
+then a backup restore program is called to restore the data (system files) into the recreated storage,
+and finally a boot loader is installed.
+
+System administrators use the ReaR framework to set up a disaster recovery procedure
+as part of their disaster recovery policy (which complements their existing backup policy).
+
+ReaR complements backup and restore of data with bare metal disaster recovery. ReaR can also act as local backup software,
+but ReaR is not a a backup management software. In many enterprise environmentments, data backup and restore happens via dedicated backup software which is integrated by ReaR and used to restore the data onto a replacement system as part of the automated disaster recovery procedure implemented by ReaR.
+
+ReaR has support for built-in backup methods using 'tar' and 'rsync' that are used for backup and restore.
+
+ReaR integrates supports the following 3rd party, also commercial, tools for restoring a backup.
+
+The complete list of backup methods (*BACKUP=...*) is:
+
+* *AVA* Dell EMC Avamar / EMC Avamar
+* *BACULA* Bacula
+* *BAREOS* Bareos
+* *BLOCKCLONE* block device cloning via `dd`
+* *BORG* Borg Backup
+* *CDM* Rubrik Cloud Data Management
+* *DP* OpenText Data Protector
+* *DUPLICITY* Duplicity / Duply
+* *EXTERNAL* External custom restore method
+* *FDRUPSTREAM* FDR/Upstream
+* *GALAXY11* Commvault Galaxy 11 / Commvault Simpana
+* *NBKDC* NovaStor DataCenter
+* *NBU* Veritas NetBackup / Symantec NetBackup
+* *NETFS* ReaR built-in backup and restore via `rsync` or `tar` to a network file system or to a locally attached backup disk (USB, eSATA, ...)
+* *NFS4SERVER* NFS4 server to push data *to* the rescue system
+* *NSR* Dell EMC NetWorker / EMC NetWorker / Legato NetWorker
+* *OBDR* One Button Disaster Recovery via tape
+* *PPDM* Dell PowerProtect Data Manager
+* *RBME* Rsync Backup Made Easy
+* *REQUESTRESTORE* Request restore from a human operator
+* *RSYNC* ReaR built-in backup using `rsync` via `rsync` or `ssh` protocol
+* *SESAM* SEP Sesam
+* *TSM* IBM Storage Protect / Tivoli Storage Manager / IBM Spectrum Protect
+* *VEEAM* Veeam Backup
+
+ReaR integrates well with Disaster Recovery Linux Manager (DRLM, see [https://drlm.org](https://drlm.org)), which can act as a central management tool for ReaR deployments.
+
+Professional services and support are available, see [https://relax-and-recover.org/support/](https://relax-and-recover.org/support/)
+
+## OPTIONS
+
+### GLOBAL OPTIONS
+
+* -h --help:
+    usage information
+
+* -c DIR:
+    alternative config directory instead of /etc/rear (not supported during recovery)
+
+* -C CONFIG:
+    additional config files (absolute path or relative to config directory)
+
+* -d:
+    *debug mode*: run many commands verbosely with debug messages in the log file (also sets -v)
+
+* -D:
+    *debugscript mode*: log executed commands via 'set -x' (also sets -v and -d)
+
+* --debugscripts SET:
+    same as -D but *debugscript mode* with 'set -SET'
+
+* -r KERNEL:
+    kernel version to use (by default the version of the running kernel)
+
+* -s:
+    *simulation mode*: show what scripts are run without executing them
+
+* -S:
+    *step-by-step mode*: acknowledge each script individually
+
+* -v:
+    *verbose mode*: show messages what ReaR is doing on the terminal
+
+* -n --non-interactive:
+    *non-interactive mode*: abort in UserInput() if default input does not make ReaR proceed (experimental)
+
+* -e --expose-secrets:
+    do not suppress output of confidential values (passwords, encryption keys) in particular in the log file
+
+* -p --portable:
+    allow running any ReaR workflow, especially recover, from a git checkout or rear source archive
+
+* -V --version:
+    version information
+
+### COMMANDS
+
+* *checklayout*:
+    check if the disk layout has changed since the last run of
+    mkbackup/mkrescue
+
+* *dump*:
+    dump configuration and system information; run this to verify
+    your setup
+
+* *format*:
+    format and label USB or tape media to be used with rear;
+    first argument is the USB or tape device to use, eg. _/dev/sdX_ or
+    _/dev/stX_
+
+* *help*:
+    print full list of commands and options
+
+* *mkbackup*:
+    create rescue media and backup the system (only for internal backup
+    methods)
+
+* *mkbackuponly*:
+    backup the system (only for internal backup methods) without creating
+    rescue media
+
+* *mkrescue*:
+    create rescue media only
+
+* *mountonly*:
+    use ReaR as live media to mount and repair the system
+
+* *recover*:
+    recover the system; can be used only when running from the rescue media
+
+* *restoreonly*:
+    only restore the backup; can be used only when running from the rescue media
+
+* *mkopalpba*:
+    create a pre-boot authentication (PBA) image to boot from TCG Opal 2-compliant self-encrypting disks
+
+* *opaladmin*:
+    administrate TCG Opal 2-compliant self-encrypting disks
+
+* *validate*:
+    submit validation information
+
+Use `rear -v help` for more advanced commands.
+
+
+## BACKGROUND INFORMATION
+
+The process of bare metal disaster recovery consists of two parts:
+
+ - Recreate the system layout
+ - Restore the data to the system
+
+Most backup software solutions are very good at restoring data but do not
+support recreating the system layout. Relax-and-Recover is very good at
+recreating the system layout but works best when used together with
+supported backup software.
+
+In this combination Relax-and-Recover recreates the system layout and calls
+the backup software to restore the actual data. Thus there is no unnecessary
+duplicate data storage and the Relax-and-Recover rescue media can be very small.
+
+For demonstration and special use purposes Relax-and-Recover also includes
+an internal backup method, NETFS, which can be used to create a simple tar.gz
+archive of the system. For all permanent setups we recommend using something
+more professional for backup, either a traditional backup software (open
+source or commercial) or rsync with hardlink based solutions, e.g. RSYNC
+BACKUP MADE EASY.
+
+## RESCUE IMAGE CONFIGURATION
+
+The `OUTPUT` variable defines from where our bootable rescue image will be
+booted and the `OUTPUT_URL` variable defines where the rescue image should be
+send to. Possible `OUTPUT` settings are:
+
+* OUTPUT=*RAMDISK*:
+Create only the Relax-and-Recover initramfs.
+
+* OUTPUT=*ISO*:
+*(Default)* Create a bootable ISO9660 image on disk as _rear-$(hostname).iso_
+
+* OUTPUT=*PXE*:
+Create on a remote PXE/NFS server the required files (such as
+configuration file, kernel and initrd image)
+
+* OUTPUT=*OBDR*:
+Create a bootable OBDR tape (optionally including the backup archive).
+Specify the OBDR tape device by using `TAPE_DEVICE`.
+
+* OUTPUT=*USB*:
+Create a bootable USB disk.
+
+* OUTPUT=*RAWDISK*:
+Create a bootable image file named "rear-$(hostname).raw.gz", which
+
+* supports UEFI boot if syslinux/EFI or Grub 2/EFI is installed,
+* supports Legacy BIOS boot if syslinux is installed,
+* supports UEFI/Legacy BIOS dual boot if syslinux *and* one of the supported EFI
+  bootloaders are installed.
+
+* OUTPUT=*PORTABLE*:
+Create a portable ReaR archive that can be used on any rescue system to run
+any ReaR workflow, especially recover. Assumes that all required software is
+installed and usable there. This is experimental, please report any issues.
+
+When using `OUTPUT=ISO`, `RAMDISK`, `OBDR`, `USB`, `PORTABLE` or `RAWDISK` you should
+provide the backup target location through the `OUTPUT_URL` variable. Possible
+`OUTPUT_URL` settings are:
+
+* OUTPUT_URL=*file://*:
+Write the image to disk. The default is in _/var/lib/rear/output/_.
+
+* OUTPUT_URL=*nfs://*:
+Write the image by mounting the target filesystem via NFS.
+
+* OUTPUT_URL=*cifs://*:
+Write the image by mounting the target filesystem via CIFS.
+
+* OUTPUT_URL=*fish://*:
+Write the image using `lftp` and the FISH protocol.
+
+* OUTPUT_URL=*ftp://*:
+Write the image using `lftp` and the FTP protocol.
+
+* OUTPUT_URL=*ftps://*:
+Write the image using `lftp` and the FTPS protocol.
+
+* OUTPUT_URL=*hftp://*:
+Write the image using `lftp` and the HFTP protocol.
+
+* OUTPUT_URL=*http://*:
+Write the image using `lftp` and the HTTP (PUT) protocol.
+
+* OUTPUT_URL=*https://*:
+Write the image using `lftp` and the HTTPS (PUT) protocol.
+
+* OUTPUT_URL=*sftp://*:
+Write the image using `lftp` and the secure FTP (SFTP) protocol.
+
+* OUTPUT_URL=*rsync://*:
+Write the image using `rsync` and the RSYNC protocol.
+
+* OUTPUT_URL=*sshfs://*:
+Write the image using sshfs and the SSH protocol.
+
+* OUTPUT_URL=*null*:
+Do not copy the rescue image from _/var/lib/rear/output/_ to a remote output location.
+`OUTPUT_URL=null` is useful when another program (e.g. an _external_ backup program)
+is used to save the rescue image from the local system to a remote place,
+or with `BACKUP_URL=iso:///backup` when the backup is included in the rescue image
+to avoid a (big) copy of the rescue image at a remote output location.
+In the latter case the rescue image must be manually saved from the local system to a remote place.
+`OUTPUT_URL=null` is only supported together with `BACKUP=NETFS`.
+
+If you do not specify `OUTPUT_URL` variable then by default it will be aligned to what
+was defined by variable `BACKUP_URL`. And, the rescue image will then be copied to the same
+location as your backup of the system disk(s).
+
+The `ISO_DEFAULT` variable defines what default boot option is used on the rescue image.
+Possible values are `manual`, `boothd` or `automatic`. Manual will make you boot into
+the shell directly by default, boothd will boot to the first disk (default) or automatic
+will automatically start in recovery mode.
+
+## RESCUE IMAGE KERNEL COMMAND LINE OPTIONS
+
+When booting the rescue image you can edit the kernel command line.
+There are some Relax-and-Recover specific kernel command line options:
+
+* *debug*:
+The rescue system start up scripts in /etc/scripts/system-setup.d/
+are run one by one each one after pressing 'Enter' and
+the scripts are run with 'set -x' which prints commands
+and their arguments as they are executed.
+
+* *auto_recover* or *automatic*:
+Launch 'rear recover' automatically (without automated reboot).
+Together with 'debug' it runs 'rear recover' in debugscript mode.
+
+* *unattended*:
+Launch 'rear recover' automatically as with 'auto_recover'
+plus automated reboot after successful 'rear recover'.
+
+* *ip= nm= netdev= gw=*:
+When IP address plus optionally netmask (default 255.255.255.0),
+network device (default eth0), and default gateway are specified,
+then only that single network device is set up. Example:
+
+    ip=192.168.100.2 nm=255.255.255.0 netdev=eth0 gw=192.168.100.1
+
+
+* *noip*:
+Skip network devices setup by the rescue system start up scripts (overrides ip= nm= netdev= gw=).
+
+## BACKUP SOFTWARE INTEGRATION
+
+Currently Relax-and-Recover supports the below listed backup methods.
+
+There is a distinction between Relax-and-Recover support for 3rd party
+backup software and Relax-and-Recover built-in backup methods. The latter
+also creates a backup of your data while the former will only integrate
+Relax-and-Recover with the backup software to restore the data with the
+help of the backup software without actually creating backups. This means
+that for all non-built-in backup software you *must* take care of creating
+backups yourself (unless otherwise noted).
+
+Especially the `rear mkbackup` command can be confusing as it is only
+useful for the built-in backup methods and has usually no function at all with
+the other (3rd party / external) backup methods where the `rear mkrescue` command applies.
+
+See the full list of supported backup methods above for reference and consult '/usr/share/rear/conf/default.conf'
+for the full list of supported options for each backup method. Also, 'rear dump' will
+show you the current settings for `BACKUP` and `OUTPUT` methods including all available options.
+
+The default *BACKUP* method is *REQUESTRESTORE* which is not a backup method at all but simply 
+halts the recovery and requests that somebody will restore the data to the appropriate location
+(e.g. via SSH). This method works especially well with an rsync based backup that is pushed
+back to the backup client.
+
+If your favourite backup software is missing from this list, please submit
+a patch or ask us to implement it for you.
+
+When using `BACKUP=NETFS` you must provide the backup target location
+through the `BACKUP_URL` variable. Possible `BACKUP_URL` settings are:
+
+* BACKUP_URL=*file://*:
+To backup to local disk, use `BACKUP_URL=file:///directory/path/`
+
+* BACKUP_URL=*nfs://*:
+To backup to NFS disk, use `BACKUP_URL=nfs://nfs-server-name/share/path`
+
+* BACKUP_URL=*tape://*:
+To backup to tape device, use `BACKUP_URL=tape:///dev/nst0` or alternatively,
+simply define `TAPE_DEVICE=/dev/nst0`
+
+* BACKUP_URL=*rsync://*:
+When backup method `BACKUP=RSYNC` is chosen then we need to define a corresponding `BACKUP_URL` rule:
+
+    BACKUP_URL=rsync://[user@]host[:port]/path
+    BACKUP_URL=rsync://[user@]host[:port]::/path
+
+* BACKUP_URL=*cifs://*:
+To backup to a Samba share (CIFS), use
+`BACKUP_URL=cifs://cifs-server-name/share/path`. To provide credentials for
+CIFS mounting use a _/etc/rear/cifs_ credentials file and define
+`BACKUP_OPTIONS="cred=/etc/rear/cifs"` and pass along:
+
+    username=_username_
+    password=_secret password_
+    domain=_domain_
+
+* BACKUP_URL=*usb://*:
+To backup to USB storage device, use `BACKUP_URL=usb:///dev/disk/by-label/REAR-000`
+or use a partition device node or a specific filesystem label. Alternatively, you
+may specify the partition device using `USB_DEVICE=/dev/disk/by-label/REAR-000` if needed.
+
+If you combine this with `OUTPUT=USB` you will end up with a bootable USB
+device.
+
+* BACKUP_URL=*sshfs://*:
+To backup to a remote server via sshfs (SSH protocol), use
+`BACKUP_URL=sshfs://user@remote-system.name.org/home/user/backup-dir/`
+
+It is advisable to add *ServerAliveInterval 15* in the `/root/.ssh/config`
+file for the remote system (remote-system.name.org).
+
+* BACKUP_URL=*iso://*:
+To include the backup within the ISO image. It is important that the `BACKUP_URL` and
+`OUTPUT_URL` variables are different. E.g.
+
+    BACKUP_URL=iso:///backup/
+    OUTPUT_URL=nfs://server/path/
+
+When using `BACKUP=NETFS` and BACKUP_PROG=tar there is an option to select
+`BACKUP_TYPE=incremental` or `BACKUP_TYPE=differential` to let `rear` make
+incremental or differential backups until the next full backup day
+e.g. via `FULLBACKUPDAY="Mon"` is reached or when the last full backup
+is too old after FULLBACKUP_OUTDATED_DAYS has passed.
+Incremental or differential backup is currently only known to work
+with `BACKUP_URL=nfs`. Other BACKUP_URL schemes may work but
+at least `BACKUP_URL=usb` requires USB_SUFFIX to be set
+to work with incremental or differential backup.
+
+## SUPPORT FOR SELF-ENCRYPTING DISKS
+
+Relax-and-Recover supports self-encrypting disks (SEDs) compliant with the TCG
+Opal 2 specification if the `sedutil-cli` executable is installed.
+
+Self-encrypting disk support includes
+
+* recovery (saving and restoring the system's SED configuration),
+* setting up SEDs, including assigning a disk password,
+* providing a pre-boot authentication (PBA) system to unlock SEDs at boot time.
+
+To prepare booting from an SED, run `rear mkopalpba`, then create the rescue
+system.
+
+To set up an SED, boot the Relax-and-Recover rescue system and run `rear
+opaladmin setupERASE DEVICE` (_DEVICE_ being the disk device path like
+`/dev/sda`).
+
+For complete information, consult the section "Support for TCG Opal 2-compliant
+Self-Encrypting Disks" in the Relax-and-Recover user guide.
+
+## CONFIGURATION
+
+To configure Relax-and-Recover you have to edit the configuration files in
+_/etc/rear/_.  All _*.conf_ files there are part of the configuration, but
+only _site.conf_ and _local.conf_ are intended for the user configuration.
+All other configuration files hold defaults for various distributions and
+should not be changed.
+
+In _/etc/rear/templates/_ there are also some template files which are used
+by Relax-and-Recover to create configuration files (mostly for the boot
+environment).  Modify the templates to adjust the information contained in
+the emails produced by Relax-and-Recover. You can use these templates to
+prepend your own configurations to the configuration files created by
+Relax-and-Recover, for example you can edit _PXE_pxelinux.cfg_ to add some
+general pxelinux configuration you use.
+
+In almost all circumstances you have to configure two main settings and their
+parameters: the backup method and the output method.
+
+The *backup method* defines, how your data is to be saved and whether Relax-and-Recover
+should backup your data as part of the mkbackup workflow for internal backup methods
+or whether you use 3rd party backup software to archive your data.
+
+The *output method* defines how the rescue system is written to disk and how you
+plan to boot the failed computer from the rescue system.
+
+See the default configuration file _/usr/share/rear/conf/default.conf_ for
+an overview of the possible methods and their options.
+
+An example to use TSM for backup and ISO for output would be to add
+these lines to _/etc/rear/local.conf_ (no need to define a `BACKUP_URL`
+when using an external backup solution):
+
+    BACKUP=TSM
+    OUTPUT=ISO
+
+And if all your systems use NTP for time synchronisation, you can also
+add these lines to _/etc/rear/site.conf_
+
+    TIMESYNC=NTP
+
+Do not forget to distribute the _site.conf_ to all your systems.
+
+The resulting ISO image will be created in _/var/lib/rear/output/_.
+You can now modify the behaviour by copying the appropriate
+configuration variables from _default.conf_ to _local.conf_ and
+changing them to suit your environment.
+
+
+## EXIT STATUS
+
+* `0`:
+    Successful program execution.
+* `>0`:
+    Usage, syntax or execution errors. Check the log file in
+    _/var/log/rear/_ for more information.
+
+
+## EXAMPLES
+
+To print out the current settings for `BACKUP` and `OUTPUT` methods and some
+system information. This command can be used to see the supported features
+for the given release and platform.
+
+    # rear dump
+
+To create a new rescue environment. Do not forget to copy the resulting
+rescue system away so that you can use it in the case of a system failure.
+
+    # rear -v mkrescue
+
+To create a new rescue image together with a complete archive of your local
+system run the command:
+
+    # rear -v mkbackup
+
+
+## FILES
+
+* /usr/sbin/rear:
+The program itself.
+
+* /etc/rear/local.conf:
+System specific configuration can be set here.
+
+* /etc/rear/site.conf:
+Site specific configuration can be set here (not created by default).
+
+* /var/log/rear/:
+Directory holding the log files.
+
+* /tmp/rear.##############:
+Relax-and-Recover working directory. If Relax-and-Recover exits with an error,
+you must remove this directory manually.
+
+* /usr/share/rear:
+Relax-and-Recover script components.
+
+* /usr/share/rear/conf/default.conf:
+Relax-and-Recover default values. Contains a complete set of parameters
+and its explanation. Do not edit or modify things therein but
+use _local.conf_ or _site.conf_ for specific settings.
+
+
+## BUGS
+
+Feedback is welcome, please report issues or improvements to our
+issue-tracker at: [http://github.com/rear/issues/](http://github.com/rear/issues/)
+
+Furthermore, we welcome pull requests via GitHub.
+
+## SEE ALSO
+
+Relax-and-Recover comes with extensive documentation located in
+_/usr/share/doc_.
+
+
+## AUTHORS
+
+The ReaR project was initiated in 2006 by Schlomo Schapiro ([https://github.com/schlomo](https://github.com/schlomo)) and
+Gratien D'haese ([https://github.com/gdha](https://github.com/gdha)) and has since then seen a lot of contributions by many authors.
+As ReaR deals with bare metal disaster recovery, there is a large amount of code
+that was contributed by owners and users of specialized hardware and software.
+Without their combined efforts and contributions ReaR would not be
+the universal Linux bare metal disaster recovery solution that it is today.
+
+As time passed the project was lucky to get the support of additional developers to also help as maintainers:
+
+* Dag Wieers ([https://github.com/dagwieers](https://github.com/dagwieers)),
+* Jeroen Hoekx ([https://github.com/jhoekx](https://github.com/jhoekx)),
+* Johannes Meixner ([https://github.com/jsmeix](https://github.com/jsmeix)),
+* Vladimir Gozora ([https://github.com/gozora](https://github.com/gozora)),
+* Sebastien Chabrolles ([https://github.com/schabrolles](https://github.com/schabrolles)),
+* Renaud Metrich ([https://github.com/rmetrich](https://github.com/rmetrich)) and
+* Pavel Cahyna ([https://github.com/pcahyna](https://github.com/pcahyna)).
+
+We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers.
+Refer to the MAINTAINERS ([https://github.com/rear/rear/blob/master/MAINTAINERS](https://github.com/rear/rear/blob/master/MAINTAINERS)) file for the list of active and past maintainers.
+
+To see the full list of authors and their contributions
+look at the git history ([https://github.com/rear/rear/graphs/contributors](https://github.com/rear/rear/graphs/contributors)).
+We are very thankful to all authors and encourage anybody interested
+to take a look at our source code and to contribute what you find important.
+
+Relax-and-Recover is a developed with a collaborative process using Github at [http://github.com/rear/](http://github.com/rear/)
+
+The Relax-and-Recover website is located at: [http://relax-and-recover.org/](http://relax-and-recover.org/)
+
+
+## COPYRIGHT
+
+(c) 2006-2025
+
+The copyright is held by the original authors of the respective code pieces as can be seen in the git history at [https://github.com/rear/rear/graphs/contributors](https://github.com/rear/rear/graphs/contributors)
+
+Relax-and-Recover comes with ABSOLUTELY NO WARRANTY; for details
+see the GNU General Public License at [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)

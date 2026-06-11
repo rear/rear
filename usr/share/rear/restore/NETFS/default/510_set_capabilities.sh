@@ -25,6 +25,6 @@ LogPrint "Restoring file capabilities (NETFS_RESTORE_CAPABILITIES)"
 while IFS="=" read file cap ; do
     file="${file% }"
     cap="${cap# }"
-    setcap "${cap}" "${TARGET_FS_ROOT}/${file}" 1>/dev/null || LogPrint "Error while setting capabilties to '$file'"
+    setcap "${cap}" "${TARGET_FS_ROOT}/${file}" 1>/dev/null || LogPrint "Error while setting capabilities to '$file'"
 done < <(cat $capabilities_file)
 

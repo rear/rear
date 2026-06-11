@@ -148,7 +148,7 @@ function create_fs () {
             # even in case of complicated device nodes e.g. things like /dev/mapper/SIBM_2810XIV_78033E7012F-part3
             # cf. current_orig_device_basename_alnum_uppercase in layout/prepare/default/300_map_disks.sh
             local xfs_device_basename_alnum_uppercase="$( echo $xfs_device_basename | tr -d -c '[:alnum:]' | tr '[:lower:]' '[:upper:]' )"
-            # cf. predefined_input_variable_name in the function UserInput in lib/_input-output-functions.sh
+            # cf. predefined_input_variable_name in the function UserInput in lib/_framework-setup-and-functions.sh
             local mkfs_xfs_options_variable_name="MKFS_XFS_OPTIONS_$xfs_device_basename_alnum_uppercase"
             # Set which options to use for mkfs.xfs:
             if test "${!mkfs_xfs_options_variable_name:-}" ; then

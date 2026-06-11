@@ -13,7 +13,7 @@ function copy_binaries () {
     local destdir="$1"
     test -d "$destdir" || BugError "copy_binaries destination '$destdir' is not a directory"
     local binary=""
-    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+    # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
     while (( $# > 1 )) ; do
         shift
         binary="$1"
@@ -21,12 +21,12 @@ function copy_binaries () {
         contains_visible_char "$binary" || continue
         if ! cp $verbose --archive --dereference --force "$binary" "$destdir" 1>&2 ; then
             # When a binary should be copied where its target already exists as dangling symlink
-            # e.g. when /sbin/lvcreate should be copied to /tmp/rear.XXX/rootfs/bin/lvcreate
-            # but there is already the dangling symlink /tmp/rear.XXX/rootfs/bin/lvcreate -> lvm
+            # e.g. when /sbin/lvcreate should be copied to /var/tmp/rear.XXX/rootfs/bin/lvcreate
+            # but there is already the dangling symlink /var/tmp/rear.XXX/rootfs/bin/lvcreate -> lvm
             # because its link target was not yet copied into the recovery system
             # cf. "create LVM symlinks" in build/GNU/Linux/005_create_symlinks.sh
             # then cp fails (regardless of the --force option) with an error message like
-            # cp: not writing through dangling symlink '/tmp/rear.XXX/rootfs/bin/lvcreate'
+            # cp: not writing through dangling symlink '/var/tmp/rear.XXX/rootfs/bin/lvcreate'
             # so we silently skip cp errors here regardless what the reason is why cp failed here
             # and add it to REQUIRED_PROGS to error out later if it is actually missing in the recovery system
             # (for binaries in PROGS copy_binaries is only called when it exists in the original system)
@@ -62,7 +62,7 @@ LogPrint "Copying binaries and libraries"
 Log "Determining binaries from PROGS and REQUIRED_PROGS"
 local bin=""
 local bin_path=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 local all_binaries=( $( for bin in "${PROGS[@]}" "${REQUIRED_PROGS[@]}" ; do
                             bin_path="$( get_path "$bin" )"
                             if test -x "$bin_path" ; then
@@ -91,7 +91,7 @@ local all_libs=( "${LIBS[@]}" $( RequiredSharedObjects "${all_binaries[@]}" "${L
 Log "Libraries being copied: ${all_libs[@]}"
 local lib=""
 local link_target=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 for lib in "${all_libs[@]}" ; do
     if test -L $lib ; then
         # Because $lib is a symbolic link on the original system

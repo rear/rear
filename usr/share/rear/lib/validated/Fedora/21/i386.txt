@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.17.0 / Git
-Validation:  Fedora/21/i386
-Submitted:   Frank Crawford <frank@crawford.emu.id.au>, Australia
-Date:        2015-03-29
-Features:    LVM, MD, REQUESTRESTORE, ISO, EMAIL
-Comment:     Works, with standard Fedora RPM installation. The documentation could be a little better.

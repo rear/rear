@@ -6,8 +6,10 @@ test -d $ROOTFS_DIR/etc/udev/rules.d || return 0
 
 # check systemd version
 systemd_version="$(systemd-notify --version 2>/dev/null | grep systemd | awk '{print $2}')"
-[[ -z "$systemd_version" ]] && systemd_version=0
-if version_newer "$systemd_version" 190; then
+if [[ -n "$systemd_version" ]] ; then
+   if ! version_newer "$systemd_version" 190 ; then
+       Error "systemd version is '$systemd_version', systemd versions below 190 are not supported"
+   fi
    ps ax | grep -v grep | grep -q systemd-udevd && { # check if daemon is actually running
        Log "systemd-udevd will be used - no need for udev rules rewrites"
        return 0

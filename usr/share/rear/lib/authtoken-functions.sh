@@ -13,7 +13,7 @@
 # and the image is immutable (PBA-area is RO on locked drive),
 # see https://github.com/rear/rear/issues/3035#issuecomment-1662239427
 # so secrets could not leak out from that environment.
-# This functions are not properly implemeted to be executed within other environments
+# These functions are not properly implemented to be executed within other environments
 # e.g. when called by other ReaR scripts during "rear mkrescue/mkbackup" or "rear recover".
 # The main reason is that this functions could leak secrets when executed,
 # in particular with 'set -x' (e.g. when rear is run in debugscript mode),
@@ -22,8 +22,8 @@
 # instead of using ReaR functions like LogPrint, UserOutput,... and UserInput
 # which is correct here because those ReaR user input/output functions
 # cannot be made available at ReaR system startup time
-# because lib/lib/_input-output-functions.sh cannot be sourced there
-# because lib/_input-output-functions.sh does also some special stuff
+# because lib/lib/_framework-setup-and-functions.sh cannot be sourced there
+# because lib/_framework-setup-and-functions.sh does also some special stuff
 # (like adding EXIT_TASKS and STDIN STDOUT and STDERR redirections)
 # cf. https://github.com/rear/rear/pull/2956#discussion_r1133701768
 # and https://github.com/rear/rear/pull/2956#discussion_r1133714369

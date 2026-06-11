@@ -8,7 +8,7 @@ function set_tar_features () {
     # Test for features in tar
     # true if at supports the --warning option (v1.23+)
     FEATURE_TAR_WARNINGS=
-    local tar_version=$( get_version tar --version )
+    local tar_version="$( get_version tar --version )"
     if version_newer "$tar_version" 1.23 ; then
         FEATURE_TAR_WARNINGS="y"
         TAR_OPTIONS+=" --warning=no-xdev"
@@ -18,9 +18,9 @@ function set_tar_features () {
 
 local backup_prog_rc
 
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
-local opath=$( backup_path $scheme $path )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 test "$opath" && mkdir $v -p "$opath"
 
 # In any case show an initial basic info what is currently done
@@ -33,7 +33,7 @@ if is_true "$BACKUP_PROG_CRYPT_ENABLED" ; then
     test "tar" = "$BACKUP_PROG" || Error "Backup archive encryption is only supported with BACKUP_PROG=tar"
     # Backup archive encryption is impossible without a BACKUP_PROG_CRYPT_KEY value.
     # Avoid that the BACKUP_PROG_CRYPT_KEY value is shown in debugscript mode
-    # cf. the comment of the UserInput function in lib/_input-output-functions.sh
+    # cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
     # how to keep things confidential when usr/sbin/rear is run in debugscript mode
     # ('2>>/dev/$SECRET_OUTPUT_DEV' should be sufficient here because 'test' does not output on stdout):
     { test "$BACKUP_PROG_CRYPT_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV || Error "BACKUP_PROG_CRYPT_KEY must be set for backup archive encryption"
@@ -42,17 +42,17 @@ fi
 
 # Log what is included in the backup and what is excluded from the backup
 # cf. backup/NETFS/default/400_create_include_exclude_files.sh
-Log "Backup include list (backup-include.txt contents):"
+Log "Backup include list $TMP_DIR/backup-include.txt"
 while read -r backup_include_item ; do
     test "$backup_include_item" && Log "  $backup_include_item"
 done < $TMP_DIR/backup-include.txt
-Log "Backup exclude list (backup-exclude.txt contents):"
+Log "Backup exclude list $TMP_DIR/backup-exclude.txt"
 while read -r backup_exclude_item ; do
     test "$backup_exclude_item" && Log "  $backup_exclude_item"
 done < $TMP_DIR/backup-exclude.txt
 
-# Check if the backup needs to be splitted or not (on multiple ISOs).
-# Dummy split command when the backup is not splitted (the default case).
+# Check if the backup needs to be split or not (on multiple ISOs).
+# Dummy split command when the backup is not split (the default case).
 # Let 'dd' read and write up to 1M=1024*1024 bytes at a time to speed up things
 # for example from only 500KiB/s (with the 'dd' default of 512 bytes)
 # via a 100MBit network connection to about its full capacity
@@ -106,7 +106,7 @@ FAILING_BACKUP_PROG_RC_FILE="$TMP_DIR/failing_backup_prog_rc"
 # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
 # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
 # so that stderr of the confidential command is redirected to /dev/null
-# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
 # how to keep things confidential when rear is run in debugscript mode
 # because it is more important to not leak out user secrets into a log file
 # than having stderr error messages when a confidential command fails
@@ -222,12 +222,12 @@ case "$(basename ${BACKUP_PROG})" in
         Log "Using unsupported backup program '$BACKUP_PROG'"
         Log $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
-            "${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
+            "${BACKUP_PROG_OPTIONS[@]}" "$backuparchive" \
+            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > "$backuparchive"
         $BACKUP_PROG "${BACKUP_PROG_COMPRESS_OPTIONS[@]}" \
             $BACKUP_PROG_OPTIONS_CREATE_ARCHIVE $TMP_DIR/backup-exclude.txt \
-            "${BACKUP_PROG_OPTIONS[@]}" $backuparchive \
-            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > $backuparchive
+            "${BACKUP_PROG_OPTIONS[@]}" "$backuparchive" \
+            $(cat $TMP_DIR/backup-include.txt) $RUNTIME_LOGFILE > "$backuparchive"
     ;;
 esac 2> "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 # For the rsync and default case the backup prog is the last in the case entry
@@ -265,7 +265,7 @@ case "$( basename $BACKUP_PROG )" in
         # this obviously leads to wrong results in case something else is writing to the same
         # disk at the same time as is very likely with a networked file system. For local disks
         # this should be good enough and in any case this is only some eye candy.
-        # TODO: Find a fast way to count the actual transfer data, preferrable getting the info from rsync.
+        # TODO: Find a fast way to count the actual transfer data, preferable getting the info from rsync.
         let old_disk_used="$(get_disk_used "$backuparchive")"
         while sleep $PROGRESS_WAIT_SECONDS ; kill -0 $BackupPID 2>/dev/null; do
             let disk_used="$(get_disk_used "$backuparchive")" size=disk_used-old_disk_used
@@ -292,7 +292,7 @@ wait $BackupPID
 backup_prog_rc=$?
 
 if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" ]] ; then
-    (cd $(dirname $backuparchive) && md5sum $(basename $backuparchive) > ${backuparchive}.md5 || md5sum $(basename $backuparchive).?? > ${backuparchive}.md5)
+    (cd $(dirname "$backuparchive") && md5sum $(basename "$backuparchive") > "${backuparchive}".md5 || md5sum $(basename "$backuparchive").?? > "${backuparchive}".md5)
 fi
 
 # TODO: Why do we sleep here after 'wait $BackupPID'?

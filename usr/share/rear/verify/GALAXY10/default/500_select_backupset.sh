@@ -16,7 +16,7 @@ $(
 	)"
 
 	# Use the original STDIN STDOUT and STDERR when rear was launched by the user
-	# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+	# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 	read -p "Please select the backupset to use: " answer 0<&6 1>&7 2>&8
 	test $answer -ge 0 -a $answer -lt $c ||\
 		Error "You must specify the backupset with its number."

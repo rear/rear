@@ -27,10 +27,6 @@
 # OUTPUT=USB on IBM Z (s390/s390x) architecture:
 # The symbolic link prep/USB/Linux-s390/350_safeguard_error_out.sh
 # and its link target prep/USB/Linux-ppc64/350_safeguard_error_out.sh
-#
-# OUTPUT=USB on ARM architecture:
-# The symbolic link prep/USB/Linux-arm/350_safeguard_error_out.sh
-# and its link target prep/USB/Linux-ppc64/350_safeguard_error_out.sh
 
 Error "OUTPUT=USB not supported on $ARCH (no support to install a bootloader)"
 

@@ -4,8 +4,8 @@
 #
 
 if test "$BACKUP_URL" ; then
-    local backup_scheme=$( url_scheme "$BACKUP_URL" )
-    case $backup_scheme in
+    local backup_scheme="$( url_scheme "$BACKUP_URL" )"
+    case "$backup_scheme" in
        (iso)
            case $WORKFLOW in
                (mkrescue|mkbackuponly)
@@ -52,8 +52,8 @@ else
 fi
 
 if test "$OUTPUT_URL" ; then
-    local output_scheme=$( url_scheme "$OUTPUT_URL" )
-    case $output_scheme in
+    local output_scheme="$( url_scheme "$OUTPUT_URL" )"
+    case "$output_scheme" in
         (fish|ftp|ftps|hftp|http|https|sftp)
             local required_prog='lftp'
             has_binary $required_prog || Error "The OUTPUT_URL scheme '$output_scheme' requires the '$required_prog' command which is missing"

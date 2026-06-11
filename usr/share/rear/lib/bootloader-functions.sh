@@ -60,7 +60,8 @@ function find_syslinux_modules_dir {
             # cf. https://github.com/rear/rear/issues/2792
             # tell the user in debug mode what is going on
             DebugPrint "Searching whole /usr for SYSLINUX modules directory (you may specify SYSLINUX_MODULES_DIR)"
-            file=$( find /usr -name "$1" 2>/dev/null | tail -1 )
+	    # issue #3350 - adding -xdev to find to avoid hanging NFS
+            file=$( find /usr -xdev -name "$1" 2>/dev/null | tail -1 )
             syslinux_modules_dir=$( dirname "$file" )        # /usr/lib/syslinux/modules/efi32
             syslinux_modules_dir=${syslinux_modules_dir%/*}  # /usr/lib/syslinux/modules
             if is_true $USING_UEFI_BOOTLOADER ; then
@@ -180,7 +181,7 @@ function set_syslinux_features {
 
 # Create a suitable syslinux configuration based on capabilities
 # the mandatory first argument is the full path to an existing directory where required binaries will be copied to
-# the optional second argment is the target flavour and defaults to isolinux
+# the optional second argument is the target flavour and defaults to isolinux
 function make_syslinux_config {
     test -d "$1" || BugError "make_syslinux_config: required first argument for BOOT_DIR missing"
     test -d "$SYSLINUX_DIR" || BugError "make_syslinux_config: required environment SYSLINUX_DIR '$SYSLINUX_DIR' not set or not a directory"
@@ -571,7 +572,7 @@ function is_disk_grub_candidate () {
     else
         # Other disklabel types don't need anything special to install GRUB.
         # The test for the PReP boot partition (finalize/Linux-ppc64le/660_install_grub2.sh)
-        # is a bit similar, but operates on the partition itself, not on the uderlying disk.
+        # is a bit similar, but operates on the partition itself, not on the underlying disk.
         return 0
     fi
 }
@@ -992,6 +993,29 @@ function make_pxelinux_config_grub {
     echo "echo 'Loading initial ramdisk ...'"
     echo "initrd (tftp)/$PXE_INITRD"
     echo "}"
+}
+
+function get_sysconfig_bootloader() {
+    local sysconfig_bootloader_path=/etc/sysconfig/bootloader
+    if test "$RECOVERY_MODE" ; then
+        sysconfig_bootloader_path="$TARGET_FS_ROOT$sysconfig_bootloader_path"
+    fi
+
+    if ! test -f "$sysconfig_bootloader_path" ; then
+        return 1
+    fi
+
+    local sysconfig_bootloader
+
+    # SUSE uses LOADER_TYPE, and others?
+    # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
+    sysconfig_bootloader=$( grep ^LOADER_TYPE "$sysconfig_bootloader_path" | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
+
+    if ! test "$sysconfig_bootloader" ; then
+        return 1
+    fi
+
+    echo "$sysconfig_bootloader"
 }
 
 # vim: set et ts=4 sw=4

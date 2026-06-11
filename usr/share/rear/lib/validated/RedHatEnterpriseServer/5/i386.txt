@@ -1,9 +1,0 @@
-Version:     Relax-and-Recover 1.14 / Git
-Validation:  RedHatEnterpriseServer/5/i386
-Submitted:   Lucky leavell <lucky.william.leavell@crnsus.gov>, US Census Bureau, USA
-Date:        2013-03-14
-Features:    NBU, ISO, VMware VM
-Comment:     Need to set partition type on swap (82)"
-Comment:     OS is 64-bit
-Comment:     Initial boot hung on NTP, CTRL-C canceled NTP attempt
-Comment:     Otherwise flawless recovery

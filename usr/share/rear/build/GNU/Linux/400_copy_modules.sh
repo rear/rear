@@ -64,7 +64,7 @@ function modinfo_filename () {
     # 'readlink -e something' shows nothing when something is no file or a broken symlink and exits with exit code 1
     # 'readlink -e something' shows nothing on stdout but an error on stderr when something is empty and exits with exit code 1
     # It is crucial to output the original module_filename also when it is a symlink
-    # because in the code below 'cp -L' copies the symlink taget content
+    # because in the code below 'cp -L' copies the symlink target content
     # as a new regular file with file name as the name of the symlink
     # so the copied content can be still found under its original name,
     # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
@@ -89,7 +89,7 @@ for dummy in "once" ; do
         # The '--parents' is needed to get the '/lib/modules/' directory in the copy.
         # The '-L' copies the actual content to avoid dangling symlinks in the recovery system
         # cf. https://github.com/rear/rear/issues/2677#issuecomment-997859219
-        # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+        # It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
         if ! cp $verbose -t $ROOTFS_DIR -a -L --parents /lib/modules/$KERNEL_VERSION 2>>/dev/$DISPENSABLE_OUTPUT_DEV 1>&2 ; then
             # Do not error out if 'cp -a -L' failed to to copy all contents of /lib/modules/$KERNEL_VERSION
             # because dangling symlinks let 'cp -L' fail and there is no cp option to let it skip broken symlinks
@@ -180,7 +180,7 @@ for dummy in "once" ; do
                sr_mod ide_cd cdrom
                zlib zlib-inflate zlib-deflate
                libcrc32c crc32c crc32c-intel )
-    # Include the modules in MODULES plus their dependant modules.
+    # Include the modules in MODULES plus their dependent modules.
     for module in "${MODULES[@]}" ; do
         # Strip trailing ".o" if there:
         module=${module#.o}

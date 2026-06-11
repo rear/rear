@@ -28,7 +28,7 @@ fi
 # but '$BACKUP_PROG_CRYPT_KEY' must be used in the actual command call which means
 # the BACKUP_PROG_CRYPT_KEY value would appear in the log when rear is run in debugscript mode
 # so that stderr of the confidential command is redirected to SECRET_OUTPUT_DEV (normally /dev/null)
-# cf. the comment of the UserInput function in lib/_input-output-functions.sh
+# cf. the comment of the UserInput function in lib/_framework-setup-and-functions.sh
 # how to keep things confidential when rear is run in debugscript mode
 # because it is more important to not leak out user secrets into a log file
 # than having stderr error messages when a confidential command fails

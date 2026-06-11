@@ -53,7 +53,7 @@ Do not exit 'bextract' until all files are restored.
 WARNING: The new root is mounted under '$TARGET_FS_ROOT'.
 "
         # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+        # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
         read -p "Press ENTER to start bextract" 0<&6 1>&7 2>&8
 
         bextract$exclude_list -V$BEXTRACT_VOLUME /backup $TARGET_FS_ROOT

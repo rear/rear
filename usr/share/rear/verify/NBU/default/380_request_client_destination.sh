@@ -18,7 +18,7 @@ LogPrint "Netbackup Client Source For This Restore is:  $NBU_CLIENT_SOURCE"
 LogPrint "If this is a normal restore to the same client press ENTER."
 LogPrint "If this is a restore to a CLONE enter the new client name."
 # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-# to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+# to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
 read -t $WAIT_SECS -r -p "Enter Cloned Client name or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
 
 # validate input
@@ -40,7 +40,7 @@ else
         LogPrint "bp.conf defined servers: " ; cat /usr/openv/netbackup/bp.conf | grep -i server
         LogPrint ""
         # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-        # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+        # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
         # FIXME: Is it right to let 'read' timeout here which makes 'rear recover' automatically proceed after WAIT_SECS?
         # I <jsmeix@suse.de> think at this point during 'rear recover' the user may not yet have been able to
         # "Ensure all servers defined in bp.conf can connect to this RESCUE system using the hostname: ${NBU_CLIENT_NAME}"

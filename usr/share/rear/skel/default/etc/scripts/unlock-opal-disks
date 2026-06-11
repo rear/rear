@@ -11,6 +11,7 @@ shopt -s nullglob extglob  # Enable pattern matching extensions required for 'op
 source /usr/share/rear/lib/opal-functions.sh
 [[ -f /.OPAL_PBA_SETTINGS.sh ]] && source /.OPAL_PBA_SETTINGS.sh
 [[ ${#OPAL_PBA_TKNPATH[@]} -gt 0 ]] && source /usr/share/rear/lib/authtoken-functions.sh
+[[ -n "$OPAL_PBA_TPMNVINDEX" ]] && source /usr/share/rear/lib/tpmpwd-functions.sh
 
 
 function use_plymouth() {
@@ -288,6 +289,15 @@ if is_true "$OPAL_PBA_TKNDBG"; then
     authtkn_stderr="/.authtkn.stderr.$$"
 fi
 
+tpmpwd_allowed=""
+[[ ${#OPAL_PBA_TKNPATH[@]} -eq 0 && -n "$OPAL_PBA_TPMNVINDEX" ]] && tpmpwd_allowed="Y"
+
+tpmpwd_stderr="/dev/null"
+if is_false "$OPAL_PBA_TKNDBG" && is_true "$OPAL_PBA_TPMDBG"; then
+    echo "TPM bind: [$OPAL_PBA_TKNBIND] -> $authtkn_bind2dev"
+    tpmpwd_stderr="/.tpmpwd.stderr.$$"
+fi
+
 declare -i attempt=0
 declare -i attempts2fa=0
 declare -i unlocked_device_count=0
@@ -331,6 +341,17 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
                 fi
             fi
         fi
+    elif [ -n "$tpmpwd_allowed" ] && [ -z "$password" ]; then
+        at_password=$(tpmpwd_load "$OPAL_PBA_TPMNVINDEX" 2>>$tpmpwd_stderr)
+        if [ $? -eq 0 ]; then #loaded & decrypted successfully
+            is_true "$OPAL_PBA_TPMDBG" && echo "TPM password successfully loaded"
+            if [ -z "$sb_fail_status" ]; then # SecBoot is active or user explicitly doesn't care, allowing unattended boot
+                password="$at_password"
+            else # SecBoot disabled or unavailable, ensure user is aware of that
+                ask_question "SecureBoot is DISABLED or UNAVAILABLE! Continue anyway [Y/N]?"
+                is_true "$answer" && password="$at_password" || instant_reboot
+            fi
+        fi
     else
         # this is to cover multiple paths with the single [ -z "$password" ] block below
         password=""
@@ -347,7 +368,7 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
         # If other devices require different passwords for unlocking, we assume
         # that this is intentional and will be dealt with by other means.
         attempt+=1
-        if is_true "$OPAL_PBA_TKNDBG"; then
+        if is_true "$OPAL_PBA_TKNDBG" || is_true "$OPAL_PBA_TPMDBG"; then
             # acceptable typed-in only
             [[ "$password" == "dbgpass" ]] && [[ -z "$at_password" ]] && unlocked_device_count+=1
             # acceptable both AT-sourced or typed-in
@@ -360,7 +381,9 @@ while (( unlocked_device_count == 0 && attempt < max_authentications )); do
         if [ -n "$at_password" ] && (( unlocked_device_count == 0 )); then
             # AuthToken-derived password unlocked nothing -> stop considering AT as unlock option
             authtkn_allowed="" # disabling AT
+            tpm_allowed=""
             is_true "$OPAL_PBA_TKNDBG" && echo "AuthToken-derived password REJECTED"
+            is_true "$OPAL_PBA_TPMDBG" && echo "TPM-derived password REJECTED"
         fi
     fi
 done
@@ -398,6 +421,22 @@ if (( unlocked_device_count > 0 )); then
                 sleep 3
             fi
         done
+    elif [ -z "$at_password" ] && [ -n "$OPAL_PBA_TPMNVINDEX" ]; then
+        # password is user-supplied & valid
+        opal_password="$password"
+        if [ -e /dev/tpm0 ]; then
+            is_true "$OPAL_PBA_TPMDBG" && echo "Offering to store password onto TPM"
+            ask_question "Want to store password on TPM [Y/N]?"
+            if is_true "$answer"; then
+                at_password="$opal_password"
+                is_true "$OPAL_PBA_TPMDBG" && echo "Storing..."
+                if tpmpwd_store "$OPAL_PBA_TPMNVINDEX" "$at_password" >>$tpmpwd_stderr 2>&1; then
+                    display_message "Success! password is now stored in TPM for this PBA"
+                else
+                    display_message "Failed to store password on TPM 2>>$tpmpwd_stderr)"
+                fi
+            fi
+        fi
     fi
 
     if ! is_true "$OPAL_PBA_NOSUCCESSMSG"; then
@@ -408,12 +447,12 @@ if (( unlocked_device_count > 0 )); then
         fi
         sleep 1
     fi
-    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_reboot
+    is_true "$OPAL_PBA_TKNDBG" || is_true "$OPAL_PBA_TPMDBG" && emergency_shell || instant_reboot
 else
     display_message "$unsuccessful_unlock_response"
     # If finally unsuccessful, power off.
     # This is required as TCG Opal 2-compliant disks will refuse further authentication attempts before being reset.
     display_message "Powering off after $attempt unsuccessful attempts..."
     sleep 3
-    is_true "$OPAL_PBA_TKNDBG" && emergency_shell || instant_poweroff
+    is_true "$OPAL_PBA_TKNDBG" || is_true "$OPAL_PBA_TPMDBG" && emergency_shell || instant_poweroff
 fi

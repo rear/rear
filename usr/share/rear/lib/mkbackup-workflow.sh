@@ -4,7 +4,7 @@
 WORKFLOW_mkbackup_DESCRIPTION="create rescue media and backup system"
 WORKFLOWS+=( mkbackup )
 WORKFLOW_mkbackup () {
-	local scheme=$(url_scheme $BACKUP_URL)
+	local scheme="$( url_scheme "$BACKUP_URL" )"
 
 	SourceStage "prep"
 

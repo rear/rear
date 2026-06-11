@@ -14,7 +14,7 @@ has_binary $HPSSACLI || return 0
 # Add $HPSSACLI to the rescue image (and added to REQUIRED_PROGS below when it is actually required):
 PROGS+=( $HPSSACLI )
 # How the "eval $(grep ON_DIR= $(get_path $HPSSACLI))" command works:
-# Prerequisit: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
+# Prerequisite: $HPSSACLI (e.g. /sbin/ssacli) is a shell script.
 # That $HPSSACLI script contains a command (e.g. in case of /sbin/ssacli) like
 #   export SSACLI_BIN_INSTALLATION_DIR=/opt/smartstorageadmin/ssacli/bin/
 # This command is searched for with "grep ON_DIR="
@@ -121,5 +121,5 @@ done
 # see the create_logicaldrive and create_smartarray functions in layout/prepare/GNU/Linux/170_include_hpraid_code.sh
 # what program calls are written to diskrestore.sh
 # cf. https://github.com/rear/rear/issues/1963
-egrep -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( $HPSSACLI ) || true
+grep -E -q '^logicaldrive |^smartarray ' $DISKLAYOUT_FILE && REQUIRED_PROGS+=( $HPSSACLI ) || true
 

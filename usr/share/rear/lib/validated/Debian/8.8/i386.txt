@@ -1,7 +1,0 @@
-on:     Relax-and-Recover 2.1 / 2017-06-07 
-Validation:  Debian/8.8/i386 
-Submitted:   Sayyed-Mahmoud.Ketabi@kisters.de, KISTERS AG, Germany 
-Date:        2017-06-28 
-Features:    NETFS, ISO 
-Comment:     We need a German manual for rear 
-

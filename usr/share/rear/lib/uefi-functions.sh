@@ -70,7 +70,7 @@ function build_boot_efi {
     fi
 
     # Determine what modules need to be loaded in order to access given directories
-    # (if the list of modules is not overriden by GRUB2_MODULES_UEFI_LOAD)
+    # (if the list of modules is not overridden by GRUB2_MODULES_UEFI_LOAD)
     if (( ${#dirs[@]} )) && ! (( ${#modules[@]} )) ; then
         if has_binary grub-probe ; then
             gprobe=grub-probe

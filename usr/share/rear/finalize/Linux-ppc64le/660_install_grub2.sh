@@ -85,15 +85,22 @@ if ! test -d "$TARGET_FS_ROOT/boot/$grub_name" ; then
 fi
 
 # Generate GRUB configuration file anew to be on the safe side (this could be even mandatory in MIGRATION_MODE):
+local grub2_config_generated="yes"
 if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$grub_name/grub.cfg" ; then
+    grub2_config_generated="no"
+    # TODO: We should make this fatal.  Outdated/incomplete/just wrong grub2.cfg may result into an unbootable system.
     LogPrintError "Failed to generate boot/$grub_name/grub.cfg in $TARGET_FS_ROOT - trying to install GRUB2 nevertheless"
 fi
+
+# Detect platform, e.g. PowerNV, in advance.
+# An alternative approach, also based on parsing /proc/cpuinfo, can be found in the pseries_platform helper from powerpc-utils.
+grub2_ppc_platform="$(awk '/platform/ {print $NF}' < /proc/cpuinfo)"
 
 # Do not update nvram when system is running in PowerNV mode (BareMetal).
 # grub2-install will fail if not run with the --no-nvram option on a PowerNV system,
 # see https://github.com/rear/rear/pull/1742
 grub2_no_nvram_option=""
-if [[ $(awk '/platform/ {print $NF}' < /proc/cpuinfo) == PowerNV ]] ; then
+if [[ "$grub2_ppc_platform" == PowerNV ]] ; then
     grub2_no_nvram_option="--no-nvram"
 fi
 # Also do not update nvram when no character device node /dev/nvram exists.
@@ -173,6 +180,20 @@ LogPrint "Determining where to install GRUB2 (no GRUB2_INSTALL_DEVICES specified
 # Find PPC PReP Boot partitions:
 part_list=$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $7}}' $LAYOUT_FILE )
 if ! test "$part_list" ; then
+    # The PReP Boot partitions are not required on PowerNV systems.
+    if [[ "$grub2_ppc_platform" == "PowerNV" ]] ; then
+        if is_false "$grub2_config_generated" ; then
+            LogPrintError "Booting using Petitboot may not work (failed to generate GRUB configuration file anew)"
+            return 1
+        fi
+
+        LogPrint "PPC PReP boot partition not found - GRUB2 installation is not necessary on PowerNV systems"
+        # As long as the GRUB 2 configuration was generated successfully, the
+        # system will be bootable using Petitboot.
+        NOBOOTLOADER=''
+        return 0
+    fi
+
     LogPrintError "Cannot install GRUB2 (unable to find a PPC PReP boot partition)"
     return 1
 fi

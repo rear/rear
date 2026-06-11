@@ -64,7 +64,7 @@ if [[ -f "$sshd_config_file" ]]; then
     sed -i "${sed_patch_options[@]}" "$sshd_config_file"
 
 else
-    LogPrintError "There is no sshd configuration at $sshd_config_file - logging into the rescue sytem via ssh may not work"
+    LogPrintError "There is no sshd configuration at $sshd_config_file - logging into the rescue system via ssh may not work"
 fi
 
 # Create possibly missing directories needed by sshd in the recovery system

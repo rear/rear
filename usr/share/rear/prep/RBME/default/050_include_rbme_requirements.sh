@@ -1,12 +1,18 @@
+REQUIRED_PROGS+=( rbme )
 
-scheme=$(url_scheme "$BACKUP_URL")
+if test -z "$BACKUP_URL" ; then
+    Error "Missing BACKUP_URL=nfs://HOST/PATH !"
+fi
+
+scheme="$(url_scheme "$BACKUP_URL")"
 case $scheme in
     (nfs)
         PROGS+=(
         showmount
-        mount.$(url_scheme $BACKUP_URL)
-        umount.$(url_scheme $BACKUP_URL)
+        mount.$(url_scheme "$BACKUP_URL")
+        umount.$(url_scheme "$BACKUP_URL")
         )
+        MODULES+=( nfs nfsd )
         ;;
     (*)
         return

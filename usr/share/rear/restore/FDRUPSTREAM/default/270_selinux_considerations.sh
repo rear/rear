@@ -28,7 +28,7 @@ in order to allow login of the restored system."
 is_true "$USER_INPUT_SELINUX_RELABEL_ON_NEXT_BOOT" && USER_INPUT_SELINUX_RELABEL_ON_NEXT_BOOT="y"
 while true ; do
     # According to what is shown to the user "Relabeling ... required ... to allow login"
-    # the default (i.e. the automated respose after the timeout) should be 'y':
+    # the default (i.e. the automated response after the timeout) should be 'y':
     answer="$( UserInput -I SELINUX_RELABEL_ON_NEXT_BOOT -p "Would you like to relabel on next boot? (y/n)" -D 'y' )"
     is_false "$answer" && break
     if is_true "$answer" ; then

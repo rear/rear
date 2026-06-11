@@ -25,7 +25,7 @@ to improve $PRODUCT.
 --- The $PRODUCT development team
 "
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -e -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
 
 Print "
@@ -44,7 +44,7 @@ should only include information that you are willing to see published on the
 $PRODUCT website and contained within $PRODUCT.
 "
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -e -p "Press ENTER to continue ... " 0<&6 1>&7 2>&8
 
     Print "
@@ -59,7 +59,7 @@ will be...
 Example: Your Name <email-address>, Company/Organisation, Country
 "
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -e -p "Submitted By: " 0<&6 1>&7 2>&8
     SUBMITTED_BY="$REPLY"
 
@@ -73,7 +73,7 @@ as configuration types like LVM, MD etc.
 Example: LVM, MD, SCSI, $BACKUP, $OUTPUT, EMAIL, ...
 "
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -e -p "Features: " 0<&6 1>&7 2>&8
     FEATURES="$REPLY"
 
@@ -92,7 +92,7 @@ Example: Works out-of-the-box flawless with all features
 Example: We modified path/to/file in order to support foo-bar better
 "
     # Use the original STDIN STDOUT and STDERR when rear was launched by the user
-    # to get input from the user and to show output to the user (cf. _input-output-functions.sh):
+    # to get input from the user and to show output to the user (cf. _framework-setup-and-functions.sh):
     read -e -p "Comments: " 0<&6 1>&7 2>&8
     COMMENTS="$REPLY"
 

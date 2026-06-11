@@ -30,3 +30,9 @@ for m in "${my_udev_files[@]}" ; do
     fi
 done
 
+# prefer dbus-broker over dbus-daemon (the reference implementation)
+if [[ -f /lib/systemd/system/dbus-broker.service ]] || [[ -f /usr/lib/systemd/system/dbus-broker.service ]]; then
+    ln $v -rsf $ROOTFS_DIR/usr/lib/systemd/system/dbus{-broker,}.service >&2
+else
+    ln $v -rsf $ROOTFS_DIR/usr/lib/systemd/system/dbus{-daemon,}.service >&2
+fi

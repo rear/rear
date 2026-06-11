@@ -1,0 +1,41 @@
+name: 🚥 Codespell
+
+# Workflow to check spelling errors on the changed files within the current pull request.
+#
+# The previous version already did a complete check on the whole repository, therefore,
+# we prefer only to check the added/changed files for spelling errors.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  codespell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: 🔸 Get Changed Files from Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # get file names and separate them with space ' '
+          #files=$(gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c "echo \'./{}\'" | tr '\n' ' ')
+          gh pr diff ${{ github.event.pull_request.number }} --name-only | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/changed
+          gh api '/repos/rear/rear/git/trees/master?recursive=true' -q '.tree[]|.path' | xargs -I {} sh -c 'echo ./{}' | sort >/tmp/full
+          comm -23 /tmp/full /tmp/changed > ./exclude_file
+          echo "EXCLUDE_FILE=./exclude_file" >> "$GITHUB_ENV"          
+
+      - name: 🔸 Output the Exclude File
+        run: cat ${{ env.EXCLUDE_FILE }}
+          
+      - name: 🔸 Check for Spelling Errors for Changed Files
+        uses: codespell-project/actions-codespell@v2
+        with:
+          check_filenames: true
+          check_hidden: true
+          ignore_words_file: .codespellignore
+          skip: .git,./renovate.json,./LICENSE,./MAINTAINERS,*.8,*.pdf,*.html,*.yml
+          exclude_file: ${{ env.EXCLUDE_FILE }}
+          #path: ${{ env.CHANGED_FILES }}
+

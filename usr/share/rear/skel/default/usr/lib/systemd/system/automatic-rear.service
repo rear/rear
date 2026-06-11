@@ -1,0 +1,14 @@
+[Unit]
+Description=Automatic recovery if requested
+Wants=network-online.target
+After=network-online.target sysinit.service
+Requires=sysinit.service
+
+[Service]
+Type=oneshot
+ExecStart=/etc/scripts/run-automatic-rear
+StandardInput=tty
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

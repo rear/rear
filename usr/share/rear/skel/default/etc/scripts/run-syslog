@@ -7,7 +7,7 @@ if type -p rsyslogd >/dev/null ; then
         exec rsyslogd  -n -i /var/run/rsyslogd.pid -f /etc/rsyslog.conf
 elif type -p syslog-ng >/dev/null ; then
     # need get_version and version_newer functions
-    . /usr/share/rear/lib/layout-functions.sh
+    source /usr/share/rear/lib/layout-functions.sh
 
     ng_version=$(get_version syslog-ng --version)
     if version_newer "$ng_version" "3" ; then

@@ -1,7 +1,0 @@
-Version:     Relax-and-Recover 2.2 / 2017-07-20
-Validation:  Debian/8.9/i386
-Submitted:   Andreas Lemke <andreas.lemke@tu-braunschweig.de>, TU Braunschweig Sprachenzentrum, Germany
-Date:        2017-09-21
-Features:    BAREOS
-Comment:
-

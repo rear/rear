@@ -24,7 +24,7 @@ set -e -u -o pipefail
 local yum_backup_dir=$( dirname "$backuparchive" )
 test -d $yum_backup_dir || mkdir $verbose -p -m 755 $yum_backup_dir
 
-find $(cat $TMP_DIR/backup-include.txt) -xdev -exec stat -c "%C %n" {} \; | egrep -w -v -f $TMP_DIR/backup-exclude.txt > $yum_backup_dir/selinux_contexts.dat
+find $(cat $TMP_DIR/backup-include.txt) -xdev -exec stat -c "%C %n" {} \; | grep -E -w -v -f $TMP_DIR/backup-exclude.txt > $yum_backup_dir/selinux_contexts.dat
 
 # Go back from "set -e -u -o pipefail" to the defaults:
 apply_bash_flags_and_options_commands "$DEFAULT_BASH_FLAGS_AND_OPTIONS_COMMANDS"

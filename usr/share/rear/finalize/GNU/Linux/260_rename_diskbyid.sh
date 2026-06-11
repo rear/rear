@@ -1,7 +1,7 @@
 # remove existing disk-by-id mappings
 # FIXME: Don't we actually not 'remove' but 'replace' or 'migrate' disk-by-id mappings?
 #
-# We call sed once for each substituation
+# We call sed once for each substitution
 # it would be better to build one sed script and use this later
 #  (like finalize/GNU/Linux/250_migrate_disk_devices_layout.sh)
 #
@@ -97,7 +97,7 @@ for file in $FILES; do
             # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
             # the symlink target is considered to not be a restored file that needs to be patched
             # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-            if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+            if echo $symlink_target | grep -Eq '/proc/|/sys/|/dev/|/run/' ; then
                 LogPrint "Skip patching symlink $realfile target $symlink_target on /proc/ /sys/ /dev/ or /run/"
                 continue
             fi

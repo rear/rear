@@ -81,7 +81,7 @@ function valid_restored_file_for_patching () {
     # If the symlink target contains /proc/ /sys/ /dev/ or /run/ we skip it because then
     # the symlink target is considered to not be a restored file that needs to be patched
     # cf. https://github.com/rear/rear/pull/2047#issuecomment-464846777
-    if echo $symlink_target | egrep -q '/proc/|/sys/|/dev/|/run/' ; then
+    if echo $symlink_target | grep -Eq '/proc/|/sys/|/dev/|/run/' ; then
         Log "Skip patching symlink $restored_file target $symlink_target on /proc/ /sys/ /dev/ or /run/"
         return 1
     fi
@@ -102,14 +102,13 @@ function valid_restored_file_for_patching () {
 # FIXME: The following code fails if file names contain characters from IFS (e.g. blanks),
 # see https://github.com/rear/rear/pull/1514#discussion_r141031975
 # and for the general issue see https://github.com/rear/rear/issues/1372
-for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* ; do
+for restored_file in $TARGET_FS_ROOT/etc/sysconfig/*/ifcfg-* $TARGET_FS_ROOT/etc/network/inter[f]aces $TARGET_FS_ROOT/etc/network/interfaces.d/* $TARGET_FS_ROOT/etc/NetworkManager/system-connections/*.nmconnection ; do
     network_config_file="$( valid_restored_file_for_patching "$restored_file" )" || continue
-    network_config_files+=( $network_config_file )
+    network_config_files+=( "$network_config_file" )
 done
 
 # Skip if no valid restored network configuration files are found
-# i.e. when the network_config_files array does not even have a first (non empty) element:
-test $network_config_files || return 0
+test ${#network_config_files[@]} -gt 0 || return 0
 
 # Create a temporary directory for plain mapping files content without comments and empty lines.
 # Do not error out at this late state of "rear recover" (after the backup was restored) but inform the user:
@@ -165,7 +164,7 @@ if test -s $TMP_DIR/mappings/mac ; then
         test "$interface" -a "$new_interface" -a "$interface" != "$new_interface" && sed_script+=" ; s/$interface/$new_interface/g"
         # The "sed -e 'p ; y/abcdef/ABCDEF/'" hack prints each line as is and once again with upper case hex letters.
         # The reason is that .../mappings/mac has lower case hex letters (cf. doc/mappings/mac.example)
-        # but some systems seem to have MAC adresses with upper case hex letters in the config files.
+        # but some systems seem to have MAC addresses with upper case hex letters in the config files.
         # We do not want to mess around with that so we do each replacement two times both case-sensitive
         # one with lower case hex letters and the other one with upper case hex letters in the sed script:
     done < <( sed -e 'p ; y/abcdef/ABCDEF/' $TMP_DIR/mappings/mac )
@@ -175,9 +174,9 @@ if test -s $TMP_DIR/mappings/mac ; then
         for network_config_file in "${network_config_files[@]}" ; do
             # The network_config_files array contains only existing files (cf. above how it is set).
             if sed -i -e "$sed_script" "$network_config_file" ; then
-                Log "Wrote new MAC addresses and network interfaces in $network_config_file"
+                Log "Wrote new MAC addresses and network interfaces in '$network_config_file'"
             else
-                LogPrintError "Failed to rewrite MAC addresses and network interfaces in $network_config_file"
+                LogPrintError "Failed to rewrite MAC addresses and network interfaces in '$network_config_file'"
             fi
         done
     else
@@ -204,7 +203,7 @@ else
             current_mac=$( cat /sys/class/net/$interface/address )
             echo "$current_mac $current_mac $interface" >> $TMP_DIR/mappings/mac
         done
-        # Verify we could generate a fallback $TMP_DIR/mappings/mac file with acual content (i.e. non-empty):
+        # Verify we could generate a fallback $TMP_DIR/mappings/mac file with actual content (i.e. non-empty):
         if test -s $TMP_DIR/mappings/mac ; then
             Log "Using generated fallback $TMP_DIR/mappings/mac file (/etc/rear/mappings/mac is missing or has no content)"
         else
@@ -307,7 +306,7 @@ if test -s $TMP_DIR/mappings/ip_addresses ; then
             # like '1080::8:800:200C:417A' where '::' is the shortest possible IPv6 address,
             # cf. "Current formats" in https://tools.ietf.org/html/rfc1924
             # so ':' can be the first (and only) character in an IPv6 address.
-            # In ifcfg configuration files the vaule can be in single quotes like KEYWORD='VALUE':
+            # In ifcfg configuration files the value can be in single quotes like KEYWORD='VALUE':
             if grep -q "^IPADDR=[':0-9A-Fa-f][.:0-9A-Fa-f]*/[0-9'][0-9']*" $ifcfg_file ; then
                 # Case 1) where the syntax is like IPADDR=192.168.1.1/24 or IPADDR='192.168.1.1/24'
                 # replace the old IPADDR value with the new_ip_cidr value (always in the IPADDR='...' form) and

@@ -34,16 +34,16 @@ local rpm_package_name="basesystem"
 LogPrint "Installing the very basic stuff ('$rpm_package_name' and what it requires)"
 yum $verbose --disablerepo=* $repoList --installroot=$TARGET_FS_ROOT --releasever=$(cat $yum_backup_dir/releasever.dat) -y install "$rpm_package_name" 1>&2
 # aaa_base requires filesystem so that yum installs filesystem before aaa_base
-# but for a clean filesystem installation YUM needs users and gropus
+# but for a clean filesystem installation YUM needs users and groups
 # as shown by RPM as warnings like (excerpt):
 #   warning: user news does not exist - using root
 #   warning: group news does not exist - using root
 #   warning: group dialout does not exist - using root
 #   warning: user uucp does not exist - using root
-# Because those users and gropus are created by aaa_base scriptlets and
+# Because those users and groups are created by aaa_base scriptlets and
 # also RPM installation of permissions pam libutempter0 shadow util-linux
 # (that get also installed before aaa_base by yum installation of aaa_base)
-# needs users and gropus that are created by aaa_base scriptlets so that
+# needs users and groups that are created by aaa_base scriptlets so that
 # those packages are enforced installed a second time after aaa_base was installed.
 # To be safe against changes in the list of packages that need to be
 # enforced installed a second time after aaa_base was installed
@@ -55,7 +55,7 @@ local rpm_package=""
 local rpm_package_name_version=""
 for rpm_package in $rpms_in_installion_order ; do
     # Simple "something is still going on" indicator by printing dots
-    # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+    # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
     # and not using a Print function to always print to the original stdout
     # i.e. to the terminal wherefrom the user has started "rear recover":
     echo -n "." >&7
@@ -87,7 +87,7 @@ if test "independent_RPMs" = "$YUM_INSTALL_RPMS" ; then
     # because therein the latest installed RPMs are listed topmost:
     for rpm_package in $( tac $yum_backup_dir/independent_RPMs ) ; do
         # Simple "something is still going on" indicator by printing dots
-        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7
@@ -119,7 +119,7 @@ else
     # because therein the latest installed RPMs are listed topmost:
     for rpm_package in $( tac $yum_backup_dir/installed_RPMs | cut -d ' ' -f1 ) ; do
         # Simple "something is still going on" indicator by printing dots
-        # directly to stdout which is fd7 (see lib/_input-output-functions.sh)
+        # directly to stdout which is fd7 (see lib/_framework-setup-and-functions.sh)
         # and not using a Print function to always print to the original stdout
         # i.e. to the terminal wherefrom the user has started "rear recover":
         echo -n "." >&7

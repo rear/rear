@@ -8,9 +8,9 @@
 # answer is yes force auto relabeling the files after the reboot to have a correct SELinux labeled system.
 
 # If selinux was turned off for the backup we have to label the
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
-local opath=$( backup_path $scheme $path )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 if test -f "$opath/selinux.autorelabel" ; then
     touch $TARGET_FS_ROOT/.autorelabel

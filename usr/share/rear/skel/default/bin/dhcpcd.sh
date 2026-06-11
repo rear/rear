@@ -20,8 +20,8 @@ fi
 hostinfo="$1"
 state="$2"
 
-# Reading HostInfo file for configuration parameters
-[ -e "${hostinfo}" ] && . "${hostinfo}"
+# Sourcing HostInfo file for configuration parameters
+[ -e "${hostinfo}" ] && source "${hostinfo}"
 
 case "${state}" in
     up)

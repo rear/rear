@@ -45,7 +45,7 @@ ln $verbose -s $log_file_symlink_target $log_file_symlink || true
 # Copy backup restore related files (in particular the backup restore log file) if exists.
 # This will be done as the last one of the exit tasks of this script because
 # the exit tasks are executed in reverse ordering of how AddExitTask is called
-# (see AddExitTask in _input-output-functions.sh) the ordering of how AddExitTask is called
+# (see AddExitTask in _framework-setup-and-functions.sh) the ordering of how AddExitTask is called
 # must begin with the to-be-last-run exit task and end with the to-be-first-run exit task:
 if test "$( echo $VAR_DIR/restore/* )" ; then
     # Using 'mkdir -p' primarily because that causes no error if the directory already exists

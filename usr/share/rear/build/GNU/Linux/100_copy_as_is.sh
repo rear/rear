@@ -133,7 +133,7 @@ local copy_as_is_file=""
 # then 'tar' copies things in /path/to/somedir/subdir two times
 # and reports them twice in the copy_as_is_filelist_file
 # cf. https://github.com/rear/rear/pull/2378
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 while read -r copy_as_is_file ; do
     # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above)
     # but do not skip symbolic links. Their targets will be copied later by build/default/490_fix_broken_links.sh.
@@ -151,7 +151,7 @@ Log "copy_as_is_executables = ${copy_as_is_executables[@]}"
 # add them to the LIBS list if they are not yet included in the copied files:
 Log "Adding required libraries of executables in all the copied files to LIBS"
 local required_library=""
-# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_input-output-functions.sh):
+# It is crucial to append to /dev/$DISPENSABLE_OUTPUT_DEV (cf. 'Print' in lib/_framework-setup-and-functions.sh):
 for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" ) ; do
     # Skip when the required library was already actually copied by 'tar' above.
     # grep for a full line (copy_as_is_filelist_file contains 1 file name per line)
@@ -166,9 +166,20 @@ for required_library in $( RequiredSharedObjects "${copy_as_is_executables[@]}" 
 done 2>>/dev/$DISPENSABLE_OUTPUT_DEV
 Log "LIBS = ${LIBS[@]}"
 
-# Fix ReaR directories when running from checkout or REAR_VAR configuration:
-Log "Validating and fixing ReaR directories for non-default paths"
-test "$VAR_DIR" != /var/lib/rear && ln -v -sf "$VAR_DIR" $ROOTFS_DIR/var/lib/rear
-test "$SHARE_DIR" != /usr/share/rear && ln -v -sf "$SHARE_DIR" $ROOTFS_DIR/usr/share/rear
-
-
+# Symlinking non-default VAR_DIR and SHARE_DIR to defaults (e.g. when running from checkout or REAR_VAR configuration):
+Log "In ReaR recovery system symlinking non-default VAR_DIR and SHARE_DIR to defaults if needed (e.g. when running from checkout)"
+# When running with non-default VAR_DIR and/or SHARE_DIR it is mandatory that in the ReaR recovery system
+# all ReaR files are accessible via the default /var/lib/rear and /usr/share/rear directories - otherwise
+# the ReaR recovery system startup fails in usr/share/rear/skel/default/etc/scripts/system-setup with
+# "ERROR: ReaR recovery cannot work without /usr/share/rear/conf/default.conf"
+# so we error out if making a needed symlink fails.
+# On old systems with /bin/ln from coreutils < 8.16 'ln' did not support the '-r/--relative' option
+# but a relative symlink is needed in portable mode, see https://github.com/rear/rear/pull/3206
+if ! test "$VAR_DIR" = /var/lib/rear ; then
+    Log "In ReaR recovery system make symlink /var/lib/rear to VAR_DIR '$VAR_DIR'"
+    ln -v -srf "$ROOTFS_DIR/$VAR_DIR" $ROOTFS_DIR/var/lib/rear || Error "Failed to symlink /var/lib/rear to '$VAR_DIR'"
+fi
+if ! test "$SHARE_DIR" = /usr/share/rear ; then
+    Log "In ReaR recovery system make symlink /usr/share/rear to SHARE_DIR '$SHARE_DIR'"
+    ln -v -srf "$ROOTFS_DIR/$SHARE_DIR" $ROOTFS_DIR/usr/share/rear || Error "Failed to symlink /usr/share/rear to '$SHARE_DIR'"
+fi

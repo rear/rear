@@ -10,6 +10,6 @@ Comment:    We had to manually include btrfs subvolumes in local.conf with
             the backup file and rescue system on it. Without interfering 
             manually the rescue media is destroyed (We tested once and it 
             was...); Second attempt the target disk (empty, new ssd with 
-            different size as origninal disk) was chosen manually during 
+            different size as original disk) was chosen manually during 
             the restore process and it finished with a bootable system without 
             any further problems;

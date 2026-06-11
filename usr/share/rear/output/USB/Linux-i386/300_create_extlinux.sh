@@ -98,11 +98,6 @@ case "$WORKFLOW" in
     (*) BugError "Workflow $WORKFLOW should not run this script."
 esac
 
-USB_REAR_DIR="$BUILD_DIR/outputfs/$USB_PREFIX"
-if [ ! -d "$USB_REAR_DIR" ]; then
-    mkdir -p $v "$USB_REAR_DIR" >/dev/null || Error "Could not create USB ReaR dir [$USB_REAR_DIR] !"
-fi
-
 # We generate a single syslinux.cfg for the current system
 Log "Creating $USB_PREFIX/syslinux.cfg"
 # FIXME: # type -a time
@@ -395,7 +390,7 @@ EOF
 
     # Use chain booting for booting disk, if chain.c32 is available
     if syslinux_has "chain.c32" ; then
-        # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menue is currently shown)
+        # Boot from boothd0 (which is usually the same USB disk where this syslinux boot menu is currently shown)
         # only as boot default when that was explicitly specified by the user (results usually a boot loop):
         if test "boothd0" = "$USB_BIOS_BOOT_DEFAULT" ; then
             syslinux_write <<EOF

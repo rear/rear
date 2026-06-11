@@ -6,9 +6,4 @@ cat - <<EOF >> "$ROOTFS_DIR/etc/rear/rescue.conf"
 # initialize our /etc/rear/rescue.conf file sourced by the rear command in recover mode
 # also the configuration is sourced by system-setup script during booting our recovery image
 
-SHARE_DIR="/usr/share/rear"
-CONFIG_DIR="/etc/rear"
-VAR_DIR="/var/lib/rear"
-LOG_DIR="/var/log/rear"
-
 EOF

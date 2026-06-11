@@ -133,6 +133,30 @@ function WORKFLOW_opaladmin() {
     : ${OPALADMIN_IMAGE_FILE:="$(opal_local_pba_image_file)"}
     [[ -n "$OPALADMIN_IMAGE_FILE" ]] && opal_check_pba_image "$OPALADMIN_IMAGE_FILE"
 
+    if ! is_true "$EXPOSE_SECRETS" ; then
+        # Certain 'opaladmin' actions could leak out secrets.
+        # At least the TCG Opal password could leak out (and will leak out in debugscript mode)
+        # into the ReaR log file, see https://github.com/rear/rear/issues/3486
+        # so get explicit user confirmation that the user "knows what he does"
+        # via a true OPAL_EXPOSE_SECRETS environment variable for OPAL specific secrets
+        # or in general via the '--expose-secrets' option for any secrets everywhere
+        # or inform the user that secrets could leak out
+        # see https://github.com/rear/rear/issues/3486#issuecomment-3073334020
+        if ! is_true "$OPAL_EXPOSE_SECRETS" ; then
+            if is_true "$DEBUGSCRIPTS" ; then
+                LogPrintError "Workflow '$WORKFLOW' will leak out secrets:"
+                LogPrintError "  E.g. the TCG Opal password leaks out into the ReaR log file."
+            else
+                LogPrintError "Workflow '$WORKFLOW' could leak out secrets:"
+                LogPrintError "  E.g. the TCG Opal password could leak out into the ReaR log file."
+            fi
+            LogPrintError "  In particular in debugscript mode ('-D') secrets will leak out."
+            LogPrintError "  You may export the environment variable OPAL_EXPOSE_SECRETS='yes'"
+            LogPrintError "  to confirm that you know how to keep your system secure on your own."
+            Error "Won't run '$WORKFLOW' (OPAL_EXPOSE_SECRETS not true or no '--expose-secrets')"
+        fi
+    fi
+
     eval "opaladmin_${action}_action"  # do not pass arguments here due to eval
 
     return 0

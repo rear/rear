@@ -1,0 +1,30 @@
+
+# Documentation for the Portable Recovery Mode
+
+## Summary
+
+ReaR supports a portable mode where `rear mkrescue` or `rear mkbackup` will not create a bootable rescue media but instead only a "portable" rescue archive. This archive contains a full copy of ReaR as it was installed on the source system, together with the ReaR configuration and the recovery information. It doesn't contain any other software or binaries.
+
+The purpose of the portable mode is to solve special scenarios where the ReaR rescue media either doesn't work or can't be created. It can be also used to save storage for covering a large amount of identical systems with a shared generic rescue media.
+
+The portable mode is therefore not a replacement for the ReaR rescue media, but a workaround for special cases. We developed and tested the portable mode with the [System Rescue CD](https://www.system-rescue.org/) and the Ubuntu Desktop Live CD, where it worked well.
+
+## How to use the Portable Recovery Mode
+
+To create a portable rescue archive, install ReaR and then run rear mkrescue or rear mkbackup with the OUTPUT=PORTABLE option. This will create a portable rescue archive in the `output/` directory. The archive is a tarball with the name `rear-<hostname>-portable.tar.gz`. It will be also copied to the `OUTPUT_URL` if it is set.
+
+To recover a system from a portable rescue archive (the only workflow that we tested), you need to 
+
+1. extract the archive on your rescue system into a directory
+
+2. set the machine hostname to the target machine, e.g. via `hostnamectl hostname <hostname>` or `hostname <hostname>`
+
+3. change into the directory and run `./usr/sbin/rear -p recover`
+
+The recovery process will then use the extracted ReaR installation to recover the system.
+
+## Caveats
+
+With the `-p` option you disable a lot of sanity checks in ReaR, which can be used to run any workflow, even workflows that harm your system (e.g. recover on the source system) or that don't work as intended or expected. Please submit PRs for use cases where you think that the portable mode is useful and that don't work as you would like them to work.
+
+In portable mode ReaR assumes that all required software is available in the rescue system. There are no further checks for missing software. If you miss some software, the recovery process will fail. ReaR is not tested for this scenario as normally the rescue media is guaranteed to contain everything needed for a successful recovery.

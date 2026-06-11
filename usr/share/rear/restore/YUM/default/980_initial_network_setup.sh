@@ -33,7 +33,7 @@ for network_setup_command in "${YUM_NETWORK_SETUP_COMMANDS[@]}" ; do
     case "$network_setup_command" in
         (YAST)
             # YaST network card setup in the target system (without having ncurses stuff in the output via TERM=dumb)
-            # plus automated respose to all requested user input via yes '' (i.e. only plain [Enter] as user input)
+            # plus automated response to all requested user input via yes '' (i.e. only plain [Enter] as user input)
             # and ignore non zero exit codes from YaST to avoid that "rear recover" aborts here:
             LogPrint "Initial network setup in the target system via 'yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp'"
             chroot $TARGET_FS_ROOT /bin/bash --login -c "yes '' | TERM=dumb yast2 --ncurses lan add name=eth0 ethdevice=eth0 bootproto=dhcp" || true

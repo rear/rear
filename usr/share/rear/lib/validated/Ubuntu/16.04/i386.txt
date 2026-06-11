@@ -1,7 +1,0 @@
-Version:     Relax-and-Recover 2.1 / 2017-06-07
-Validation:  Ubuntu/16.04/i386
-Submitted:   Phil Dobbin <phildobbin@gmail.com> HorseLatitudes UK
-Date:        2017-08-20
-Features:    LVM
-Comment:     Works out-of-the-box flawless with all features
-

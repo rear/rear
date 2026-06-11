@@ -1,21 +1,20 @@
 # In some dists (e.g. Ubuntu) bash is not the default shell. Statements like
 #   cp -a etc/rear/{mappings,templates} ...
-# assumes bash. So its better to set SHELL
-SHELL = /bin/bash
+# assumes bash. So its better to set SHELL to bash explicitly, using the one from PATH
+# to also work on MacOS with Homebrew-installed bash
+SHELL = bash
 
 # disable parallel execution of make
 .NOTPARALLEL:
 
 DESTDIR =
 OFFICIAL =
-DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.adoc  tests  tools  usr
+DIST_CONTENT = COPYING  doc  etc  MAINTAINERS  Makefile  packaging  README.md  tests  tools  usr
 
 ### Get version from Relax-and-Recover itself
 rearbin = usr/sbin/rear
 name = rear
 version := $(shell awk 'BEGIN { FS="=" } /^readonly VERSION=/ { print $$2}' $(rearbin))
-
-BUILD_DIR = /var/tmp/build-$(name)-$(version)
 
 ifneq ($(OFFICIAL),)
 	distversion = $(version)
@@ -62,6 +61,8 @@ else
 endif
 
 
+BUILD_DIR = /var/tmp/build-$(name)-$(distversion)
+
 prefix = /usr
 sysconfdir = /etc
 sbindir = $(prefix)/sbin
@@ -85,7 +86,8 @@ else
 RUNASUSER :=
 endif
 
-tarparams = --exclude-from=.gitignore --exclude=.gitignore --exclude=".??*" $(DIST_CONTENT)
+# .gitignore is optional, avoid tar errors if it does not exist, e.g. in a dist archive
+tarparams = $(shell test -f .gitignore && echo --exclude-from=.gitignore --exclude=.gitignore) --exclude=".??*" $(DIST_CONTENT)
 
 DIST_FILES := $(shell tar -cv -f /dev/null $(tarparams))
 
@@ -97,6 +99,7 @@ all:
 help:
 	@echo -e "Relax-and-Recover make targets:\n\
 \n\
+  version         - Show ReaR version used\n\
   validate        - Check source code\n\
   install         - Install Relax-and-Recover (may replace files)\n\
   uninstall       - Uninstall Relax-and-Recover (may remove files)\n\
@@ -117,13 +120,19 @@ Relax-and-Recover make variables (optional):\n\
   \n\
 "
 
+version:
+	@echo $(distversion)
+
 dump:
 # found at https://www.cmcrossroads.com/article/dumping-every-makefile-variable
 	$(foreach V, $(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(info $V=$($V) defined as >$(value $V)<)))
 
 clean:
-	rm -Rf dist $(BUILD_DIR) etc/os.conf etc/site.conf var build-stamp
+	rm -Rf dist etc/os.conf etc/site.conf var build-stamp
 	$(MAKE) -C doc clean
+
+clean-all: clean
+	rm -Rf $(BUILD_DIR)
 
 ### You can call 'make validate' directly from your .git/hooks/pre-commit script
 validate:
@@ -165,10 +174,10 @@ install-config:
 install-bin:
 	@echo -e "\033[1m== Installing binary ==\033[0;0m"
 	install -Dp -m0755 $(rearbin) $(DESTDIR)$(sbindir)/rear
-	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$(sysconfdir)/rear",' \
-		-e 's,^SHARE_DIR=.*,SHARE_DIR="$(datadir)/rear",' \
-		-e 's,^VAR_DIR=.*,VAR_DIR="$(localstatedir)/lib/rear",' \
-		-e 's,^LOG_DIR=.*,LOG_DIR="$(localstatedir)/log/rear",' \
+	sed -i -e 's,^CONFIG_DIR=.*,CONFIG_DIR="$$REAR_DIR_PREFIX$(sysconfdir)/rear",' \
+		-e 's,^SHARE_DIR=.*,SHARE_DIR="$$REAR_DIR_PREFIX$(datadir)/rear",' \
+		-e 's,^VAR_DIR=.*,VAR_DIR="$$REAR_DIR_PREFIX$(localstatedir)/lib/rear",' \
+		-e 's,^LOG_DIR=.*,LOG_DIR="$$REAR_DIR_PREFIX$(localstatedir)/log/rear",' \
 		$(DESTDIR)$(sbindir)/rear
 
 install-data:
@@ -237,6 +246,10 @@ dist-install: dist/$(name)-$(distversion).tar.gz
 package-clean:
 	rm -f dist/*.rpm dist/*.deb dist/*.pkg.*
 
+# TODO: It might be better to set BUILD_DIR=/tmp/rear-<packagetype>-$(distversion) to separate
+# outer build dir from the package build dir, thereby enabling the make clean to also delete
+# the BUILD_DIR correctly.
+
 ifneq ($(shell type -p pacman),)
 package: package-clean pacman
 else ifneq ($(shell type -p dpkg),)
@@ -259,7 +272,7 @@ srpm: dist/$(name)-$(distversion).tar.gz
 	tar -xz -C $(BUILD_DIR)/ -f dist/$(name)-$(distversion).tar.gz $(dir $(effectivespecfile))
 	cp $(BUILD_DIR)/$(dir $(effectivespecfile))/* $(BUILD_DIR)/
 	if test "$(savedspecfile)"; then cp $(BUILD_DIR)/$(notdir $(effectivespecfile)) "$(savedspecfile)"; fi
-	rpmbuild -bs --clean --nodeps \
+	rpmbuild -bs --nodeps \
 		--define="_sourcedir $(BUILD_DIR)/" \
 		--define="_srcrpmdir $(CURDIR)/dist" \
 		$(rpmdefines) \

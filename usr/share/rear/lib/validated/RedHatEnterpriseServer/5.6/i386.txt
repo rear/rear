@@ -1,6 +1,0 @@
-Relax-and-Recover Version 1.10.00 /
-Validation:     RedHatEnterpriseServer/5.6/i386
-Submitted:      Michael Orlov ACMS, Canada
-Date:           2011-03-30
-Features:       LVM,NETFS,PXE
-Comment:        ext4 support needed, restore working only with -S flag.

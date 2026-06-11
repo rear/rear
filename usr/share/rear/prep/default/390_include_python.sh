@@ -27,7 +27,7 @@ python_dist_dirs=(
 if is_false "$PYTHON_MINIMAL" ; then
     LogPrint "Using $PYTHON_INTERPRETER as Python interpreter and including all site/dist packages"
     COPY_AS_IS+=( "${python_dist_dirs[@]}")
-    # Determine the binaries of all installed Python modules by quering pip
+    # Determine the binaries of all installed Python modules by querying pip
     # This is a bit hacky but the only way I found to get the binaries of all installed Python modules
     # The output of pip show --files is a YAML file that contains a list of files for each module
     # We filter out all files that are not in a "/bin" directory and then resolve the path to the binary

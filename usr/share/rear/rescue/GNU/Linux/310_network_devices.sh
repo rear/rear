@@ -23,7 +23,7 @@ prepare_network_devices_script=$ROOTFS_DIR/etc/scripts/system-setup.d/50-prepare
 # Example:  on s390 (zLinux) network devices must be removed from the ignore list and configured
 # cf. https://github.com/rear/rear/pull/2142
 # TODO: add case statement for different os vendors
-if [[ "$ARCH" == "Linux-s390" && "$OS_MASTER_VENDOR" != "SUSE_LINUX" ]] ; then
+if [[ "$ARCH" == "Linux-s390" ]] ; then
 cat >$prepare_network_devices_script << 'EOF'
 
 echo "run cio_ignore -R"
@@ -963,11 +963,14 @@ rc=
 # see https://github.com/rear/rear/issues/2902
 for network_interface in $( ls /sys/class/net/ ) ; do
     if ! is_linked_to_physical $network_interface ; then
-        LogPrint "Skipping '$network_interface': not bound to any physical interface."
+        LogPrint "Skipping network interface '$network_interface': not bound to any physical interface."
         continue
     fi
-    is_interface_up $network_interface || continue
-
+    if ! is_interface_up $network_interface ; then
+        DebugPrint "Skipping network interface '$network_interface': link state not 'up'"
+        continue
+    fi
+    
     DebugPrint "Handling network interface '$network_interface'"
 
     handle_interface $network_interface >$tmpfile

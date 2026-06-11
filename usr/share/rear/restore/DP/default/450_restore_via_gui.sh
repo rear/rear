@@ -1,5 +1,5 @@
 # 450_restore_via_gui.sh
-# If the automatic restore failes give the user the option to execute a restore via GUI
+# If the automatic restore fails give the user the option to execute a restore via GUI
 
 [ ! -f $TMP_DIR/DP_GUI_RESTORE ] && return   # restore was OK - skip this option
 

@@ -58,7 +58,7 @@ if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
         cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
         create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
         # We need to set the GRUB environment variable 'root' to a reasonable default/fallback value
-        # because GRUB's default 'root' (or GRUB's 'root' identifcation heuristics) would point to the ramdisk
+        # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk
         # but neither kernel nor initrd are located on the ramdisk but on the device where the recovery system was booted from.
         # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
         # Set GRUB2_SET_ROOT_COMMAND if not specified by the user:

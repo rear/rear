@@ -1,7 +1,7 @@
 # Test if ORIG_LAYOUT and TEMP_LAYOUT are the same.
 
 # Usually ORIG_LAYOUT is of the form var/lib/rear/layout/disklayout.conf
-# and TEMP_LAYOUT is of the form /tmp/rear.XXXX/tmp/checklayout.conf
+# and TEMP_LAYOUT is of the form /var/tmp/rear.XXXX/tmp/checklayout.conf
 # see lib/checklayout-workflow.sh
 
 # In case of btrfs the ordering of the btrfsmountedsubvol entries is random

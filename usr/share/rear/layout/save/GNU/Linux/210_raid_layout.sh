@@ -149,6 +149,7 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     fi
 
     container=$( grep "Container" $mdadm_details | tr -d " " | cut -d ":" -f "2" | cut -d "," -f "1")
+    container_size=0 # initialize with 0 to avoid "-gt: unary operator expected" errors when no container used #3425
     line=( $( grep "Used Dev Size :" $mdadm_details ) )
     used_dev_size=${line[4]}
     line=( $( grep "Array Size :" $mdadm_details ) )
@@ -212,7 +213,7 @@ mdadm --detail --scan --config=partitions | while read array raiddevice junk ; d
     # so for the above examples the layout string becomes:
     # near=2
     # far=3
-    # offest=4
+    # offset=4
     # near=2,far=3
     # near=2,far=3,offset=4
     layout="${line[2]}${line[3]:-}${line[4]:-}"

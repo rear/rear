@@ -11,6 +11,7 @@ ha:0:wait:/etc/scripts/do-shutdown halt
 re:6:wait:/etc/scripts/do-shutdown reboot
 
 sy:23:respawn:/etc/scripts/run-syslog
+l3:3:wait:/etc/scripts/run-automatic-rear
 
 t1:3:respawn:/sbin/mingetty --noclear tty1
 t2:3:respawn:/sbin/mingetty --noclear tty2

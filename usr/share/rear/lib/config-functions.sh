@@ -20,13 +20,15 @@ function SetOSVendorAndVersion () {
         # Try to find all the required information from that file
         if [[ -f /etc/os-release ]] ; then
             grep -q -i 'fedora' /etc/os-release && OS_VENDOR=Fedora
-            grep -q -i -E '(centos|redhat|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
+            grep -q -i -E '(centos|rhel|scientific|oracle)' /etc/os-release && OS_VENDOR=RedHatEnterpriseServer
             grep -q -i 'suse' /etc/os-release && OS_VENDOR=SUSE_LINUX
             grep -q -i 'debian' /etc/os-release && OS_VENDOR=Debian
             grep -q -i -E '(ubuntu|linuxmint)' /etc/os-release && OS_VENDOR=Ubuntu
-            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch
-            local version_id=$(grep "^VERSION_ID=" /etc/os-release | cut -d\" -f2 ) # 7
-            contains_visible_char "$version_id" && OS_VERSION="$version_id"
+            grep -q -i 'arch' /etc/os-release && OS_VENDOR=Arch_Linux
+
+            local VERSION_ID
+            eval "$(grep "^VERSION_ID=" /etc/os-release)"
+            contains_visible_char "$VERSION_ID" && OS_VERSION="$VERSION_ID"
         fi
 
         # For non-systemd distro's try the /etc/system-release file
@@ -42,7 +44,7 @@ function SetOSVendorAndVersion () {
             fi
         fi
 
-        # For older distro's we try to interprete the /etc/SuSE-release or /etc/redhat-release file
+        # For older distro's we try to interpret the /etc/SuSE-release or /etc/redhat-release file
         # The /etc/issue file cannot be trusted as it can contain customer related info instead of release info
         if test "$OS_VENDOR" = generic ; then
             if [[ -f /etc/SuSE-release ]] ; then
@@ -108,51 +110,37 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     case "$( echo $OS_VENDOR_VERSION | tr '[A-Z]' '[a-z]' )" in
         (*oracle*|*centos*|*fedora*|*redhat*|*scientific*)
             OS_MASTER_VENDOR="Fedora"
-            case "$OS_VERSION" in
-                (5.*)
-                    # map all RHEL 5.x and clones to Fedora/5
-                    # this is safe because FedoraCore 5 never existed
-                    OS_MASTER_VERSION="5"
-                    ;;
-                (6.*)
-                    # map all RHEL 6.x and clones to Fedora/6
-                    OS_MASTER_VERSION="6"
-                    ;;
-                (7.*)
-                    # map all RHEL 7.x and clones to Fedora/7
-                    OS_MASTER_VERSION="7"
-                    ;;
-                (*)
-                OS_MASTER_VERSION="$OS_VERSION"
-                ;;
-            esac
             ;;
         (*ubuntu*|*linuxmint*)
             OS_MASTER_VENDOR="Debian"
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
         (*archlinux*)
-            OS_MASTER_VENDOR="Arch"
-            OS_MASTER_VERSION="$OS_VERSION"
+            OS_MASTER_VENDOR="Arch_Linux"
             ;;
         (*suse*)
             # When OS_VENDOR_VERSION contains 'SUSE', set OS_MASTER_VENDOR to 'SUSE'
             # but do not set OS_MASTER_VENDOR same as OS_VENDOR (i.e. 'SUSE_LINUX')
             # (cf. above: all SUSE distributions ... must be unified to 'SUSE_LINUX')
             # because then scripts in a .../SUSE_LINUX/... sub-directoriy and conf/SUSE_LINUX.conf
-            # get sourced twice by the (buggy) SourceStage function in lib/framework-functions.sh
+            # get sourced twice by the (buggy) SourceStage function in lib/_framework-setup-and-functions.sh
             OS_MASTER_VENDOR="SUSE"
-            # If OS_VERSION is of the form 12.34.56 OS_MASTER_VERSION is only the first part '12'.
-            # Because openSUSE Tumbleweed has rolling releases OS_VERSION is a date of the form YYYYMMDD
-            # so that there is no real OS_MASTER_VERSION which is then the the same as OS_VERSION:
-            OS_MASTER_VERSION="${OS_VERSION%%.*}"
             ;;
         (*)
             # set fallback values to avoid error exit for 'set -eu' because of unbound variables:
             OS_MASTER_VENDOR=""
-            OS_MASTER_VERSION="$OS_VERSION"
             ;;
     esac
+
+    # Set master version to the MAJOR release version. ReaR assumes that OS_MASTER_VERSION
+    # is just the major release number extracted from OS_VERSION and not the version of the derived OS.
+    # If OS_VERSION is of the form 12.34.56, OS_MASTER_VERSION is only the first part '12'.
+    #
+    # Because openSUSE Tumbleweed has rolling releases, OS_VERSION is a date of the form YYYYMMDD.
+    # Therefore, there is no real OS_MASTER_VERSION and this variable will be set to the same value
+    # as OS_VERSION.
+    #
+    # TODO: Rename the variable to be less confusing, e.g. to OS_VERSION_MAJOR.
+    OS_MASTER_VERSION="${OS_VERSION%%.*}"
 
     # combined stuff for OS_MASTER_*
     if [ "$OS_MASTER_VENDOR" ] ; then

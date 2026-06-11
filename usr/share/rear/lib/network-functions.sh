@@ -104,7 +104,7 @@ function get_device_by_hwaddr () {
     ip -o link | grep -v 'link/ieee802.11' | grep -i "$hwaddr" | awk -F ": " '{print $2}'
 }
 
-# Retun 0 if args is a valid IPV4 ip_address
+# Return 0 if args is a valid IPV4 ip_address
 function is_ip () {
     local test_ip=$1
     [ -z "$test_ip" ] && BugError "function is_ip() called without argument."
@@ -113,7 +113,7 @@ function is_ip () {
     local ip_pattern="^(([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))\.){3}([0-9]{1,2}|1[0-9]{2}|2([0-4][0-9]|5[0-5]))$"
 
     # $ip_pattern MUST NOT be quoted. Using a variable to store regex is used here to assure
-    # compatiblity with pre-3.2 bash version (SLES10).
+    # compatibility with pre-3.2 bash version (SLES10).
     if [[ "$test_ip" =~ $ip_pattern ]] ; then
         return 0
     else
@@ -128,7 +128,7 @@ function get_ip_from_fqdn () {
 
     # Get a list of potential IPs that resolve $fqdn
     ip=( $(getent ahostsv4 $fqdn) ) || Error "Could not resolve $fqdn to IP"
-    # Check if $ip is a valide IP
+    # Check if $ip is a valid IP
     is_ip "$ip" || Error "Got '$ip' from resolving $fqdn which is not an IP"
     Log "$fqdn resolved to $ip"
     echo "$ip"

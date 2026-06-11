@@ -71,7 +71,7 @@ esac
 
 ParseDevice () {
 ###########
-# input $1 is a line containing as 1st argument a file system devive, eg.
+# input $1 is a line containing as 1st argument a file system device, eg.
 # /dev/hda1, /dev/sdb1, /dev/md0, /dev/disk/c1t0d0, or even devfs alike
 # /dev/ide/host0/bus0/target0/lun0/part2
 # Output: Dev: hda1, sdb1, md0, md/0, disk/c1t0d0, vg_sd/lvol1
@@ -170,7 +170,7 @@ FixSfdiskPartitionFile () {
 # makes sfdisk fail at restore time (we will remove those lines)
 # parameter: $1 is the sfdisk output file to fix
 
-egrep -vi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
+grep -Evi '(^warning|^dos)'  "$1" > "${TMP_DIR}/partitions.tmp"
 
 # If LANG is not set to C (it should be) and sfdisk is producing locale specific comments
 # for example in French something like "N<degree sign (U+00B0)> table de partition de "

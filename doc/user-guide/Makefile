@@ -7,19 +7,17 @@ prefix = /usr
 datadir = $(prefix)/share
 mandir = $(datadir)/man
 
-adoctargets = relax-and-recover-user-guide.adoc
-htmltargets = $(patsubst %.adoc, %.html, $(adoctargets))
-
-asciidoc := $(shell if type -p asciidoctor >/dev/null; then echo asciidoctor; else echo asciidoc; fi)
+# ronn is a tool to generate man-pages directly from MarkDown files
+ronn := $(shell if type -p ronn >/dev/null; then echo ronn; fi)
+htmltarget = relax-and-recover-user-guide.html
 
 all: docs
 
 dist: docs
 
-docs: $(htmltargets)
+docs:
+	@echo "Prepare ReaR User Guide"
+	cat *.md | ronn --html > $(htmltarget)
 
 clean:
-	rm -f *.html *.svg *.xml
-
-%.html: %.adoc
-	$(asciidoc) -a footer-style=none $<
+	rm -f *.html

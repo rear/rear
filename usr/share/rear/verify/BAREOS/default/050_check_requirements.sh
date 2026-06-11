@@ -1,34 +1,19 @@
 #
-# Check that bareos is installed and configuration files exist
+# Check Bareos configuration
 
-# First determine whether we need to restore using bconsole or bextract.
+LogPrint "Bareos: checking requirements ..."
 
-if [ "$BEXTRACT_DEVICE" -o "$BEXTRACT_VOLUME" ]; then
-
-   ### Bareos support using bextract
-   if [ -z "$BEXTRACT_VOLUME" ]; then
-      BEXTRACT_VOLUME=*
-   fi
-
-   [ -x /usr/sbin/bextract ]
-   StopIfError "Bareos executable (bextract) missing or not executable"
-
-   bareos-sd -t 
-   StopIfError "Bareos-sd configuration invalid"
-
-else
-
-   ### Bareos support using bconsole
-   [ -x /usr/sbin/bareos-fd ]
-   StopIfError "Bareos executable (bareos-fd) missing or not executable"
-
-   bareos-fd -t
-   StopIfError "Bareos-fd configuration invalid"
-
-   [ -x /usr/sbin/bconsole ]
-   StopIfError "Bareos executable (bconsole) missing or not executable"
-
-   bconsole -t
-   StopIfError "Bareos bconsole configuration invalid"
-
+if ! bareos-fd -t; then
+    Error "bareos-fd: configuration invalid"
 fi
+
+if ! systemctl start bareos-fd.service; then
+    Error "Failed to start bareos-fd.service"
+fi
+
+if ! bconsole -t; then
+    Error "Bareos bconsole configuration invalid"
+fi
+
+# status is good or it errors out
+bareos_ensure_client_is_available "$BAREOS_CLIENT"

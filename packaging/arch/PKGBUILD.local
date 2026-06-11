@@ -16,7 +16,7 @@ md5sums=(MD5SUM)
 
 package() {
   cd $srcdir/rear-*/
-  make DESTDIR="${pkgdir}/" install
+  make DESTDIR="${pkgdir}/" install OFFICIAL=1
   mv ${pkgdir}/usr/sbin ${pkgdir}/usr/bin
 }
 

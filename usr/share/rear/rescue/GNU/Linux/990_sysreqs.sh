@@ -91,7 +91,7 @@ echo
 # Network information
 #
 echo "Network Information:"
-echo "  IP adresses:"
+echo "  IP addresses:"
 # FIXME: it seems that can go wrong for IPv6 addresses
 # perhaps <<ip -4 addr show>> is meant or <<grep 'inet'>> to exclude inet6
 # or when IPv6 should be included it should be <<sed ... -e "s/inet6//" -e "s/inet//" >>

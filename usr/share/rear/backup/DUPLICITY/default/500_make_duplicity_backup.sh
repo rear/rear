@@ -1,17 +1,21 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
-if [ "$BACKUP_PROG" = "duply" ] && has_binary duply ; then
-    # we found the duply program; check if a profile was defined
-    [[ -z "$DUPLY_PROFILE" ]] && return
+if [ "$BACKUP_PROG" = "duply" ] ; then
 
-    # a real profile was detected - check if we can talk to the remote site
+    has_binary duply || Error "No 'duply' binary (BACKUP_PROG=duply)"
+
+    # error out when DUPLY_PROFILE is empty or does not exist
+    # cf. the same test in prep/DUPLICITY/default/200_find_duply_profile.sh
+    test -s "$DUPLY_PROFILE" || Error "DUPLY_PROFILE '$DUPLY_PROFILE' empty or does not exist (BACKUP_PROG=duply)"
+
+    # do the backup
     LogPrint "Starting full backup with duply/duplicity"
-    duply "$DUPLY_PROFILE" backup >&2   # output is going to logfile
-    StopIfError "Duply profile $DUPLY_PROFILE backup returned errors - see $RUNTIME_LOGFILE"
-
-    LogPrint "The last full backup taken with duply/duplicity was:"
-    LogPrint "$( tail -50 $RUNTIME_LOGFILE | grep 'Last full backup date:' )"
+    # command stdout and stderr output appears in the ReaR logfile only in debug modes,
+    # cf. https://github.com/rear/rear/wiki/Coding-Style#what-to-do-with-stdin-stdout-and-stderr
+    DebugPrint "Calling 'duply $DUPLY_PROFILE backup'"
+    Debug "'duply $DUPLY_PROFILE backup' output:"
+    duply "$DUPLY_PROFILE" backup || Error "'duply $DUPLY_PROFILE backup' returned non-zero exit code, check $RUNTIME_LOGFILE"
 fi
 
 
@@ -35,10 +39,13 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         FULL_BACKUP="--full-if-older-than $BACKUP_DUPLICITY_FULL_IF_OLDER_THAN"
     fi
 
-    if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
-        GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
-    fi
-    PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
+    { test -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	    { GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+
+    { PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+
+    { test -n "$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	    { SIGN_PASSPHRASE="$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set -f # Temporarily Stop Evaluation of Patterns By the Shell
@@ -51,13 +58,14 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         EXCLUDES+=" --exclude $EXDIR"
     done
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
-        set +f # Reenable Evaluation of Patterns By the Shell
+        set +f # Re-enable Evaluation of Patterns By the Shell
     fi
 
     LogUserOutput "EXCLUDES = $EXCLUDES"
 
     # Setting the pass phrase to encrypt the backup files
     export PASSPHRASE
+    export SIGN_PASSPHRASE
 
     # check and create directory at backup-server
     # if the target-directory don't exist, duplicity will fail
@@ -95,18 +103,12 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     fi
 
     # do the backup
-    if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
-           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    else
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES \
-           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    fi
+    LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS <GPG_KEY> $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+    #env PASSPHRASE="PASSHRASE" $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
 
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
-        set +f # Reenable Evaluation of Patterns By the Shell
+        set +f # Re-enable Evaluation of Patterns By the Shell
     fi
 
     RC_DUP=$?
@@ -128,5 +130,6 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     "
         LogPrint "$LOGAUSZUG"
     fi
+    unset PASSPHRASE # unset the export setting of passphrase
 fi
 

@@ -117,37 +117,38 @@ fi
                     Log "Filesystem $fstype on $device mounted at $mountpoint is below Docker Root Dir $docker_root_dir, skipping."
                     continue
                 fi
-                # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
-                # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
-                # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
-                # rebuild automatically via kubernetes longhorn-engine pods.
-                # Issue where we discovered this behavior was #2365
-                # In normal situations you will find traces of longhorn in the log saying skipping non-block devices.
-                # For example an output of the 'df' command:
-                # /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792   82045336    4500292   77528660   6% /var/lib/kubelet/pods/7f47aa55-30e2-4e7b-8fec-ec9a1e761352/volumes/kubernetes.io~csi/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792/mount
-                # lsscsi shows it as:
-                # [34:0:0:0]   storage IET      Controller       0001  -
-                # [34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf
-                # ls -l /dev/sdf /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
-                # brw-rw---- 1 root disk 8, 80 Apr 17 12:02 /dev/sdf
-                # brw-rw---- 1 root root 8, 64 Apr 17 10:36 /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
-                # and parted says:
-                # parted /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 print
-                # Model: IET VIRTUAL-DISK (scsi)
-                # Disk /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792: 85.9GB
-                # Sector size (logical/physical): 512B/512B
-                # Partition Table: loop
-                # Disk Flags:
-                # Number  Start  End     Size    File system  Flags
-                # 1      0.00B  85.9GB  85.9GB  ext4
-                # => as result (without the next if clausule) we would end up with an entry in the disklayout.conf file:
-                # fs /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 /var/lib/kubelet/pods/61ed399a-d51b-40b8-8fe8-a78e84a1dd0b/volumes/kubernetes.io~csi/pvc-c65df331-f1c5-466a-9731-b2aa5e6da714/mount ext4 uuid=4fafdd40-a9ae-4b62-8bfb-f29036dbe3b9 label= blocksize=4096 reserved_blocks=0% max_mounts=-1 check_interval=0d bytes_per_inode=16384 default_mount_options=user_xattr,acl options=rw,relatime,data=ordered
-                if echo "$device" | grep -q "^/dev/longhorn/pvc-" ; then
-                    Log "Longhorn Engine replica $device, skipping."
-                    continue
-                fi
             fi
         fi
+        # In case Longhorn is rebuilding a replica device it will show up as a pseudo-device and when that is the
+        # case then you would find traces of it in the /var/lib/rear/layout/disklayout.conf file, which would
+        # break the recovery as Longhorn Engine replica's are under control of Rancher Longhorn software and these are
+        # rebuild automatically via kubernetes longhorn-engine pods.
+        # Issue where we discovered this behavior was #2365
+        # In normal situations you will find traces of longhorn in the log saying skipping non-block devices.
+        # For example an output of the 'df' command:
+        # /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792   82045336    4500292   77528660   6% /var/lib/kubelet/pods/7f47aa55-30e2-4e7b-8fec-ec9a1e761352/volumes/kubernetes.io~csi/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792/mount
+        # lsscsi shows it as:
+        # [34:0:0:0]   storage IET      Controller       0001  -
+        # [34:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdf
+        # ls -l /dev/sdf /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+        # brw-rw---- 1 root disk 8, 80 Apr 17 12:02 /dev/sdf
+        # brw-rw---- 1 root root 8, 64 Apr 17 10:36 /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792
+        # and parted says:
+        # parted /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 print
+        # Model: IET VIRTUAL-DISK (scsi)
+        # Disk /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792: 85.9GB
+        # Sector size (logical/physical): 512B/512B
+        # Partition Table: loop
+        # Disk Flags:
+        # Number  Start  End     Size    File system  Flags
+        # 1      0.00B  85.9GB  85.9GB  ext4
+        # => as result (without the next if clausule) we would end up with an entry in the disklayout.conf file:
+        # fs /dev/longhorn/pvc-ed09c0f2-c086-41c8-a38a-76ee8c289792 /var/lib/kubelet/pods/61ed399a-d51b-40b8-8fe8-a78e84a1dd0b/volumes/kubernetes.io~csi/pvc-c65df331-f1c5-466a-9731-b2aa5e6da714/mount ext4 uuid=4fafdd40-a9ae-4b62-8bfb-f29036dbe3b9 label= blocksize=4096 reserved_blocks=0% max_mounts=-1 check_interval=0d bytes_per_inode=16384 default_mount_options=user_xattr,acl options=rw,relatime,data=ordered
+        if echo "$device" | grep -q "^/dev/longhorn/pvc-" ; then
+            Log "Longhorn Engine replica $device, skipping."
+            continue
+        fi
+
         # Replace a symbolic link /dev/disk/by-uuid/a1b2c3 -> ../../sdXn
         # by the fully canonicalized target of the link e.g. /dev/sdXn
         if [[ $device == /dev/disk/by-uuid* ]]; then
@@ -231,6 +232,13 @@ fi
                 echo -n " uuid=$uuid label=$label"
                 ;;
             (btrfs)
+                # FIXME: Support for multi-disk BTRFS should be implemented sooner or later
+                # because it is the default layout for multi-disk Fedora Workstation installations.
+                # See: https://github.com/rear/rear/issues/2028
+                if grep -qE 'Total devices ([2-9]|[1-9][0-9]+) ' <(btrfs filesystem show "$mountpoint"); then
+                    Error "Mounpoint $mountpoint points to a BTRFS filesystem spanning multiple disk devices which is not yet supported. See: https://github.com/rear/rear/issues/2028"
+                fi
+
                 # Remember devices and mountpoints of the btrfs filesystems for the btrfs subvolume layout stuff below:
                 btrfs_devices_and_mountpoints+=" $device,$mountpoint"
                 uuid=$( btrfs filesystem show $device | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )
@@ -308,8 +316,8 @@ fi
             if test $( btrfs subvolume list -a $btrfs_mountpoint | wc -l ) -gt 0 ; then
                 subvolume_list=$( btrfs subvolume list -a $btrfs_mountpoint | tr -s '[:blank:]' ' ' | cut -d ' ' -f 2,9 | sed -e 's/<FS_TREE>\///' )
                 prefix=$( echo "btrfsnormalsubvol $btrfs_device $btrfs_mountpoint" | sed -e 's/\//\\\//g' )
-                # Get the IDs of the snapshot subvolumes as pattern for "egrep -v" e.g. like
-                #   egrep -v '^279 |^280 |^281 |^282 |^285 |^286 |^289 |^290 '
+                # Get the IDs of the snapshot subvolumes as pattern for "grep -Ev" e.g. like
+                #   grep -Ev '^279 |^280 |^281 |^282 |^285 |^286 |^289 |^290 '
                 # to exclude snapshot subvolume lines to get only the normal subvolumes.
                 # btrfs subvolume IDs are only unique for one same btrfs filesystem
                 # which is the case here because the btrfs_device_and_mountpoint is fixed herein
@@ -320,7 +328,7 @@ fi
                 # When there are no snapshot subvolumes $snapshot_subvolumes_pattern variable will be empty.
                 # This special case must be handled properly when setting up $subvolumes_exclude_pattern
                 # otherwise ReaR would not recreate the btrfs subvolumes during recovery
-                # because an empty pattern in the below egrep -v '|...' command would
+                # because an empty pattern in the below grep -Ev '|...' command would
                 # exclude all lines (see https://github.com/rear/rear/pull/1435):
                 if test -z "$snapshot_subvolumes_pattern" ; then
                     subvolumes_exclude_pattern=""
@@ -366,7 +374,7 @@ fi
                     # $snapshot_subvolumes_pattern variable will be empty. This special case
                     # must be handled properly when setting up $subvolumes_exclude_pattern
                     # otherwise ReaR would not recreate the btrfs subvolumes during recovery
-                    # because an empty pattern in the below egrep -v '|...' command would
+                    # because an empty pattern in the below grep -Ev '|...' command would
                     # exclude all lines (see https://github.com/rear/rear/pull/1435):
                     if test -z "$snapshot_subvolumes_pattern" ; then
                         subvolumes_exclude_pattern="$snapper_base_subvolume"
@@ -391,19 +399,19 @@ fi
                         echo "# Because any '@/.snapshots' subvolume would let 'snapper/installation-helper --step 1' fail"
                         echo "# such subvolumes are deactivated here to not let 'rear recover' fail:"
                         if test -z "$snapshot_subvolumes_pattern" ; then
-                            # With an empty snapshot_subvolumes_pattern egrep -v '' would exclude all lines:
+                            # With an empty snapshot_subvolumes_pattern grep -Ev '' would exclude all lines:
                             echo "$subvolume_list" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
                         else
-                            echo "$subvolume_list" | egrep -v "$snapshot_subvolumes_pattern" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
+                            echo "$subvolume_list" | grep -Ev "$snapshot_subvolumes_pattern" | grep "$snapper_base_subvolume" | sed -e "s/^/#$prefix /"
                         fi
                     fi
                 fi
                 # Output btrfs normal subvolumes:
                 if test -z "$subvolumes_exclude_pattern" ; then
-                    # With an empty subvolumes_exclude_pattern egrep -v '' would exclude all lines:
+                    # With an empty subvolumes_exclude_pattern grep -Ev '' would exclude all lines:
                     echo "$subvolume_list" | sed -e "s/^/$prefix /"
                 else
-                    echo "$subvolume_list" | egrep -v "$subvolumes_exclude_pattern" | sed -e "s/^/$prefix /"
+                    echo "$subvolume_list" | grep -Ev "$subvolumes_exclude_pattern" | sed -e "s/^/$prefix /"
                 fi
             fi
         done
@@ -434,6 +442,7 @@ fi
                     # Output header only once:
                     btrfsmountedsubvol_entry_exists="yes"
                     echo "# All mounted btrfs subvolumes (including mounted btrfs default subvolumes and mounted btrfs snapshot subvolumes)."
+                    echo "# Mounted btrfs snapshot subvolumes are autoexcluded."
                     if test "$findmnt_FSROOT_works" ; then
                         echo "# Determined by the findmnt command that shows the mounted btrfs_subvolume_path."
                         echo "# Format: btrfsmountedsubvol <device> <subvolume_mountpoint> <mount_options> <btrfs_subvolume_path>"
@@ -453,10 +462,10 @@ fi
                     # (using subvolid=... can fail because the subvolume ID can be different during system recovery).
                     # Because both "mount ... -o subvol=/path/to/subvolume" and "mount ... -o subvol=path/to/subvolume" work
                     # the subvolume path can be specified with or without leading '/'.
-                    # Aviod SC1087 by using ${subvolume_mountpoint} with curly brackets because
+                    # Avoid SC1087 by using ${subvolume_mountpoint} with curly brackets because
                     # we need the subsequent square brackets literally (subvolume_mountpoint is a string, not an array):
-                    btrfs_subvolume_path=$( egrep "[[:space:]]${subvolume_mountpoint}[[:space:]]+btrfs[[:space:]]" /etc/fstab \
-                                            | egrep -v '^[[:space:]]*#' \
+                    btrfs_subvolume_path=$( grep -E "[[:space:]]${subvolume_mountpoint}[[:space:]]+btrfs[[:space:]]" /etc/fstab \
+                                            | grep -E -v '^[[:space:]]*#' \
                                             | grep -o 'subvol=[^ ]*' | cut -s -d '=' -f 2 )
                 fi
                 # Remove leading '/' from btrfs_subvolume_path (except it is only '/') to have same syntax for all entries and
@@ -469,7 +478,10 @@ fi
                 # Finally, test whether the btrfs subvolume listed as mounted actually exists. A running docker
                 # daemon apparently can convince the system to list a non-existing btrfs volume as mounted.
                 # See https://github.com/rear/rear/issues/1496
-                if btrfs_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
+                if btrfs_snapshot_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
+                    # Exclude mounted snapshot subvolumes
+                    echo "#btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
+                elif btrfs_subvolume_exists "$subvolume_mountpoint" "$btrfs_subvolume_path"; then
                     echo "btrfsmountedsubvol $device $subvolume_mountpoint $mount_options $btrfs_subvolume_path"
                 else
                     LogPrintError "Ignoring non-existing btrfs subvolume listed as mounted: $subvolume_mountpoint"
@@ -500,7 +512,7 @@ fi
                     # see https://btrfs.wiki.kernel.org/index.php/Mount_options
                     test "/" != "$btrfs_subvolume_path" && btrfs_subvolume_path=${btrfs_subvolume_path#/}
                     if test -n "$btrfs_subvolume_path" ; then
-                        # Add the following binaries to the rescue image in order to be able to change required attrs uppon recovery.
+                        # Add the following binaries to the rescue image in order to be able to change required attrs upon recovery.
                         # See conf/examples/SLE12-SP2-btrfs-example.conf and https://github.com/rear/rear/issues/2927
                         REQUIRED_PROGS+=( chattr )
                         PROGS+=( lsattr )
@@ -565,6 +577,20 @@ echo $required_mkfs_tools | grep -q 'mkfs.reiserfs' && REQUIRED_PROGS+=( reiserf
 # btrfs is also required in the recovery system if 'mkfs.btrfs' is required
 # cf. what prepare/GNU/Linux/130_include_mount_subvolumes_code.sh writes to diskrestore.sh
 echo $required_mkfs_tools | grep -q 'mkfs.btrfs' && REQUIRED_PROGS+=( btrfs )
+
+# installation-helper is required in the recovery system if disklayout.conf contains
+# a 'btrfsdefaultsubvol' entry. See the btrfs_subvolumes_setup_SLES function in
+# layout/prepare/GNU/Linux/136_include_btrfs_subvolumes_SLES_code.sh for more
+# detail on when it is used.
+if grep -q '^btrfsdefaultsubvol ' "$DISKLAYOUT_FILE"; then
+    COPY_AS_IS+=(
+        /usr/lib/snapper/installation-helper
+        /etc/snapper/config-templates
+        # On SLE16,
+        # /etc/snapper/config-templates was moved to /usr/share/snapper/config-templates
+        /usr/share/snapper/config-templates
+    )
+fi
 
 Log "End saving filesystem layout"
 

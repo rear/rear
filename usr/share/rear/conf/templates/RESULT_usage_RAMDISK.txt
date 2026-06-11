@@ -22,7 +22,7 @@ you may use 'kexec':
            --initrd=initramfs-HOSTNAME.img
            --command-line='root=/dev/ram0 vga=normal'
 
-   You may have to add hardware dependant kernel command line
+   You may have to add hardware dependent kernel command line
    parameters if needed for your replacement hardware,
    cf. /proc/cmdline of your system.
 

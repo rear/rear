@@ -98,7 +98,7 @@ make_resolv_conf() {
             search="${SEARCH}"
         else
             if [ -n "${new_domain_search}" ]; then
-                # Remove instaces of \032 (#450042)
+                # Remove instances of \032 (#450042)
                 search="${new_domain_search//\\032/ }"
             elif [ -n "${new_domain_name}" ]; then
                 # Note that the DHCP 'Domain Name Option' is really just a domain

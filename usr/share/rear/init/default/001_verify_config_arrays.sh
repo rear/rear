@@ -26,7 +26,19 @@ for config in "$CONFIG_DIR"/{site,local,rescue}.conf "${CONFIG_APPEND_FILES_PATH
             grep -v '^[[:space:]]*#' "$config" | sed -n -E -e "/(^|\W+)$var\+?=/p"
             )
         for line in "${var_assignments[@]}"; do
-            [[ "$line" == *$var?(+)=\(* ]] || Error "Syntax error: Variable $var not assigned as Bash array in $config:$LF$line$LF"
+            # Avoid that the [[ expression ]] could leak secrets into the ReaR log file in debugscript mode
+            # for example when the assignment in $line assigns a secret value like
+            #   { ARRAY=( 'secret_value' ) ; } 2>>/dev/$SECRET_OUTPUT_DEV
+            # this assignment line would get shown in the ReaR log file via 'set -x' as
+            #   ++ [[ { ARRAY=( secret_value ) ; } 2>>/dev/$SECRET_OUTPUT_DEV == *ARRAY?(+)=\(* ]]
+            # see https://github.com/rear/rear/issues/3443
+            # so avoid that by using $line within { ... } 2>>/dev/$SECRET_OUTPUT_DEV
+            { [[ "$line" == *$var?(+)=\(* ]] && continue
+              LogSecret "$config : $var not assigned as array : $line"
+            } 2>>/dev/$SECRET_OUTPUT_DEV
+            # Do not have secrets in the Error message because Error() calls LogToSyslog()
+            # see https://github.com/rear/rear/pull/3449#issuecomment-2786306795
+            Error "Syntax error: Variable $var not assigned as Bash array in $config"
         done
     done
 done

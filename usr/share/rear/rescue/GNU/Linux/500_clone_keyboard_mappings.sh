@@ -58,7 +58,7 @@ fi
 # We prefer (whenever possible) to generically test "some real thing".
 # Accordingly we test known directories and use the first one that exist.
 # The last '' is there to keep keymaps_default_directory empty if none of the directories exist
-# which is (currently) not strictly requied by the code below but it is cleaner code here:
+# which is (currently) not strictly required by the code below but it is cleaner code here:
 local keymaps_default_directory=""
 for keymaps_default_directory in /usr/share/kbd/keymaps /usr/share/keymaps /lib/kbd/keymaps '' ; do
     test -d "$keymaps_default_directory" && break

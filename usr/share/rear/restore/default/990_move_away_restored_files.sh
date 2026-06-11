@@ -4,7 +4,7 @@
 # See https://github.com/rear/rear/issues/779
 #
 # After backup restore ReaR should move away files or directories
-# that should not have been restored - maily files or directories
+# that should not have been restored - mainly files or directories
 # that are created and maintained by system tools where
 # a restore from the backup results wrong/outdated
 # content that conflicts with the actual system.
@@ -55,7 +55,7 @@ for dummy in "once" ; do
         # that would be (partially) overwritten by the current copy
         # (such stuff is considered as outdated leftover e.g. from a previous recovery)
         # but keep already existing stuff in the move away directory
-        # that is not in the curent BACKUP_RESTORE_MOVE_AWAY_FILES list:
+        # that is not in the current BACKUP_RESTORE_MOVE_AWAY_FILES list:
         rm -rf $move_away_dir/$file_relative
         # Copy the file or directory:
         cp -a --parents $file_relative $move_away_dir || continue

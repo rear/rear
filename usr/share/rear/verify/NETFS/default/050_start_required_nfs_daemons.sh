@@ -31,7 +31,7 @@
 # and predefining all used variables
 # see https://github.com/rear/rear/wiki/Coding-Style
 #
-local backup_url_scheme=$( url_scheme "$BACKUP_URL" )
+local backup_url_scheme="$( url_scheme "$BACKUP_URL" )"
 # nothing to do when backup_url_scheme is not "nfs"
 test "nfs" = "$backup_url_scheme" || return 0
 # predefine all used variables
@@ -94,7 +94,7 @@ else
     fi
 fi
 
-# NFSv4 related daemons: rpc.idmapd is the bare mininum when dealing with nfsv4 and security 'sys'
+# NFSv4 related daemons: rpc.idmapd is the bare minimum when dealing with nfsv4 and security 'sys'
 if has_binary rpc.idmapd ; then
     # so far it is always a daemon process
     rpc.idmapd $RPCIDMAPDARGS && LogPrint "Started rpc.idmapd." || LogPrint "Starting rpc.idmapd failed."

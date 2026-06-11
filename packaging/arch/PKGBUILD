@@ -38,7 +38,7 @@ build() {
 
 package() {
   cd "$srcdir/$_gitname-build"
-  make DESTDIR="$pkgdir/" install
+  make DESTDIR="$pkgdir/" install OFFICIAL=1
 }
 
 # vim:set ts=2 sw=2 et:

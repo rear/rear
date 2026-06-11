@@ -103,7 +103,7 @@ while true ; do
         # and https://github.com/rear/rear/pull/2382#discussion_r418018571
         # that explains the reasoning behind the stdin stdout stderr redirection plus process substitution in
         #   COMMAND 0<&6 1>> >( tee -a $RUNTIME_LOGFILE 1>&7 ) 2>> >( tee -a $RUNTIME_LOGFILE 1>&8 )
-        # which is used to show 'barrel' messges on the user's terminal and also have them in the log file.
+        # which is used to show 'barrel' messages on the user's terminal and also have them in the log file.
         # It is also used to be on the save side if 'barrel' behaves interactively (regardless of '--yes').
         # Quoting "$BARREL_MAPPING_FILE" is needed because 'test -s' would falsely succeed with an empty argument:
         if test -s "$BARREL_MAPPING_FILE" ; then

@@ -1,6 +1,0 @@
-Version:     Relax-and-Recover 1.17.1 / Git
-Validation:  SUSE_LINUX/12/i386
-Submitted:   Werner Flamme <werner.flamme@ufz.de>, Helmholtz-Zentrum fuer Umweltforschung GmbH - UFZ, DE
-Date:        2015-07-21
-Features:    PXE, EXTERNAL
-Comment:     adapted local.conf, copied site.conf, then everything worked fine

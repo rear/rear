@@ -3,16 +3,16 @@
 [ -z "${KEEP_OLD_OUTPUT_COPY}" ] && return
 
 # do not do this for tapes and special attention for file:///path
-local scheme=$( url_scheme $OUTPUT_URL )
-local path=$( url_path $OUTPUT_URL )
+local scheme="$( url_scheme "$OUTPUT_URL" )"
+local path="$( url_path "$OUTPUT_URL" )"
 
 # if filesystem access to url is unsupported return silently (e.g. scheme tape)
 scheme_supports_filesystem $scheme || return 0
 
-local opath=$( output_path $scheme $path )
+local opath="$( output_path "$scheme" "$path" )"
 
 # an old lockfile from a previous run not cleaned up by output is possible
-[[ -f ${opath}/.lockfile ]] && rm -f ${opath}/.lockfile >&2
+[[ -f "${opath}/.lockfile" ]] && rm -f "${opath}/.lockfile" >&2
 
 if test -d "${opath}" ; then
     rm -rf $v "${opath}.old" || Error "Could not remove '${opath}.old'"

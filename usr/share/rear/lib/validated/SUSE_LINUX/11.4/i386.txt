@@ -1,3 +1,0 @@
-Submitted:      Schlomo Schapiro
-Date:           2011-02-20
-Features:       NETFS, ISO, LVM

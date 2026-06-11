@@ -67,10 +67,10 @@ WITH_INITRD_MODULES=$( printf '%s\n' $INITRD_MODULES | awk '{printf "--add-drive
 # kdump images as they are build by kdump
 # initramfs rescue images (>= Rhel 7), which need all modules and are created by new-kernel-pkg
 # initrd-plymouth.img (>= Rhel 7), which contains only files needed for graphical boot via plymouth
-for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | egrep -v '(kdump|rescue|plymouth)' ) ; do
+for INITRD_IMG in $( ls $TARGET_FS_ROOT/boot/initramfs-*.img $TARGET_FS_ROOT/boot/initrd-*.img | grep -Ev '(kdump|rescue|plymouth)' ) ; do
     # Do not use KERNEL_VERSION here because that is readonly in the rear main script:
     kernel_version=$( basename $( echo $INITRD_IMG ) | cut -f2- -d"-" | sed s/"\.img"// )
-    INITRD=$( echo $INITRD_IMG | egrep -o "/boot/.*" )
+    INITRD=$( echo $INITRD_IMG | grep -Eo "/boot/.*" )
     LogPrint "Running dracut..."
     # Run dracut directly in chroot without a login shell in between (see https://github.com/rear/rear/issues/862).
     # We need the dracut binary in the chroot environment i.e. the dracut binary in the recreated system.

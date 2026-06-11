@@ -7,7 +7,7 @@
 #
 # Remounting with async option is not needed when systemd is used because
 # when systemd is used remounting with sync option is skipped in a preceding
-# recover WORKFLOW via finalize/default/900_remount_sync.sh and to aviod
+# recover WORKFLOW via finalize/default/900_remount_sync.sh and to avoid
 # needless operations remounting with async option is also skipped here
 # cf. https://github.com/rear/rear/issues/1097
 

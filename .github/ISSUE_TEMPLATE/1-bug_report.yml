@@ -1,0 +1,96 @@
+name: 🐛 Bug report
+description: Create a report to help us improve ReaR
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue tracker is for bugs and issues found within ReaR code.
+        Please fill in as much of the following form as you're able.
+  - type: input
+    attributes:
+      label: ReaR version
+      description: Output of `/usr/sbin/rear -V`
+      placeholder: Run `/usr/sbin/rear -V`
+    validations:
+      required: true 
+  - type: textarea
+    attributes:
+      label: Describe the ReaR bug in detail
+      description: |
+        Describe the ReaR bug you encountered as precis as possible.
+        We prefer with output from running ReaR in debug mode, e.g.
+        rear -D mkbackup
+        rear -D mkrescue
+        rear -D savelayout
+        Depending in which workflow you are having the issue.
+  - type: dropdown
+    attributes:
+      label: Platform
+      description: The platform used by ReaR
+      multiple: true
+      options:
+        - Linux x64
+        - Linux ARM64
+        - Linux PPC64LE
+        - Linux s390x
+        - Other
+  - type: input
+    attributes:
+      label: OS version
+      description: >
+        OS version ("cat /etc/os-release" or "lsb_release -a" or "cat /etc/rear/os.conf")
+      placeholder: Run `cat /etc/os-release`
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Backup
+      description: If known, please specify affected BACKUP subsystem
+      multiple: true
+      options:
+        - NETFS
+        - RSYNC
+        - REQUESTRESTORE
+        - EXTERNAL
+        - DP
+        - FDRUPSTREAM
+        - GALAXY
+        - GALAXY7
+        - GALAXY10
+        - GALAXY11
+        - NBU
+        - TSM
+        - NSR
+        - PPDM
+        - AVA
+        - SESAM
+        - NBKDC
+        - CDM
+        - RBME
+        - BAREOS
+        - BACULA
+        - DUPLICITY
+        - BORG
+        - VEEAM
+        - NFS4SERVER
+        - No idea
+  - type: textarea
+    attributes:
+      label: Storage layout
+      description: >
+        Storage layout (`lsblk -ipo NAME,KNAME,PKNAME,TRAN,TYPE,FSTYPE,LABEL,SIZE,MOUNTPOINT`)
+  - type: textarea
+    attributes:
+      label: What steps will reproduce the bug?
+      description: >
+        Enter details about your bug, preferably a simple code snippet that can
+        be run using `rear -D mkrescue/mkbackup` directly
+  - type: textarea
+    attributes:
+      label: Workaround, if any
+      description: Have you found a valid workaround?
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: Tell us anything else you think we should know.

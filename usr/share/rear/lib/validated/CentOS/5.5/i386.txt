@@ -1,6 +1,0 @@
-Relax-and-Recover Version trunk>1.10.0
-Validation:     CentOS/5.5/i386
-Submitted:      Schlomo Schapiro
-Date:           2011-04-08
-Features:       LVM, XEN PV
-Comment:        I did only basic tests

@@ -31,9 +31,9 @@ local backup_prog_rc
 		;;
 
 	(*)
-		local scheme=$(url_scheme $BACKUP_URL)
-		local path=$(url_path $BACKUP_URL)
-		local opath=$(backup_path $scheme $path)
+		local scheme="$(url_scheme "$BACKUP_URL")"
+		local path="$(url_path "$BACKUP_URL")"
+		local opath="$(backup_path "$scheme" "$path")"
 		# probably using the BACKUP=NETFS workflow instead
 		if [ -d "${opath}" ]; then
 			if [ ! -f "${opath}/selinux.autorelabel" ]; then

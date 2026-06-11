@@ -3,16 +3,27 @@
 #
 # File system support functions
 
+function btrfs_snapshot_subvolume_exists() {
+    # returns true if the btrfs snapshot subvolume ($2) exists in the Btrfs
+    # file system at the mount point ($1).
+
+    # Use -s so that btrfs subvolume list considers snapshots only
+    btrfs_subvolume_exists "$1" "$2" "-s"
+}
+
 function btrfs_subvolume_exists() {
     # returns true if the btrfs subvolume ($2) exists in the Btrfs file system at the mount point ($1).
     local subvolume_mountpoint="$1" btrfs_subvolume_path="$2"
+
+    # extra options for the btrfs subvolume list command ($3)
+    local btrfs_extra_opts="$3"
 
     # A root subvolume can be assumed to always exist
     [ "$btrfs_subvolume_path" == "/" ] && return 0
 
     # A non-root subvolume exists if the btrfs subvolume list contains its complete path at the end of one line.
     # This code deliberately uses a plain string comparison rather than a regexp.
-    btrfs subvolume list -a "$subvolume_mountpoint" | sed -e 's; path <FS_TREE>/; path ;' |
+    btrfs subvolume list -a $btrfs_extra_opts "$subvolume_mountpoint" | sed -e 's; path <FS_TREE>/; path ;' |
     awk -v path="$btrfs_subvolume_path" '
         BEGIN {
             match_string = " path " path;
@@ -154,6 +165,43 @@ function xfs_parse
     xfs_param_search[17]="realtime_section"
     xfs_param_opt[17]="-r"
     xfs_param_name[17]="extsize"
+
+    # xfs_info v4.5.0 on RHEL 7 reports 'spinodes' instead of 'sparse'
+    xfs_param_iname[18]="spinodes"
+    xfs_param_search[18]="metadata_section"
+    xfs_param_opt[18]="-i"
+    xfs_param_name[18]="sparse"
+
+    # xfs_info v5.0.0 on RHEL 8 and later versions report 'sparse'
+    xfs_param_iname[19]="sparse"
+    xfs_param_search[19]="metadata_section"
+    xfs_param_opt[19]="-i"
+    xfs_param_name[19]="sparse"
+
+    xfs_param_iname[20]="rmapbt"
+    xfs_param_search[20]="metadata_section"
+    xfs_param_opt[20]="-m"
+    xfs_param_name[20]="rmapbt"
+
+    xfs_param_iname[21]="reflink"
+    xfs_param_search[21]="metadata_section"
+    xfs_param_opt[21]="-m"
+    xfs_param_name[21]="reflink"
+
+    xfs_param_iname[22]="bigtime"
+    xfs_param_search[22]="metadata_section"
+    xfs_param_opt[22]="-m"
+    xfs_param_name[22]="bigtime"
+
+    xfs_param_iname[23]="inobtcount"
+    xfs_param_search[23]="metadata_section"
+    xfs_param_opt[23]="-m"
+    xfs_param_name[23]="inobtcount"
+
+    xfs_param_iname[24]="nrext64"
+    xfs_param_search[24]="metadata_section"
+    xfs_param_opt[24]="-i"
+    xfs_param_name[24]="nrext64"
 
     # Here we will save some variables, that will be later used for
     # calculations (block_size) or due dependencies with other options (crc).

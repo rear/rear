@@ -1,6 +1,0 @@
-Relax-and-Recover Release 1.11.0 (trunk 464)
-Validation:     Fedora/14/i386
-Submitted:	Gratien D'haese
-Date:           2011-05-23
-Features:       LVM, NETFS, ISO, CIFS, NFS
-Comment:	dr (default) and USE_LAYOUT mode worked fine

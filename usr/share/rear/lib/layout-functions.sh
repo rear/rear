@@ -15,7 +15,19 @@ save_original_file() {
     local extension="$2"
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
     local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
-    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" )
+    local cp_exit_code=0
+    cp -ar $filename $saved_original_file && SAVED_ORIGINAL_FILES+=( "$filename" ) || cp_exit_code=$?
+    if ! is_true "$EXPOSE_SECRETS" ; then
+        if test "$filename" = "$LAYOUT_FILE" ; then
+            # Garble possible LUKS passwords in a saved disklayout.conf
+            # see https://github.com/rear/rear/pull/3490
+            # and https://github.com/rear/rear/issues/3483
+            if ! sed -i -e "\|^crypt |s|password=[^[:space:]]*|password=XXXXX|" "$saved_original_file" ; then
+                LogPrintError "Failed to garble LUKS passwords in 'crypt' entries in $saved_original_file"
+            fi
+        fi
+    fi
+    return $cp_exit_code
 }
 
 # Restore the saved original content of the original file named $1
@@ -26,6 +38,12 @@ restore_original_file() {
     test "$extension" || extension=$WORKFLOW.$MASTER_PID
     local saved_original_file="$filename.$START_DATE_TIME_NUMBER.$extension.$SAVED_ORIGINAL_FILE_SUFFIX"
     test -r "$saved_original_file" || return 1
+    if ! is_true "$EXPOSE_SECRETS" ; then
+        if test "$filename" = "$LAYOUT_FILE" ; then
+            # Inform the user that LUKS passwords (if any) became garbled by save_original_file() before:
+            grep '^crypt .*password=XXXXX' $saved_original_file && LogPrintError "LUKS passwords are garbled in 'crypt' entries in restored $filename"
+        fi
+    fi
     cp -ar $saved_original_file $filename
 }
 
@@ -156,7 +174,7 @@ generate_layout_dependencies() {
                 vgrp=$(echo "$remainder" | cut -d " " -f "1")
                 lvol=$(echo "$remainder" | cut -d " " -f "2")
                 # When a LV is a Thin, then we need to create the Thin Pool first
-                pool=$(echo "$remainder" | egrep -ow "thinpool:\\S+" | cut -d ":" -f 2)
+                pool=$(echo "$remainder" | grep -Eow "thinpool:\\S+" | cut -d ":" -f 2)
 
                 # Vgs and Lvs containing - in their name have a double dash in DM
                 dm_vgrp=${vgrp//-/--}
@@ -195,7 +213,7 @@ generate_layout_dependencies() {
                     if [ "${mp#$temp_dep_mp}" != "${mp}" ] && [ "$mp" != "$dep_mp" ]; then
                         add_dependency "$type:$mp" "$dep_type:$dep_mp"
                     fi
-                done < <( egrep '^fs |^btrfsmountedsubvol ' $LAYOUT_FILE )
+                done < <( grep -E '^fs |^btrfsmountedsubvol ' $LAYOUT_FILE )
                 ;;
             swap)
                 dev=$(echo "$remainder" | cut -d " " -f "1")
@@ -209,8 +227,12 @@ generate_layout_dependencies() {
                 add_component "$dev" "drbd"
                 ;;
             crypt)
-                name=$(echo "$remainder" | cut -d " " -f "1")
-                dev=$(echo "$remainder" | cut -d " " -f "2")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#luks-devices
+                { name=$(echo "$remainder" | cut -d " " -f "1")
+                  dev=$(echo "$remainder" | cut -d " " -f "2")
+                } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_dependency "$name" "$dev"
                 add_component "$name" "crypt"
                 ;;
@@ -223,7 +245,10 @@ generate_layout_dependencies() {
                 done
                 ;;
             opaldisk)
-                dev=$(echo "$remainder" | cut -d " " -f "1")
+                # $remainder may contain optionally password=<password>
+                # see https://github.com/rear/rear/issues/3483
+                # and https://github.com/rear/rear/blob/master/doc/user-guide/06-layout-configuration.adoc#tcg-opal-2-compliant-self-encrypting-disks
+                { dev=$(echo "$remainder" | cut -d " " -f "1") ; } 2>>/dev/$SECRET_OUTPUT_DEV
                 add_component "opaldisk:$dev" "opaldisk"
                 for disk in $(opal_device_disks "$dev"); do
                     add_dependency "$disk" "opaldisk:$dev"
@@ -274,7 +299,7 @@ mark_as_done() {
 # Mark all components that depend on component $1 as done.
 mark_tree_as_done() {
     for component in $( get_child_components "$1" ) ; do
-        DebugPrint "Dependant component $component is a child of component $1"
+        DebugPrint "Dependent component $component is a child of component $1"
         mark_as_done "$component"
     done
 }
@@ -428,8 +453,9 @@ get_partition_number() {
     # I <jsmeix@suse.de> found https://github.com/rear/rear/commit/e758bba0a415173952cc588e5cf80570a6385f7e that links to
     # https://github.com/rear/rear/issues/263 that contains https://github.com/rear/rear/issues/263#issuecomment-20464763
     # which reads (excerpt): "The GPT standard allows maximum of 128 partitions per disk" which is not true
-    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
-    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes für die Partitionstabelle vor, so dass es Platz für 128 Einträge gibt."
+    # according to how I understand the German https://de.wikipedia.org/wiki/GUID_Partition_Table that reads
+    # (excerpt, umlauts written as 'ae' and 'ue' to get ASCII see https://github.com/rear/rear/wiki/Coding-Style#character-encoding)
+    # "Die EFI-Spezifikationen schreiben ein Minimum von 16384 Bytes fuer die Partitionstabelle vor, so dass es Platz fuer 128 Eintraege gibt."
     # in English "EFI specification mandate a minimum of 16384 bytes for the partition table so that there is space for 128 entries"
     # which matches the English https://en.wikipedia.org/wiki/GUID_Partition_Table that reads (excerpt)
     # "The UEFI specification stipulates that a minimum of 16384 bytes ... are allocated for the Partition Entry Array. Each entry has a size of 128 bytes."
@@ -527,9 +553,25 @@ get_partition_start() {
     echo $start
 }
 
-# Get the type of a layout component
+# Get the type of a layout component:
+# It is OK when one same layout component is stored in disktodo.conf
+# several times with one same component type (then 'uniq' results one value)
+# but it is a bug in ReaR when one same layout component is stored
+# in disktodo.conf several times with different component types
+# (then 'uniq' results more than one value),
+# see https://github.com/rear/rear/issues/3400#issuecomment-2659261782
+# and https://github.com/rear/rear/pull/3403
 get_component_type() {
-    grep -E "^[^ ]+ $1 " $LAYOUT_TODO | cut -d " " -f 3
+    # function replies with 'disk', 'part', 'lvmgrp', 'lvmvol', 'lvmdev', 'fs'
+    local component="$1"
+    local component_types=()
+    # component_types array can contain only 'one' entry (hence the 'uniq' parsing)
+    component_types=( $( grep -E "^[^ ]+ $component " $LAYOUT_TODO | cut -d " " -f 3 | uniq ) )
+    # if there are no entries in array component_types then return with code 1, but do not exit ReaR
+    test ${#component_types[@]} -lt 1 && return 1
+    # if there are more than 1 entries in the array then we hit a bug, therefore, the BugError exit
+    test ${#component_types[@]} -gt 1 && BugError "Layout component '$component' has more than one type in $LAYOUT_TODO"
+    echo "${component_types[0]}"
 }
 
 # Get the disklabel (partition table) type of the disk $1 from the layout file
@@ -541,7 +583,7 @@ function get_disklabel_type () {
 
     disk=''
 
-    read component disk size label junk < <(grep "^disk $1 " "$LAYOUT_FILE")
+    read component disk size label junk < <(grep -E "^(disk|multipath) $1 " "$LAYOUT_FILE")
     test $disk || return 1
 
     echo $label
@@ -549,9 +591,9 @@ function get_disklabel_type () {
 
 # Get partition flags from layout (space-separated) of partition given as $1
 function get_partition_flags () {
-    local part disk size pstart name flags partition junk
+    local part disk size pstart name flags partition partuuid junk
 
-    while read part disk size pstart name flags partition junk; do
+    while read part disk size pstart name flags partition partuuid junk; do
         if [ "$partition" == "$1" ] ; then
             echo "$flags" | tr ',' ' '
             return 0
@@ -884,7 +926,7 @@ function is_disk_valid {
 function is_multipath_used {
     # Return 'false' if there is no multipath command:
     type multipath &>/dev/null || return 1
-    # 'multipath -l' is the only simple and reliably working commad
+    # 'multipath -l' is the only simple and reliably working command
     # to find out in general whether or not multipath is used at all.
     # But 'multipath -l' scans all devices and the time it takes is proportional
     # to their number so that time would become rather long (seconds up to minutes)
@@ -1005,7 +1047,7 @@ function get_part_device_name_format() {
             part_name="${device_name}p" # append p between main device and partitions
             ;;
         (*mapper[/!]*)
-            # Every Linux distribution / version has their own rule to name the multipthed partion device.
+            # Every Linux distribution / version has their own rule to name the multipthed partition device.
             #
             # Suse:
             #     Version <12 : always <device>_part<part_num> (same with/without user_friendly_names)
@@ -1043,24 +1085,10 @@ function get_part_device_name_format() {
                 ;;
 
                 (Fedora)
-                    if is_false "$user_friendly_names" ; then
-                        # RHEL 7 and above seems to named partitions on multipathed devices with
-                        # [mpath device UUID/WWID] + p + [part number] when "user_friendly_names"
-                        # option is FALSE.
-                        # For example: /dev/mapper/3600507680c82004cf8000000000000d8p1
-                        part_name="${device_name}p" # append p between main device and partitions
-                    else
-                        # RHEL 7 and above seems to named partitions on multipathed devices with
-                        # [mpath device name] + [part number] like standard disk when "user_friendly_names"
-                        # option is used (default).
-                        # For example: /dev/mapper/mpatha1
-                        # But the scheme in RHEL 6 need a "p" between [mpath device name] and [part number].
-                        # For exemple: /dev/mapper/mpathap1
-                        if (( $OS_MASTER_VERSION < 7 )) ; then
-                            part_name="${device_name}p" # append p between main device and partitions
-                        else
-                            part_name="${device_name}"
-                        fi
+                    # RHEL 7 and above add a "p" after the device name when the device name ends
+                    # by a digit, see https://access.redhat.com/solutions/2354631.
+                    if (( $OS_MASTER_VERSION < 7 )) || [[ ${device_name: -1} =~ [0-9] ]]; then
+                        part_name="${device_name}p"
                     fi
                 ;;
 
@@ -1218,11 +1246,11 @@ function apply_layout_mappings() {
         # Replace partitions with unique replacement words:
         # For example we normalize /dev/cciss/c0d1p2 to something like _REAR5_2
         # (therein the '5' is arbitrary but the '2' is the actual partition number).
-        # Due to multipath partion naming complexity, all known partition naming types for example
+        # Due to multipath partition naming complexity, all known partition naming types for example
         # /dev/mapper/mpatha4 /dev/mapper/mpathap4 /dev/mapper/mpatha-part4 /dev/mapper/mpatha_part4
         # are replaced by the same normalized replacement word like _REAR7_4
         # (therein the '7' is arbitrary but the '4' is the actual partition number)
-        # that is then in step 2 re-replaced with the right partion naming scheme
+        # that is then in step 2 re-replaced with the right partition naming scheme
         # via the get_part_device_name_format() function,
         # cf. https://github.com/rear/rear/pull/1765
         # Because $original (e.g. /dev/sda1) contains slashes sed '/regexp/' cannot be used
@@ -1486,7 +1514,7 @@ create_disk_partition() {
 # delete_dummy_partitions_and_resize_real_ones()
 #
 # When current disk has non-consecutive partitions, delete temporary partitions
-# that have been created and resize the temporary shrinked partitions to their
+# that have been created and resize the temporary shrunk partitions to their
 # expected size.
 #
 delete_dummy_partitions_and_resize_real_ones() {
@@ -1509,7 +1537,7 @@ delete_dummy_partitions_and_resize_real_ones() {
     dummy_partitions_to_delete=()
     my_udevsettle
 
-    # Resize previously shrinked partitions (to make place for dummy
+    # Resize previously shrunk partitions (to make place for dummy
     # partitions) to expected size
     local -i endB
     while read num endB ; do
@@ -1527,5 +1555,73 @@ delete_dummy_partitions_and_resize_real_ones() {
     disk_label=""
     last_partition_number=0
 }
+
+function get_partuuid() {
+    local partition_device=$1
+
+    local partuuid=""
+    if has_binary blkid; then
+        partuuid="$(blkid -s PARTUUID -o value "$partition_device")"
+    # Fallback for cases when blkid is not available
+    elif [ -d /dev/disk/by-partuuid ]; then
+        local partition_symlink
+        for partition_symlink in /dev/disk/by-partuuid/*; do
+            if [ "$(readlink -e "$partition_symlink")" = "$partition_device" ]; then
+                partuuid="${partition_symlink#/dev/disk/by-partuuid/}"
+                break
+            fi
+        done
+    fi
+
+    echo "$partuuid"
+}
+
+function set_partuuid() {
+    local device=$1
+    local partnum=$2
+    local partuuid=$3
+
+    if ! has_binary sgdisk; then
+        return 1
+    fi
+
+    sgdisk --partition-guid="$partnum":"$partuuid" "$device"
+}
+
+# In cases when PARTUUIDs are used to tell the Linux kernel where the root
+# filesystem live, e.g.,
+#     linux /vmlinuz-... root=PARTUUID=<partition uuid>
+# or when they are used in /etc/fstab to mount devices, e.g.,
+#     PARTUUID=<partition uuid> /boot xfs defaults 0 0
+# changing PARTUUIDs during recovery may lead to a non-bootable system.
+# Therefore, in these cases, PARTUUID restoration is required.
+#
+# In other cases, PARTUUID restoration considered as a nice-to-have.
+function partuuid_restoration_is_required() {
+    local cfgs=(
+        /boot/grub/grub.cfg
+        /boot/grub2/grub.cfg
+        /boot/loader/entries/
+        /etc/fstab
+    )
+
+    local cfg
+    for cfg in "${cfgs[@]}"; do
+        if test -e "$cfg" && grep -qr "PARTUUID=" "$cfg"; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+# The regex defines the expected PARTUUID format.
+# Pseudo-UUIDs (not RFC 4122–compliant) are intentionally allowed, as they can
+# be manually assigned as PARTUUID using sgdisk. sgdisk primarily validates
+# the length.
+#
+# Extended regular expression (ERE) syntax must be used because this value is
+# used as a pattern for the Bash =~ operator.
+PARTUUID_REGEX="(no-partuuid|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
 
 # vim: set et ts=4 sw=4:

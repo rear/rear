@@ -7,13 +7,13 @@
 # but it is also happens for local stuff like OUTPUT_URL=usb:///dev/disk/by-label/REAR-000
 
 # Do not do this for tapes and special attention for file:///path
-local scheme=$( url_scheme $OUTPUT_URL )
-local path=$( url_path $OUTPUT_URL )
+local scheme="$( url_scheme "$OUTPUT_URL" )"
+local path="$( url_path "$OUTPUT_URL" )"
 
 # If filesystem access to url is unsupported return silently (e.g. scheme tape)
 scheme_supports_filesystem $scheme || return 0
 
-local opath=$( output_path $scheme $path )
+local opath="$( output_path "$scheme" "$path" )"
 
 # Create $OUTPUT_PREFIX sub-directory.
 # That directory should be neither world-readable nor world-writable

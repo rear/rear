@@ -13,7 +13,7 @@ local known_bootloader
 
 # When BOOTLOADER is specified use that:
 if test "$BOOTLOADER" ; then
-    # case-insensitive match, as later we conver all to uppercase
+    # case-insensitive match, as later we convert all to uppercase
     if [[ "$BOOTLOADER" == [Gg][Rr][Uu][Bb] ]] ; then
         if is_grub2_installed ; then
             LogPrintError "BOOTLOADER=GRUB used to mean GRUB 2 if GRUB 2 is installed and GRUB Legacy if not"
@@ -27,24 +27,29 @@ if test "$BOOTLOADER" ; then
 fi
 
 # When a bootloader is specified in /etc/sysconfig/bootloader use that:
-if test -f /etc/sysconfig/bootloader ; then
-    # SUSE uses LOADER_TYPE, and others?
-    # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
-    sysconfig_bootloader=$( grep ^LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
-    if test "$sysconfig_bootloader" ; then
-        LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
-        echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
-        return
-    fi
+#
+# On SUSE, the possible values for BOOTLOADER_TYPE are:
+# grub,grub2,grub2-efi,grub2-bls,systemd-boot,none
+#
+# Proceed to auto-detect the bootloader in the steps below if /etc/sysconfig/bootloader
+# contains 'none', 'grub2-bls' (which should be treated as GRUB2 or GRUB2-EFI),
+# or 'grub2-efi' (which can be used on hybrid systems and leads to losing
+# the capability to boot in a BIOS environment, making them purely EFI after recovery
+# see https://github.com/rear/rear/pull/3128#issuecomment-2176373583)
+if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
+    && [[ ! "$sysconfig_bootloader" =~ ^(grub2-efi|grub2-bls|none)$ ]] ; then
+    LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
+    echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
+    return
 fi
 
-# On ARM, guess the dummy bootloader:
-if [ "$ARCH" = "Linux-arm" ] ; then
-    BOOTLOADER=ARM
-    # Inform the user that we do nothing:
-    LogPrint "Using guessed bootloader 'ARM'. Skipping bootloader backup, see default.conf about 'BOOTLOADER'"
-    echo "$BOOTLOADER" >$bootloader_file
-    return
+# Check if any disk contains a PPC PReP boot partition.
+# Detection taken from usr/share/rear/finalize/Linux-ppc64/680_install_PPC_bootlist.sh
+disk_device="$( awk -F ' ' '/^part / {if ($6 ~ /prep/) {print $2}}' $LAYOUT_FILE )"
+if test "$disk_device" ; then
+   LogPrint "Using guessed bootloader 'PPC' for 'rear recover' (found PPC PReP boot partition on $disk_device)"
+   echo "PPC" >$bootloader_file
+   return
 fi
 
 # Finally guess the used bootloader by inspecting the first bytes on all disks
@@ -54,12 +59,6 @@ for block_device in /sys/block/* ; do
     # Continue with the next block device when the current block device is not a disk that can be used for booting:
     [[ $blockd = hd* || $blockd = sd* || $blockd = cciss* || $blockd = vd* || $blockd = xvd* || $blockd = nvme* || $blockd = mmcblk* || $blockd = dasd*  ]] || continue
     disk_device=$( get_device_name $block_device )
-    # Check if the disk contains a PPC PreP boot partition (ID=0x41):
-    if file -s $disk_device | grep -q "ID=0x41" ; then
-       LogPrint "Using guessed bootloader 'PPC' for 'rear recover' (found PPC PreP boot partition 'ID=0x41' on $disk_device)"
-       echo "PPC" >$bootloader_file
-       return
-    fi
     # Get all strings in the first 512*4=2048 bytes on the disk:
     bootloader_area_strings_file="$TMP_DIR/bootloader_area_strings"
     block_size=$( get_block_size ${disk_device##*/} )
@@ -111,6 +110,14 @@ for block_device in /sys/block/* ; do
     Log "End of strings in the first bytes on $disk_device"
 done
 
+# Default to GRUB2 on ppc64le PowerNV machines if no PPC PReP Boot partitions
+# were found because it is not manadatory to use them in this setup.
+if [ "$ARCH" = "Linux-ppc64le" ] && [ "$(awk '/platform/ {print $NF}' < /proc/cpuinfo)" = "PowerNV" ] ; then
+    LogPrint "Using guessed bootloader 'GRUB2' for 'rear recover' (default for ppc64le PowerNV machines)"
+    echo "GRUB2" >$bootloader_file
+    return
+fi
+
 # No bootloader detected, but we are using UEFI - there is probably an EFI bootloader
 if is_true $USING_UEFI_BOOTLOADER ; then
     if is_grub2_installed ; then
@@ -123,13 +130,22 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         # which already indicates that there is an EFI bootloader. We use it as a placeholder
         # to not leave $bootloader_file empty.
         # Note that it is legal to have USING_UEFI_BOOTLOADER=1 and e.g. known_bootloader=GRUB2
-        # (i.e. a non=EFI bootloader). This will happen in BIOS/UEFI hybrid boot scenarios.
+        # (i.e. a non-EFI bootloader). This will happen in BIOS/UEFI hybrid boot scenarios.
         # known_bootloader=GRUB2 indicates that there is a BIOS bootloader and USING_UEFI_BOOTLOADER=1
         # indicates that there is also an EFI bootloader. Only the EFI one is being used at this
         # time, but both will need to be restored.
         echo "EFI" >$bootloader_file
     fi
     return 0
+fi
+
+# On ARM, guess the dummy bootloader:
+if [ "$ARCH" = "Linux-arm" ] ; then
+    BOOTLOADER=ARM
+    # Inform the user that we do nothing:
+    LogPrint "Using guessed bootloader 'ARM'. Skipping bootloader backup, see default.conf about 'BOOTLOADER'"
+    echo "$BOOTLOADER" >$bootloader_file
+    return
 fi
 
 # Error out when no bootloader was specified or could be autodetected:

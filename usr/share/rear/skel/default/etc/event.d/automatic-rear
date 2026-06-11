@@ -1,0 +1,5 @@
+start on running
+
+console output
+exec /etc/scripts/run-automatic-rear
+post-stop exec initctl emit automatic-rear-complete

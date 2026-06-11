@@ -3,9 +3,9 @@
 [ -z "${NETFS_KEEP_OLD_BACKUP_COPY}" ] && return
 
 # do not do this for tapes and special attention for file:///path
-local scheme=$( url_scheme $BACKUP_URL )
-local path=$( url_path $BACKUP_URL )
-local opath=$( backup_path $scheme $path )
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
+local opath="$( backup_path "$scheme" "$path" )"
 
 # if $opath is empty return silently (e.g. scheme tape)
 [ -z "$opath" ] && return 0

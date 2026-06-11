@@ -8,3 +8,13 @@
 
 override_dh_fixperms:
 	dh_fixperms --exclude debian/rear/etc/rear
+
+override_dh_auto_build:
+	dh_auto_build -- OFFICIAL=1
+
+override_dh_auto_clean:
+	dh_auto_clean -- OFFICIAL=1
+
+override_dh_auto_install:
+	dh_auto_install -- OFFICIAL=1
+

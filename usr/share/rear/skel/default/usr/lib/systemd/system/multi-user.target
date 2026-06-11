@@ -4,7 +4,7 @@
 
 [Unit]
 Description=Multi-User
-Requires=sysinit.target
+Requires=sysinit.target basic.target
 AllowIsolate=yes
 
 [Install]
