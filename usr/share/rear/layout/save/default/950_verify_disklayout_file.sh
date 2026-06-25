@@ -46,15 +46,16 @@ while read keyword disk_dev disk_size parted_mklabel junk ; do
 
     Log "Verifying that the 'part' entries for $disk_dev in $DISKLAYOUT_FILE are correct"
     # The section "Disk layout file syntax" in doc/user-guide/06-layout-configuration.adoc reads (excerpt)
-    #   part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
+    #   part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name> <partition uuid/"no-partuuid">
     # as above layout/prepare/GNU/Linux/100_include_partition_code.sh is the most important one
     # so that it is used here as reference to decide whether or not the entries are correct:
     partitions=()
    
-    while read keyword dummy part_size part_start part_name part_flags part_dev junk ; do
+    while read keyword dummy part_size part_start part_name part_flags part_dev partuuid junk ; do
         test -b "$part_dev" || broken_part_errors+=( "$part_dev is not a block device" )
         is_positive_integer $part_size || broken_part_errors+=( "$part_dev size $part_size is not a positive integer" )
         is_nonnegative_integer $part_start || broken_part_errors+=( "$part_dev start $part_start is not a nonnegative integer" )
+        [[ $partuuid =~ ^$PARTUUID_REGEX$ ]] || broken_part_errors+=( "$partuuid is an unexpected PARTUUID format" )
         partitions+=( "$part_dev" )
         # Using the parted_mklabel fallback behaviour in create_partitions() in prepare/GNU/Linux/100_include_partition_code.sh
         # only when there is no parted_mklabel value, but when there is a parted_mklabel value use it as is:

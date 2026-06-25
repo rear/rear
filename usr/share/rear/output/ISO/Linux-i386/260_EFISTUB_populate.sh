@@ -24,7 +24,7 @@ Log "EFI_STUB: will use $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER as ReaR rescue system
 # Check if file exists.
 if [[ -f $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER ]]; then
     # Check magic number of EFI application.
-    if [[ $(file $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER | grep -E "EFI application|MS Windows") ]]; then
+    if file -b -- "$OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER" | grep -Eq "EFI.*(application|executable)|MS Windows"; then
         Log "EFI_STUB: $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER looks to be valid EFI executable"
     else
         Error "EFI_STUB: $OUTPUT_EFISTUB_SYSTEMD_BOOTLOADER is not valid EFI executable"

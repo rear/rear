@@ -157,6 +157,8 @@ case "$scheme" in
         # RESULT_FILES into last available directory in the path.
         # e.g. OUTPUT_URL=sftp://<host_name>/iso/server1 and have "/iso/server1"
         # directory missing, would upload RESULT_FILES into sftp://<host_name>/iso/
+        # SECURITY NOTE: The stderr redirection to /dev/null is crucial here
+        # because $lftp_user_opts may contain the secret $OUTPUT_LFTP_PASSWORD (see above):
         { lftp $lftp_user_opts "$OUTPUT_URL" <<< "$lftp_cmds_heredoc" 
         } 2>/dev/null \
             || Error "lftp failed to transfer '${RESULT_FILES[*]}' to '$OUTPUT_URL' (lftp exit code: $?)"

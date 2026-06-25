@@ -15,7 +15,7 @@ fi
 
 if lvs --noheadings -o modules | grep -q -v "^\s*$" ; then
     # There are non-linear LVs on the system, include required libraries
-    LIBS+=( /lib64/*lvm2* )
+    LIBS+=( /lib*/*lvm2* /lib/*/*lvm2* )
 fi
 
 # vim: set et ts=4 sw=4:

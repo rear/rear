@@ -39,10 +39,13 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
         FULL_BACKUP="--full-if-older-than $BACKUP_DUPLICITY_FULL_IF_OLDER_THAN"
     fi
 
-    if [ -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ]; then
-        GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY"
-    fi
-    PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE"
+    { test -n "$BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	    { GPG_KEY="--encrypt-key $BACKUP_DUPLICITY_GPG_ENC_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+
+    { PASSPHRASE="$BACKUP_DUPLICITY_GPG_ENC_PASSPHRASE" ; } 2>>/dev/$SECRET_OUTPUT_DEV
+
+    { test -n "$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV && \
+	    { SIGN_PASSPHRASE="$BACKUP_DUPLICITY_GPG_SIGN_KEY" ; } 2>>/dev/$SECRET_OUTPUT_DEV
 
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set -f # Temporarily Stop Evaluation of Patterns By the Shell
@@ -62,6 +65,7 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
 
     # Setting the pass phrase to encrypt the backup files
     export PASSPHRASE
+    export SIGN_PASSPHRASE
 
     # check and create directory at backup-server
     # if the target-directory don't exist, duplicity will fail
@@ -99,15 +103,9 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     fi
 
     # do the backup
-    if [[ "$BACKUP_DUPLICITY_GPG_OPTIONS" ]] ; then
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options ${BACKUP_DUPLICITY_GPG_OPTIONS} $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY --gpg-options "${BACKUP_DUPLICITY_GPG_OPTIONS}" $EXCLUDES \
-           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    else
-        LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log "
-        $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES \
-           / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log 2>&1
-    fi
+    LogPrint "Running CMD: $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS <GPG_KEY> $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+    #env PASSPHRASE="PASSHRASE" $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
+    $DUPLICITY_PROG -v5 --name $BACKUP_DUPLICITY_NAME $FULL_BACKUP $DUP_OPTIONS $GPG_KEY $EXCLUDES / $BKP_URL/$HOSTNAME >> ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log
 
     if ! is_true "$BACKUP_DUPLICITY_EXCLUDE_EVALUATE_BY_SHELL"; then
         set +f # Re-enable Evaluation of Patterns By the Shell
@@ -132,5 +130,6 @@ if [ "$BACKUP_PROG" = "duplicity" ] ; then
     "
         LogPrint "$LOGAUSZUG"
     fi
+    unset PASSPHRASE # unset the export setting of passphrase
 fi
 

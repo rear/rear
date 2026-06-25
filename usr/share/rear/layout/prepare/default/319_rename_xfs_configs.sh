@@ -24,7 +24,7 @@ while read source target junk ; do
     # LAYOUT_XFS_OPT_DIR_RESTORE.
     if [ -e "$LAYOUT_XFS_OPT_DIR/$base_source.xfs" ]; then
         Log "Migrating XFS configuration file $base_source.xfs to $base_target.xfs"
-        cp "$v" "$LAYOUT_XFS_OPT_DIR/$base_source.xfs" \
+        cp $v "$LAYOUT_XFS_OPT_DIR/$base_source.xfs" \
          "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_target.xfs"
 
         # Replace old device name in meta-data= option in XFS
@@ -40,7 +40,7 @@ while read source target junk ; do
 
     # Find corresponding partitions to source disk in LAYOUT_FILE
     # and migrate/rename them too if necessary.
-    while read _ layout_device _ _ _ _ layout_partition; do
+    while read _ layout_device _ _ _ _ layout_partition _; do
         if [[ "$source" = "$layout_device" ]]; then
             base_src_layout_partition=$(basename "$layout_partition")
             base_dst_layout_partition=${base_src_layout_partition//$base_source/$base_target}
@@ -48,7 +48,7 @@ while read source target junk ; do
 
             if [ -e "$LAYOUT_XFS_OPT_DIR/$base_src_layout_partition.xfs" ]; then
                 Log "Migrating XFS configuration $base_src_layout_partition.xfs to $base_dst_layout_partition.xfs"
-                cp "$v" "$LAYOUT_XFS_OPT_DIR/$base_src_layout_partition.xfs" \
+                cp $v "$LAYOUT_XFS_OPT_DIR/$base_src_layout_partition.xfs" \
                  "$LAYOUT_XFS_OPT_DIR_RESTORE/$base_dst_layout_partition.xfs"
 
                 # Replace old device name in meta-data= option in XFS

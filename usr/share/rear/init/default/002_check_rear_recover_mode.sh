@@ -1,3 +1,6 @@
+
+# In general see https://github.com/rear/rear/pull/3206
+# and in particular see https://github.com/rear/rear/pull/3206#issuecomment-2122628596
 is_true "$PORTABLE" && return
 
 # In the ReaR rescue/recovery system the only possible workflows are
@@ -15,9 +18,9 @@ is_true "$PORTABLE" && return
 # recover layoutonly restoreonly finalizeonly and mountonly
 # must not run because they can destroy the original system
 # cf. https://github.com/rear/rear/issues/2387#issuecomment-626303944
-# In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise):
-if test -f /etc/rear-release ; then
-    # We are in the ReaR rescue/recovery system:
+if test "$RECOVERY_MODE" ; then
+    # We are in the ReaR rescue/recovery system
+    # (we are not in PORTABLE mode because PORTABLE is handled above):
     case "$WORKFLOW" in
         (recover|layoutonly|restoreonly|finalizeonly|mountonly|opaladmin|shell|dump|help)
             LogPrint "Running workflow $WORKFLOW within the ReaR rescue/recovery system"
@@ -27,7 +30,8 @@ if test -f /etc/rear-release ; then
             ;;
     esac
 else
-    # We are in the normal/original system:
+    # We are in the normal/original system
+    # (we are not in the ReaR rescue/recovery system and we are not in PORTABLE mode because PORTABLE is handled above):
     case "$WORKFLOW" in
         (recover|layoutonly|restoreonly|finalizeonly|mountonly)
             Error "The workflow $WORKFLOW is only supported in the ReaR rescue/recovery system,${LF}use --portable to disable this check at your own risk.${LF}ReaR will destroy your system if you run these workflows in the normal/original system!"

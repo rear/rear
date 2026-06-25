@@ -20,8 +20,10 @@ function WORKFLOW_recover () {
     # and do not (over)-write /etc/motd in the recovery system in simulation mode
     # which results with the above to never (over)-write /etc/motd in simulation mode:
     if ! is_true "$SIMULATE" ; then
-        # In the recovery system /etc/rear-release is unique (it does not exist otherwise)
-        # cf. init/default/050_check_rear_recover_mode.sh
+        # In the ReaR rescue/recovery system /etc/rear-release is unique (it does not exist otherwise).
+        # In PORTABLE mode changing /etc/motd would be wrong because
+        # PORTABLE mode runs in a foreign rescue system or on the original system
+        # so testing for RECOVERY_MODE cannot be used here:
         test -f /etc/rear-release -a -w /etc/motd && echo -e '\nWelcome to Relax-and-Recover.\n' >/etc/motd
     fi
 

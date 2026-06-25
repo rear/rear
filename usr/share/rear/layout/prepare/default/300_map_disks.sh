@@ -260,7 +260,7 @@ while read keyword orig_device orig_size junk ; do
             Log "$preferred_target_device_name excluded from device mapping choices (is designated as write-protected)"
             continue
         fi
-        LogPrint "The size of $preferred_target_device_name is $(blockdev --getsize64 $current_device_path)"
+        LogPrint "The size of $preferred_target_device_name is $(get_disk_size $preferred_target_device_name)"
         # Add the current device as possible choice for the user:
         possible_targets+=( "$preferred_target_device_name" )
     done

@@ -27,15 +27,20 @@ if test "$BOOTLOADER" ; then
 fi
 
 # When a bootloader is specified in /etc/sysconfig/bootloader use that:
-if test -f /etc/sysconfig/bootloader ; then
-    # SUSE uses LOADER_TYPE, and others?
-    # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
-    sysconfig_bootloader=$( grep ^LOADER_TYPE /etc/sysconfig/bootloader | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
-    if test "$sysconfig_bootloader" ; then
-        LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
-        echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
-        return
-    fi
+#
+# On SUSE, the possible values for BOOTLOADER_TYPE are:
+# grub,grub2,grub2-efi,grub2-bls,systemd-boot,none
+#
+# Proceed to auto-detect the bootloader in the steps below if /etc/sysconfig/bootloader
+# contains 'none', 'grub2-bls' (which should be treated as GRUB2 or GRUB2-EFI),
+# or 'grub2-efi' (which can be used on hybrid systems and leads to losing
+# the capability to boot in a BIOS environment, making them purely EFI after recovery
+# see https://github.com/rear/rear/pull/3128#issuecomment-2176373583)
+if sysconfig_bootloader="$(get_sysconfig_bootloader)" \
+    && [[ ! "$sysconfig_bootloader" =~ ^(grub2-efi|grub2-bls|none)$ ]] ; then
+    LogPrint "Using sysconfig bootloader '$sysconfig_bootloader' for 'rear recover'"
+    echo "$sysconfig_bootloader" | tr '[a-z]' '[A-Z]' >$bootloader_file
+    return
 fi
 
 # Check if any disk contains a PPC PReP boot partition.

@@ -995,4 +995,27 @@ function make_pxelinux_config_grub {
     echo "}"
 }
 
+function get_sysconfig_bootloader() {
+    local sysconfig_bootloader_path=/etc/sysconfig/bootloader
+    if test "$RECOVERY_MODE" ; then
+        sysconfig_bootloader_path="$TARGET_FS_ROOT$sysconfig_bootloader_path"
+    fi
+
+    if ! test -f "$sysconfig_bootloader_path" ; then
+        return 1
+    fi
+
+    local sysconfig_bootloader
+
+    # SUSE uses LOADER_TYPE, and others?
+    # Getting values from sysconfig files is like sourcing shell scripts so that the last setting wins:
+    sysconfig_bootloader=$( grep ^LOADER_TYPE "$sysconfig_bootloader_path" | cut -d= -f2 | tail -n1 | sed -e 's/"//g' )
+
+    if ! test "$sysconfig_bootloader" ; then
+        return 1
+    fi
+
+    echo "$sysconfig_bootloader"
+}
+
 # vim: set et ts=4 sw=4

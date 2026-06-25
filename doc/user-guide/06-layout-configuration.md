@@ -636,7 +636,7 @@ They can be excluded when hand-crafting a layout file line.
 
 ### Partitions
 
-    part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name>
+    part <disk name> <size(B)> <start(B)> <partition name/type> <flags/"none"> <partition name> <partition uuid/"no-partuuid">
 
 
 ### Software RAID arrays

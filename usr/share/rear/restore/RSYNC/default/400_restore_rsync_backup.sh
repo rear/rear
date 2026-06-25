@@ -15,34 +15,40 @@ LogPrint "Restoring $BACKUP_PROG backup from '${host}:${path}'"
 
 ProgressStart "Restore operation"
 (
-	case "$(basename $BACKUP_PROG)" in
+    case "$(basename $BACKUP_PROG)" in
 
-		(rsync)
+        (rsync)
 
-			case $(rsync_proto "$BACKUP_URL") in
+            case $(rsync_proto "$BACKUP_URL") in
 
-				(ssh)
-					Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote_full "$BACKUP_URL")/backup"/ $TARGET_FS_ROOT/
-					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
-					"$(rsync_remote_full "$BACKUP_URL")/backup"/ \
-					$TARGET_FS_ROOT/
-					;;
+                (ssh)
+                    if [[ -z "$BACKUP_RSYNC_RETENTION_DAYS" ]] ; then
+                        # no retention days requested
+			Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote_full "$BACKUP_URL")/backup"/ $TARGET_FS_ROOT/
+                        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
+                        "$(rsync_remote_full "$BACKUP_URL")/backup"/  $TARGET_FS_ROOT/
+                    else
+                        Log $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" "$(rsync_remote_full "$BACKUP_URL")/backup/$RSYNC_BACKUP"/ $TARGET_FS_ROOT/
+                        $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
+			"$(rsync_remote_full "$BACKUP_URL")/backup/$RSYNC_BACKUP"/  $TARGET_FS_ROOT/
+                    fi
+                    ;;
 
-				(rsync)
-					$BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
-					"$(rsync_remote_full "$BACKUP_URL")/backup"/ $TARGET_FS_ROOT/
-					;;
+                (rsync)
+                    $BACKUP_PROG "${BACKUP_RSYNC_OPTIONS[@]}" \
+                    "$(rsync_remote_full "$BACKUP_URL")/backup"/  $TARGET_FS_ROOT/
+                    ;;
 
-			esac
-			;;
+            esac
+            ;;
 
-		(*)
-			# no other backup programs foreseen than rsync so far
-			:
-			;;
+        (*)
+            # no other backup programs foreseen than rsync so far
+            :
+            ;;
 
-	esac
-	echo $? >$TMP_DIR/retval
+    esac
+    echo $? >$TMP_DIR/retval
 ) >"${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log" &
 BackupPID=$!
 starttime=$SECONDS
