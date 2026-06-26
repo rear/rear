@@ -1,15 +1,12 @@
-#
-# Stop SELinux if present - see prep/RSYNC/GNU/Linux/200_selinux_in_use.sh
-#
-test -f $TMP_DIR/selinux.mode || return 0
-case "$( basename ${BACKUP_PROG} )" in
-    (tar|rsync)
-        #cat /selinux/enforce > $TMP_DIR/selinux.mode
-        echo "0" > $SELINUX_ENFORCE
-        Log "Temporarily stopping SELinux enforce mode with BACKUP=${BACKUP} and BACKUP_PROG=${BACKUP_PROG} backup"
-        ;;
-    (*) # do nothing
-        :
-        ;;
-esac
+# Stop SELinux if BACKUP_SELINUX_DISABLE is set
+
+# Only stop SELinux if both conditions are met:
+# - BACKUP_SELINUX_DISABLE is true
+# - SELinux is actually in use on the system
+is_true "$BACKUP_SELINUX_DISABLE" || return 0
+is_true "$SELINUX_IN_USE" || return 0
+
+# Set SELinux to permissive mode (0) during backup
+echo "0" > $SELINUX_ENFORCE
+Log "Temporarily stopping SELinux enforce mode with BACKUP=${BACKUP} and BACKUP_PROG=${BACKUP_PROG} backup"
 

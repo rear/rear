@@ -1,38 +1,11 @@
-# Start SELinux if it was stopped - check presence of  $TMP_DIR/selinux.mode
+# Restore original SELinux enforce mode if it was stopped during backup
 
-local backup_prog_rc
+# Only restore if both conditions are met:
+# - BACKUP_SELINUX_DISABLE is true (meaning we stopped SELinux during backup)
+# - SELinux is actually in use on the system
+is_true "$BACKUP_SELINUX_DISABLE" || return 0
+is_true "$SELINUX_IN_USE" || return 0
 
-[ -f $TMP_DIR/selinux.mode ] && {
-	touch "${TMP_DIR}/selinux.autorelabel"
-	cat $TMP_DIR/selinux.mode > $SELINUX_ENFORCE
-	Log "Restored original SELinux mode"
-	case $(rsync_proto "$BACKUP_URL") in
-
-	(ssh)
-		# for some reason rsync changes the mode of backup after each run to 666
-                # FIXME: Add an explanatory comment why "2>/dev/null" is useful here
-                # or remove it according to https://github.com/rear/rear/issues/1395
-		ssh $(rsync_remote_ssh "$BACKUP_URL") "chmod $v 755 $(rsync_path_full "$BACKUP_URL")/backup" 2>/dev/null
-		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" \
-		 "$(rsync_remote_full "$BACKUP_URL")/backup/.autorelabel" 2>/dev/null
-		backup_prog_rc=$?
-		if [ $backup_prog_rc -ne 0 ]; then
-			LogPrint "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup [${rsync_err_msg[$backup_prog_rc]}]"
-			#StopIfError "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup"
-		fi
-		;;
-
-	(rsync)
-		$BACKUP_PROG -a "${TMP_DIR}/selinux.autorelabel" "${BACKUP_RSYNC_OPTIONS[@]}" \
-		 "$(rsync_remote_full "$BACKUP_URL")/backup/.autorelabel"
-		backup_prog_rc=$?
-		if [ $backup_prog_rc -ne 0 ]; then
-			LogPrint "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup [${rsync_err_msg[$backup_prog_rc]}]"
-			#StopIfError "Failed to create .autorelabel on $(rsync_path_full "$BACKUP_URL")/backup"
-		fi
-		;;
-
-	esac
-	Log "Trigger autorelabel (SELinux) file"
-}
-
+# Restore original SELinux enforcing mode
+echo "$SELINUX_ENFORCING" > $SELINUX_ENFORCE
+Log "Restored original SELinux mode"
