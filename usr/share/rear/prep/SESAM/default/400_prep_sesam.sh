@@ -20,16 +20,22 @@ if [ -e /etc/sesam2000.ini ]; then
             /etc/sesam2000.ini
         )
 
-        # do not include certain sesam folders as generated boot
-        # image will grow too big if sesam listing and temporary
-        # files are included
+        # do not include certain sesam folders content as generated boot
+        # image will grow too big if sesam listing, temporary, working and log
+        # files are included (don't also exclude the directories themselves
+        # as they're required for the sesam client to work in the recovery
+        # environment); double-quoting is required to prevent the shell from
+        # expanding those entries already here, which does not include e.g.
+        # hidden files/dirs like /var/opt/sesam/var/tmp/.guestfs-0/ - if tar
+        # is given such an exclude it does it right ...
         COPY_AS_IS_EXCLUDE+=(
             "${COPY_AS_IS_EXCLUDE_SESAM[@]}" 
-            $SESAM_TMP_DIR 
-            $SESAM_LIS_DIR 
-            $SESAM_LGC_DIR 
-            $SESAM_SMS_DIR
-            $SESAM_PROT_DIR 
+            "${SESAM_WORK_DIR}/*"
+            "${SESAM_TMP_DIR}/*"
+            "${SESAM_LIS_DIR}/*"
+            "${SESAM_LGC_DIR}/*"
+            "${SESAM_SMS_DIR}/*"
+            "${SESAM_PROT_DIR}/*"
         )
 
         # include libssl as it is needed to run sesam sm_sshd if included

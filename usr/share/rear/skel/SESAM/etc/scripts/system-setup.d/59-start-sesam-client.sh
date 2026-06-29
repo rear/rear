@@ -6,8 +6,10 @@ if [ -e /etc/sesam2000.ini ]; then
         # set the sesam environment profile
         source $SESAM_VAR_DIR/var/ini/sesam2000.profile
 
-        # create sesam Semaphore directory
+        # create sesam minimal directory structure for client
+        # to start in recovery environment
         mkdir -p $SESAM_WORK_DIR/sem/
+        mkdir -p $SESAM_WORK_DIR/ctl/
 
         # start sesam client daemon
         $SESAM_BIN_DIR/bin/sesam/sm_main start

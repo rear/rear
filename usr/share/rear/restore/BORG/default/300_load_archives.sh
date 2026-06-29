@@ -47,7 +47,37 @@ local archive_cache_lines_last_shown=0
 # When pagination is disabled by the user, show everything
 [[ $BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX -eq 0 ]] \
     && BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=$archive_cache_lines_total
+# -----------------------------------------------------------------------------
+# Optional: Node-specific archive restriction for BORG restores
+#
+# If ENABLE_BORG_NODE_FILTER is set to "yes" (e.g. in /etc/rear/local.conf),
+# this section restricts the available restore archives to only the most recent
+# (highest-numbered) backup with this node's BORGBACKUP_ARCHIVE_PREFIX.
+#
+# This prevents accidental restore of the wrong system in shared repositories,
+# especially in unattended/AUTO_CONFIRM scenarios.
+#
+# If no matching archive is found, ReaR aborts with a clear error and NEVER
+# restores from another node's backup.
+#
+# This block is fully backward compatible: if ENABLE_BORG_NODE_FILTER is not "yes",
+# ReaR shows all available BORG archives as before.
+# -----------------------------------------------------------------------------
+if is_true "$ENABLE_BORG_NODE_FILTER"; then
+    [[ -n $BORGBACKUP_ARCHIVE_PREFIX ]] || Error "ENABLE_BORG_NODE_FILTER=yes but BORGBACKUP_ARCHIVE_PREFIX is empty"
+    [[ -s $BORGBACKUP_ARCHIVE_CACHE ]] || Error "ENABLE_BORG_NODE_FILTER=yes but Borg archive cache '$BORGBACKUP_ARCHIVE_CACHE' is missing or empty"
 
+    # Find highest-numbered archive for this node prefix (archive names are ${BORGBACKUP_ARCHIVE_PREFIX}_<number>)
+    latest_archive=$( grep "^${BORGBACKUP_ARCHIVE_PREFIX}_" "$BORGBACKUP_ARCHIVE_CACHE" | LC_ALL=C sort -t_ -k2,2n | tail -n 1 )
+    if [[ -n $latest_archive ]]; then
+        printf '%s\n' "$latest_archive" > "$BORGBACKUP_ARCHIVE_CACHE"
+        archive_cache_lines_total=1
+        BORGBACKUP_RESTORE_ARCHIVES_SHOW_MAX=1
+        LogUserOutput "ENABLE_BORG_NODE_FILTER enabled: restricting restore candidates to the latest ${BORGBACKUP_ARCHIVE_PREFIX}_* archive."
+    else
+        Error "ENABLE_BORG_NODE_FILTER=yes but no archives with prefix '${BORGBACKUP_ARCHIVE_PREFIX}_' exist in Borg repository $BORGBACKUP_REPO on ${BORGBACKUP_HOST:-USB}. Aborting to avoid restoring from a different node."
+    fi
+fi
 while true ; do
     UserOutput ""
     LogUserOutput "$( cat -n "$BORGBACKUP_ARCHIVE_CACHE" \
