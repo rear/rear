@@ -49,6 +49,8 @@ local boot_kernel_name="rear-kernel"
 local boot_initrd_name="rear-$REAR_INITRD_FILENAME"
 local boot_kernel_file="$boot_dir/$boot_kernel_name"
 local boot_initrd_file="$boot_dir/$boot_initrd_name"
+local boot_overlay_name="rear-overlay.sqsh"
+local boot_overlay_file="$boot_dir/$boot_overlay_name"
 local grub_config_dir="$boot_dir/grub${grub_num}"
 
 # Esure there is sufficient disk space available in /boot for the local Relax-and-Recover rescue system:
@@ -58,12 +60,12 @@ function total_filesize {
 # Free space in /boot:
 local free_space=$( df -Pkl $boot_dir | awk 'END { print $4 * 1024 }' )
 # Used space by an already existing Relax-and-Recover rescue system in /boot:
-local already_used_space=$( total_filesize $boot_kernel_file $boot_initrd_file )
+local already_used_space=$( total_filesize $boot_kernel_file $boot_initrd_file $boot_overlay_file )
 # Available space is the free space plus what an already existing Relax-and-Recover rescue system uses
 # because an already existing Relax-and-Recover rescue system would be overwritten:
 local available_space=$(( free_space + already_used_space ))
 # Required space for the new Relax-and-Recover rescue system:
-local required_space=$( total_filesize $KERNEL_FILE $initrd_file )
+local required_space=$( total_filesize $KERNEL_FILE $initrd_file $TMP_DIR/rear-overlay.sqsh )
 if (( available_space < required_space )) ; then
     required_MiB=$(( required_space / 1024 / 1024 ))
     available_MiB=$(( available_space / 1024 / 1024 ))
@@ -164,7 +166,9 @@ if is_true $USING_UEFI_BOOTLOADER ; then
         echo "menuentry '$grub_rear_menu_entry_name' --class os {"
         echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
         echo "          echo 'Loading kernel $boot_kernel_file ...'"
-        echo "          linux $grub_boot_dir/$boot_kernel_name root=UUID=$root_uuid $KERNEL_CMDLINE"
+    local grub_rescue_overlay_opt=""
+    test -f "$TMP_DIR/rear-overlay.sqsh" && grub_rescue_overlay_opt="rear_overlay=UUID=$grub_boot_uuid:$grub_boot_dir/$boot_overlay_name"
+        echo "          linux $grub_boot_dir/$boot_kernel_name root=UUID=$root_uuid $KERNEL_CMDLINE $grub_rescue_overlay_opt"
         echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"
@@ -244,9 +248,11 @@ else
     else
         echo "menuentry '$grub_rear_menu_entry_name' --class os {" >> $grub_rear_menu_entry_file
     fi
+    local grub_rescue_overlay_opt=""
+    test -f "$boot_overlay_file" && grub_rescue_overlay_opt="rear_overlay=UUID=$grub_boot_uuid:$grub_boot_dir/$boot_overlay_name"
       ( echo "          search --no-floppy --fs-uuid --set=root $grub_boot_uuid"
         echo "          echo 'Loading kernel $boot_kernel_file ...'"
-        echo "          linux $grub_boot_dir/$boot_kernel_name root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE"
+        echo "          linux $grub_boot_dir/$boot_kernel_name root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $grub_rescue_overlay_opt"
         echo "          echo 'Loading initrd $boot_initrd_file (may take a while) ...'"
         echo "          initrd $grub_boot_dir/$boot_initrd_name"
         echo "}"
@@ -269,6 +275,11 @@ else
         cp -af $v $grub_conf $grub_conf.old >&2
         cat $generated_grub_conf >$grub_conf
     fi
+fi
+
+# Copy overlay squashfs to /boot if present (created by pack/GNU/Linux/500_create_rear_overlay.sh)
+if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
+    cp -af $v "$TMP_DIR/rear-overlay.sqsh" "$boot_overlay_file" || BugError "Failed to copy overlay to '$boot_overlay_file'"
 fi
 
 # Provide the kernel as boot_kernel_file (i.e. /boot/rear-kernel):
