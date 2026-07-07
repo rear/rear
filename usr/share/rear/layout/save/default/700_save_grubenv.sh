@@ -14,7 +14,7 @@ function save_grubenv() {
 
 # Save grubenv only if Btrfs envblock is used, because the envblock
 # located in the Btrfs header is not accessible during recovery. In other cases,
-# the envblock is located at /boot/grub/envblock or /boot/grub2/envblock,
+# the envblock is located at /boot/grub/grubenv or /boot/grub2/grubenv,
 # which is backed up and restored as a regular file.
 if is_grubenv_set_required; then
     save_grubenv
