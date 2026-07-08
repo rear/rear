@@ -80,7 +80,7 @@ fi
 #   ./etc/inittab: FAILED
 #   ./etc/issue: FAILED
 # The /md5sums.txt file would be empty if the md5sums were not successfully created
-# during "rear mkrescue/mkbackup" by the build/default/995_md5sums_rootfs.sh script:
+# during "rear mkrescue/mkbackup" by the pack/GNU/Linux/800_md5sums_rootfs.sh script:
 if test -s "/md5sums.txt" ; then
     echo -e "\nVerifying md5sums of the files in the Relax-and-Recover rescue system"
     # /etc/motd is excluded because it was changed above when default.conf is missing.

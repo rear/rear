@@ -312,13 +312,5 @@ REAR_OVERLAY_USB_LABEL="$USB_DEVICE_FILESYSTEM_LABEL"
 EOF
 fi
 
-# Regenerate md5sums for the reduced rootfs so that verification at boot time
-# does not report missing files that are now in the overlay
-if test -f "$ROOTFS_DIR/md5sums.txt" ; then
-    Log "Regenerating md5sums.txt for reduced rootfs"
-    pushd "$ROOTFS_DIR" 1>&2
-    # Exclude module metadata files (modules.dep, modules.alias, etc.)
-    # because depmod -a regenerates them at boot after the overlay is applied
-    find . -xdev -type f -print0 | grep -E -z -v '/md5sums\.txt|/\.gitignore|~$|/dev/|/modules\.(dep|alias|symbols|devname|softdep)(\.bin)?$' | xargs -0 md5sum -b > md5sums.txt || cat /dev/null > md5sums.txt
-    popd 1>&2
-fi
+# md5sums.txt is created by pack/GNU/Linux/800_md5sums_rootfs.sh which
+# runs after this script, so it will reflect the reduced rootfs content.
