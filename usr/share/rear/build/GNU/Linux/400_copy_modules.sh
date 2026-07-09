@@ -16,11 +16,6 @@ if test "no_modules" = "$MODULES" ; then
     return
 fi
 
-# KERNEL_VERSION must be set.
-# It is set in default.conf to $( uname -r ) if not set by the user via the '-r' option of sbin/rear
-# so if it is not set it is likely an error by the user (e.g. empty setting in local.conf):
-test "$KERNEL_VERSION" || Error "KERNEL_VERSION must be set"
-
 # As general condition the /lib/modules/$KERNEL_VERSION directory must exist:
 if ! test -d "/lib/modules/$KERNEL_VERSION" ; then
     Error "Cannot copy kernel modules because /lib/modules/$KERNEL_VERSION does not exist"
