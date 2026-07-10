@@ -5,6 +5,12 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# KERNEL_VERSION must be set in any case.
+# It is set in default.conf to $( uname -r ) if not set by the user via the '-r' option of sbin/rear
+# so if it is not set it is likely an error by the user (e.g. wrong setting in local.conf).
+# Using plain test to ensure KERNEL_VERSION is a single non empty and non blank word:
+test $KERNEL_VERSION || Error "KERNEL_VERSION='$KERNEL_VERSION' is not a single non empty and non blank word"
+
 # When KERNEL_FILE is specified by the user use that as is or error out
 # cf. https://github.com/rear/rear/pull/1985#discussion_r237451729
 # (KERNEL_FILE is empty in default.conf):
