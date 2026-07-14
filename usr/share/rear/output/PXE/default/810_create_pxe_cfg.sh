@@ -1,53 +1,40 @@
-# 810_create_pxelinux_cfg.sh
+# 810_create_pxe_cfg.sh
 #
-# Create PXELINUX config on PXE server for Relax-and-Recover.
+# Create PXE config on PXE server for Relax-and-Recover.
 #
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
 # We got PXE_KERNEL and PXE_INITRD set in the previous script.
 
-local pxe_local_path
-if test "$PXE_CONFIG_URL" ; then
-    # E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
-    # On 'server' the directory /export/nfs/tftpboot/pxelinux.cfg must exist.
-    local scheme="$( url_scheme "$PXE_CONFIG_URL" )"
-    # We need filesystem access to the destination (schemes like ftp:// are not supported)
-    if ! scheme_supports_filesystem $scheme ; then
-        Error "Scheme $scheme for PXE output not supported, use a scheme that supports mounting (like nfs: )"
-    fi
-    mount_url "$PXE_CONFIG_URL" "$BUILD_DIR/tftpbootfs" $BACKUP_OPTIONS
-    pxe_local_path="$BUILD_DIR/tftpbootfs"
-else
-    # legacy way using pxe_local_path default
-    pxe_local_path="$PXE_CONFIG_PATH"
-fi
+test "$PXE_CONFIG_URL" || Error "PXE_CONFIG_URL must be set for PXE output"
+
+# E.g. PXE_CONFIG_URL=nfs://server/export/nfs/tftpboot/pxelinux.cfg
+# On 'server' the directory /export/nfs/tftpboot/pxelinux.cfg must exist.
+local pxe_cfg_local_path
+mount_pxe_url "$PXE_CONFIG_URL" "pxe_cfg_local_path"
 
 # PXE_CONFIG_PREFIX is by default 'rear-' (see default.conf).
 # pxe_config_file contains the PXELINUX boot configuration of $HOSTNAME
 local pxe_config_file="${PXE_CONFIG_PREFIX}$HOSTNAME"
-if test "$PXE_CONFIG_URL" ; then
-    if is_true "$PXE_CONFIG_GRUB_STYLE" ; then
-        make_pxelinux_config_grub >"$pxe_local_path/$pxe_config_file"
-    else
-        make_pxelinux_config >"$pxe_local_path/$pxe_config_file"
-    fi
-    chmod 444 "$pxe_local_path/$pxe_config_file"
+if is_true "$PXE_CONFIG_GRUB_STYLE" ; then
+    make_pxelinux_config_grub >"$pxe_cfg_local_path/$pxe_config_file"
 else
-    # legacy way using pxe_local_path default
-    local pxe_template_file="$( get_template "PXE_pxelinux.cfg" )"
-    cat >"$pxe_local_path/$pxe_config_file" <<EOF
-    $( test -s "$pxe_template_file" && cat "$pxe_template_file" )
-    display $OUTPUT_PREFIX_PXE/$PXE_MESSAGE
-    say ----------------------------------------------------------
-    say rear = disaster recover this system with Relax-and-Recover
-    label rear
-    kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
-    append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE
-EOF
-fi
+    local pxe_tftp_local_path
+    mount_pxe_url "$PXE_TFTP_UPLOAD_URL" "pxe_tftp_local_path"
 
-pushd "$pxe_local_path" >/dev/null || Error "pxe_local_path '$pxe_local_path' does not exist"
+    set_syslinux_features
+    make_syslinux_config "$pxe_tftp_local_path" "pxelinux" > "$pxe_cfg_local_path/$pxe_config_file"
+
+    # fix permissions of PXELINUX files
+    chmod 644 "$pxe_tftp_local_path"/*{memtest,pci*,.0,.c32,.help}
+    chmod 644 "$pxe_tftp_local_path/$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
+
+    umount_url "$PXE_TFTP_UPLOAD_URL" "$pxe_tftp_local_path"
+fi
+chmod 444 "$pxe_cfg_local_path/$pxe_config_file"
+
+pushd "$pxe_cfg_local_path" >/dev/null || Error "pxe_cfg_local_path '$pxe_cfg_local_path' does not exist"
 
 if test "$PXE_CREATE_LINKS" -a "$PXE_REMOVE_OLD_LINKS" ; then
     # remove old symlinks
@@ -100,10 +87,5 @@ esac
 
 popd >/dev/null
 
-if test "$PXE_CONFIG_URL" ; then
-    LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS addresses in $PXE_CONFIG_URL"
-    umount_url "$PXE_TFTP_UPLOAD_URL" "$BUILD_DIR/tftpbootfs"
-else
-    LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS addresses in $PXE_CONFIG_PATH"
-    RESULT_FILES+=( "$pxe_local_path/$pxe_config_file" )
-fi
+LogPrint "Created PXELINUX config '$pxe_config_file' and symlinks for $PXE_CREATE_LINKS addresses in $PXE_CONFIG_URL"
+umount_url "$PXE_CONFIG_URL" "$pxe_cfg_local_path"
