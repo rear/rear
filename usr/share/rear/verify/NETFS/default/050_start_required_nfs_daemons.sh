@@ -43,7 +43,7 @@ LogPrint "Starting required daemons for NFS: RPC portmapper (portmap or rpcbind)
 # newer Linux distros use rpcbind instead of portmap
 if has_binary portmap ; then
     portmapper_program="portmap"
-    # just run portmap because portmap can be called multiple times without harm
+    # run portmap "bona fide" because portmap can be called multiple times without harm
     portmap || Error "Starting RPC portmapper '$portmapper_program' failed."
     LogPrint "Started RPC portmapper '$portmapper_program'".
 elif has_binary rpcbind ; then
