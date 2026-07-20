@@ -29,7 +29,7 @@ if is_true "$BLOCKCLONE_TRY_UNMOUNT" && [ "$is_mounted" = "1" ]; then
     fi
 fi
 
-# Just put entry into log, that restore of mounted device was made
+# Output entry into log, that restore of mounted device was made
 is_mounted=$(is_device_mounted $BLOCKCLONE_SOURCE_DEV)
 if [ "$is_mounted" = "1" ]; then
     LogPrint "BLOCKCLONE was made on mounted device."
