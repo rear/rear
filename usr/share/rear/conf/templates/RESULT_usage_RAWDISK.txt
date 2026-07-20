@@ -5,7 +5,7 @@ How to recover your system:
    (a USB stick will do).
 
    * Always use the complete disk device (like /dev/sdc)
-     instead of just a disk partition (like /dev/sdc1).
+     instead of a disk partition (like /dev/sdc1).
 
    * Be careful to select the right device,
      DISK CONTENTS WILL BE OVERWRITTEN.
