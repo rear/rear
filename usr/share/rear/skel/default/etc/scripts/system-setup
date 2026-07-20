@@ -130,7 +130,7 @@ for system_setup_script in /etc/scripts/system-setup.d/*.sh ; do
         # In non-debug mode when a system setup script results non-zero exit code
         # do not show an 'exit code' message (like the above) to avoid false alarm
         # cf. https://github.com/rear/rear/pull/3070#discussion_r1393738863
-        # but just wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
+        # but wait USER_INPUT_UNATTENDED_TIMEOUT (by default 3 seconds)
         # so that the user could at least notice potential error messages from the script
         # unless in unattended_recovery mode where there is normally no watching user:
         if ! source $system_setup_script ; then
