@@ -4,5 +4,5 @@
 #
 #
 
-# we ignore errors because this is just a safety measure and the recovery should proceed regardless
+# we ignore errors because this is only a safety measure and the recovery should proceed regardless
 Galaxy stop || :
