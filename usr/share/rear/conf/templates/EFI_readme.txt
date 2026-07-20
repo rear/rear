@@ -1,6 +1,6 @@
 How to boot an IA64 with EFI shell?
 ==================================
-The following procedure can be handy is the default menu entries
+The following procedure can be handy if the default menu entries
 of the EFI BIOS do not work for some reason, e.g.
 
 Loading.: Red Hat Enterprise Linux Server
@@ -50,8 +50,7 @@ Device mapping table
 At the Shell> prompt select the disk you want, e.g.
 Shell> fs2:
 
-Just like with a DOS command prompt use cd and dir commands to view the FAT16
-content:
+Like with a DOS command prompt use cd and dir commands to view the FAT16 content:
 
 fs2:\> cd efi
 fs2:\EFI> dir
@@ -69,11 +68,13 @@ Directory of: fs2:\EFI
 
 fs2:\EFI> cd redhat
 
-To boot redhat just enter:
+To boot redhat enter:
 
 fs2:\EFI\redhat> elilo
 ELILO boot: Uncompressing Linux... done
 Loading file initrd...
 
-Just let it boot 'till you get the login prompt.
-Feedback on the above? Use 'rear validate' to mail us your comments.
+Let it boot until you get the login prompt.
+
+Feedback on the above?
+Use 'rear validate' to mail us your comments.
