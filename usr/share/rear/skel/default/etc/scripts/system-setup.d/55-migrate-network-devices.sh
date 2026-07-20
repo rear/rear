@@ -58,7 +58,7 @@ elif [ -s $tmp_mac_mapping_file ] ; then
     # Else, if some devices were renamed, we also need a migration, but it will
     # be automatic thanks to the $tmp_mac_mapping_file mapping file
 
-    # We do not need the $MAC_MAPPING_FILE file from the user, just overwrite it
+    # We do not need the $MAC_MAPPING_FILE file from the user, so overwrite it.
     # Later, we will remove that file to not have finalize() modify the ifcfg-*
     # files.
     mkdir -p $(dirname $MAC_MAPPING_FILE)
@@ -109,7 +109,7 @@ if read_and_strip_file $MAC_MAPPING_FILE ; then
 fi
 
 if unattended_recovery ; then
-    # we gonna cheat a bit and say we have map made (but we did not and just hope that the interfaces
+    # we gonna cheat a bit and say we have map made (but we did not and hope that the interfaces
     # will be in the same order on the recover vm as on the client vm)
     # For some background info see https://github.com/gdha/rear-automated-testing/issues/36
     test $MANUAL_MAC_MAPPING || MANUAL_MAC_MAPPING=unattended
@@ -265,7 +265,7 @@ fi
 # Reload udev if we have MAC mappings:
 if is_true $reload_udev ; then
     echo -n "Reloading udev ... "
-    # Force udev to reload rules (as they were just changed)
+    # Force udev to reload rules (as they were changed right now)
     # Failback to "udevadm control --reload" in case of problem (as specify in udevadm manpage in SLES12)
     # If nothing work, then wait 1 second delay. It should let the time for udev to detect changes in the rules files.
     udevadm control --reload-rules || udevadm control --reload || sleep 1
