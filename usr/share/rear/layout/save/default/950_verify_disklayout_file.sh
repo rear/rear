@@ -226,7 +226,7 @@ done < <( grep "^lvmdev " "$DISKLAYOUT_FILE" )
 # Finally after all tests had been done (so that the user gets all result messages) error out if needed:
 
 # It is a BugError when at this stage the entries in disklayout.conf are broken
-# because just before this script the entries in disklayout.conf were created
+# because right before this script the entries in disklayout.conf were created
 # by various 'layout/save' scripts where each of those 'layout/save' scripts should error out
 # when it cannot create a valid entry (e.g. because of whatever reasons outside of ReaR).
 local disklayout_file_is_broken=""
