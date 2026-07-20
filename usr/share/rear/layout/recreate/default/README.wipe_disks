@@ -582,7 +582,7 @@ do
   pvremove -ff $_pv
 done
 
-# just in case some were missed... (some always are)
+# precaution in case some were missed... (some always are)
 for _pv in $disks
 do
   pvremove -ff $_pv
