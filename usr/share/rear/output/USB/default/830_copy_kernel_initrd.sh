@@ -5,6 +5,12 @@ cp -pL $v "$KERNEL_FILE" "$BUILD_DIR/outputfs/$USB_PREFIX/kernel" >&2 || Error "
 
 cp -p $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$BUILD_DIR/outputfs/$USB_PREFIX/$REAR_INITRD_FILENAME" >&2 || Error "Could not create $BUILD_DIR/outputfs/$USB_PREFIX/$REAR_INITRD_FILENAME"
 
+# Copy overlay squashfs if present (created by pack/GNU/Linux/500_create_rear_overlay.sh)
+if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
+    cp -p $v "$TMP_DIR/rear-overlay.sqsh" "$BUILD_DIR/outputfs/$USB_PREFIX/rear-overlay.sqsh" >&2 || Error "Could not copy overlay to $USB_PREFIX/rear-overlay.sqsh"
+    Log "Copied rear-overlay.sqsh to $USB_PREFIX"
+fi
+
 Log "Copied kernel and $REAR_INITRD_FILENAME to $USB_PREFIX"
 
 # Copy current unfinished logfile to USB dir for debug purpose.

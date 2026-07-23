@@ -43,7 +43,7 @@ else
     say rear = disaster recover this system with Relax-and-Recover
     label rear
     kernel $OUTPUT_PREFIX_PXE/$PXE_KERNEL
-    append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE
+    append initrd=$OUTPUT_PREFIX_PXE/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE${PXE_OVERLAY:+${PXE_TFTP_IP:+ rear_overlay=tftp://$PXE_TFTP_IP/$PXE_OVERLAY}}
 EOF
 fi
 

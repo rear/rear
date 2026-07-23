@@ -840,11 +840,13 @@ function make_pxelinux_config {
     echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
     echo "ENDTEXT"
     echo "    kernel $PXE_KERNEL"
-    echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+    local pxe_overlay_opt=""
+    test "$PXE_OVERLAY" && test "$PXE_TFTP_IP" && pxe_overlay_opt="rear_overlay=tftp://$PXE_TFTP_IP/$PXE_OVERLAY"
+    echo "    append initrd=$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE $pxe_overlay_opt"
     echo "say ----------------------------------------------------------"
 
     # start with optional rear http entry if specified
-    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then    
+    if [[ "$PXE_HTTP_DOWNLOAD_URL" ]] ; then
         case "$PXE_RECOVER_MODE" in
         "automatic")
             echo "say rear-automatic-http - Recover $HOSTNAME (HTTP) with auto-recover kernel option"
@@ -867,7 +869,9 @@ function make_pxelinux_config {
         echo "${BACKUP:+BACKUP=$BACKUP} ${OUTPUT:+OUTPUT=$OUTPUT} ${BACKUP_URL:+BACKUP_URL=$BACKUP_URL}"
         echo "ENDTEXT"
         echo "    kernel $PXE_HTTP_DOWNLOAD_URL/$PXE_KERNEL"
-        echo "    append initrd=$PXE_HTTP_DOWNLOAD_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE"
+        local pxe_http_overlay_opt=""
+        test "$PXE_OVERLAY" && pxe_http_overlay_opt="rear_overlay=$PXE_HTTP_DOWNLOAD_URL/$PXE_OVERLAY"
+        echo "    append initrd=$PXE_HTTP_DOWNLOAD_URL/$PXE_INITRD root=/dev/ram0 vga=normal rw $KERNEL_CMDLINE $PXE_RECOVER_MODE $pxe_http_overlay_opt"
         echo "say ----------------------------------------------------------"
     fi
 

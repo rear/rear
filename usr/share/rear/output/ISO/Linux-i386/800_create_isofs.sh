@@ -17,6 +17,12 @@ else
     cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 fi
 
+# Copy overlay squashfs if present (created by pack/GNU/Linux/500_create_rear_overlay.sh)
+if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
+    Log "Copying overlay squashfs to ISO filesystem"
+    cp $v "$TMP_DIR/rear-overlay.sqsh" "$TMP_DIR/isofs/isolinux/rear-overlay.sqsh" || Error "Failed to copy overlay 'rear-overlay.sqsh'"
+fi
+
 #ISO_FILES+=( $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
 # in case the user populates this array manually we must not forget to copy
 # these files to our temporary isofs
