@@ -6,7 +6,7 @@ is_true $USING_UEFI_BOOTLOADER || return 0 # empty or 0 means NO UEFI
 # The virtual image must be aligned to 32MiB blocks
 # therefore the size of directory is measured in 32MiB blocks.
 # The du output is stored in an artificial bash array
-# so that $efi_img_sz can be simply used to get the first word
+# so that $efi_img_sz can be used to get the first word
 # which is the disk usage of the directory measured in 32MiB blocks:
 efi_img_sz=( $( du --block-size=32M --summarize $TMP_DIR/mnt ) ) || Error "Failed to determine disk usage of EFI virtual image content directory."
 

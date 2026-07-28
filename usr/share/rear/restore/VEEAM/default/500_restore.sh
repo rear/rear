@@ -8,7 +8,7 @@ if mount | grep -q /mnt/backup; then
     : # veeamconfig backup mount managed to mount the backup
 else
     # on some systems veamconfig backup mount doesn't manage (for unclear reasons) to actually mount
-    # the loopback device with the backup data, we simply try to do it ourselves
+    # the loopback device with the backup data, so we try to do it ourselves
     veeammount -d /tmp/veeamflr/*/FileLevelBackup_0 -p /mnt/backup -o ro -m || Error "Failed to mount Veeam loopback device"
 fi
 

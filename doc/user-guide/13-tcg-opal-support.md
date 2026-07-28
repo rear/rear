@@ -63,7 +63,7 @@ encryption key (DEK) will be generated. While `rear opaladmin` includes safety
 measures to avoid accidentally erasing a partitioned disk, do not rely on this
 solely. *Always back up your data and have a current rescue system available.*
 
-* Boot the rescue system just created.
+* Boot the created rescue system.
 * *RE-CHECK. The following command will erase selected disks.*
 * Run `rear opaladmin setupERASE _DEVICE_ ...`
 * `_DEVICE_` is the disk device path like `/dev/sda`, or `ALL` for all available
@@ -110,7 +110,7 @@ whether it is locked or not:
 
 * In addition to its regular contents, an Opal disk contains a special area for
 additional boot code, the (unfortunately named) _shadow MBR_. It is small (the
-spec guarantees just 128 MB), write-protected, and normally hidden.
+spec guarantees only 128 MB), write-protected, and normally hidden.
 
 * When *unlocked*, an Opal disk shows its regular contents like any other disk.
 In this state, the system firmware would boot the regular operating system.
@@ -144,7 +144,7 @@ To create a pre-boot authentication (PBA) system image:
 copy it onto a disk boot medium (a USB stick will do) with `dd
 if="$image_file" bs=1MB of="$usb_device"` (use the entire disk device, not a
 partition),
-boot from the medium just created.
+boot from the created medium.
 
 To create a rescue system with an integrated PBA system image:
 

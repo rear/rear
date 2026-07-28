@@ -30,7 +30,7 @@ function opal_devices() {
 function opal_device_disks() {
     local device="${1:?}"
     # prints all block devices belonging to the given Opal device.
-    # Normally, this is just the Opal device itself, however, NVME devices have one or more namespaces per primary
+    # Normally, this is the Opal device itself, however, NVME devices have one or more namespaces per primary
     # device and these namespaces act as disks.
 
     case "$device" in

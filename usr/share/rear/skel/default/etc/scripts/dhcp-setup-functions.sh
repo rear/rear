@@ -101,7 +101,7 @@ make_resolv_conf() {
                 # Remove instances of \032 (#450042)
                 search="${new_domain_search//\\032/ }"
             elif [ -n "${new_domain_name}" ]; then
-                # Note that the DHCP 'Domain Name Option' is really just a domain
+                # Note that the DHCP 'Domain Name Option' is really only a domain
                 # name, and that this practice of using the domain name option as
                 # a search path is both nonstandard and deprecated.
                 search="${new_domain_name}"

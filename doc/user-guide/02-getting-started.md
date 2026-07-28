@@ -109,7 +109,7 @@ The latest stable versions of Fedora and SLES can be installed via `yum` and `zy
 
 ## From RPM packages
 
-Simply install (or update) the provided packages using
+Install (or update) the provided packages using
 the command: `rpm -Uhv rear-1.17-1.fc20.noarch.rpm`
 
 You can test your installation by running `rear dump`:
@@ -138,7 +138,7 @@ On Debian (Ubuntu) use the following command to install missing dependencies:
 
 The latest and greatest sources are available at GitHub location : [https://github.com/rear/rear](https://github.com/rear/rear)
 
-To make local copy with our github repository just type:
+To make local copy with our github repository, type:
 
     git clone git@github.com:rear/rear.git
 

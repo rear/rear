@@ -187,7 +187,7 @@ for restore_input in "${RESTORE_ARCHIVES[@]}" ; do
                     #   block 5882679: root/rear/var/log/rear/rear-f79.28698.log
                     #   block 5882679: ** Block of NULs **
                     # cf. https://github.com/rear/rear/issues/1116#issuecomment-267065150
-                    # Use an array to easily separate the parts (i.e. each message word is an array member):
+                    # Use an array to separate the parts (i.e. each message word is an array member):
                     latest_tar_restore_message=( $( tail -n1 ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}-restore.log ) )
                     # An usual 'tar' restore message looks like 'block 219: etc/fstab'
                     # so that ${latest_tar_restore_message[1]} is '219:' in this example.

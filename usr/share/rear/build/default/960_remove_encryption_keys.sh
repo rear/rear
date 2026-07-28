@@ -30,13 +30,13 @@ for configfile in $( find ${ROOTFS_DIR}/etc/rear ${ROOTFS_DIR}/usr/share/rear/co
     # Avoid that the escaped BACKUP_PROG_CRYPT_KEY value in escaped_regexp is shown in debugscript mode as described above.
     # Without '-q' grep would output the escaped BACKUP_PROG_CRYPT_KEY value in escaped_regexp on stdout which is redirected to the log:
     { grep -q "BACKUP_PROG_CRYPT_KEY=.*$escaped_regexp" $configfile ; } 2>>/dev/$SECRET_OUTPUT_DEV || continue
-    # It must work for simple unquoted assignment as in
+    # It must work for unquoted assignment as in
     #   BACKUP_PROG_CRYPT_KEY=my_secret_passphrase
     # but also for more advanced things like
     #   { BACKUP_PROG_CRYPT_KEY='my;secret;passphrase' ; } 2>>/dev/$SECRET_OUTPUT_DEV
     # cf. the example in doc/user-guide/04-scenarios.adoc
     # To avoid arbitrary syntax matching via complicated regular expressions
-    # we simply remove all BACKUP_PROG_CRYPT_KEY values in lines that contain 'BACKUP_PROG_CRYPT_KEY='.
+    # we remove all BACKUP_PROG_CRYPT_KEY values in lines that contain 'BACKUP_PROG_CRYPT_KEY='.
     # Avoid that the escaped BACKUP_PROG_CRYPT_KEY value in escaped_regexp is shown in debugscript mode as described above:
     if { sed -i -e "/BACKUP_PROG_CRYPT_KEY=/s/$escaped_regexp//g" $configfile ; } 2>>/dev/$SECRET_OUTPUT_DEV ; then
         DebugPrint "Removed BACKUP_PROG_CRYPT_KEY value from $configfile"

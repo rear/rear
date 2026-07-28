@@ -39,7 +39,7 @@ ReaR with BLOCKCLONE is capable of doing backup of Linux/Windows dual boot
 
 #### Configuration
 
-This is very basic and most simple scenario where we will do backup
+This is a basic scenario where we will do backup
  of single partition (_/dev/sdc1_) located on separate disk (_/dev/sdc_). +
 First we need to set some global options in _local.conf_,
  like target for backups.

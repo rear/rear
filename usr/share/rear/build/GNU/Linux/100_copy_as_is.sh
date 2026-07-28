@@ -137,7 +137,7 @@ local copy_as_is_file=""
 while read -r copy_as_is_file ; do
     # Skip non-regular files like directories, device files, and 'tar' error messages (e.g. in case of non-existent files, see above)
     # but do not skip symbolic links. Their targets will be copied later by build/default/490_fix_broken_links.sh.
-    # We thus need library dependencies for symlinked executables just like for normal executables
+    # We thus need library dependencies for symlinked executables similar to normal executables
     # and build/default/490_fix_broken_links.sh does not perform library dependency scan.
     # See GitHub PR https://github.com/rear/rear/pull/3073
     # and issue https://github.com/rear/rear/issues/3064 for details.

@@ -14,7 +14,7 @@ proto="$(rsync_proto "$OUTPUT_URL")"
 
 LogPrint "Copying resulting files to $OUTPUT_URL location"
 
-# if called as mkbackuponly then we just don't have any result files.
+# if called as mkbackuponly then we don't have any result files.
 if test "$RESULT_FILES" ; then
     Log "Copying files '${RESULT_FILES[*]}' to $OUTPUT_URL location"
     cp $v "${RESULT_FILES[@]}" "${TMP_DIR}/rsync/${RSYNC_PREFIX}/" \

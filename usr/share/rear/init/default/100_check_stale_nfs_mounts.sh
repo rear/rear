@@ -1,5 +1,5 @@
 # 100_check_stale_nfs_mounts.sh
-# Purpose is to have a simple test if we have stale NFS mount points which
+# Purpose is to have a basic test if we have stale NFS mount points which
 # could lead to a hanging ReaR session.
 # In case there is a stale NFS present we bail out with an error to get it fixed before
 # running ReaR again.

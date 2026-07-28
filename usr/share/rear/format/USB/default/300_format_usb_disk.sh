@@ -85,7 +85,7 @@ fi
 # * backup/storage/data partition
 
 # In case of GPT with BIOS boot we need a 'bios_grub' partition
-# In case of MSDOS partition table we just need some free space in between the partition table and the first partition
+# In case of MSDOS partition table we only need some free space in between the partition table and the first partition
 # This partition should be the first one afaik this has a better chance to work with odd BIOS firmwares
 if is_true "$FORMAT_BIOS" ; then
     if [[ "$USB_DEVICE_PARTED_LABEL" == "gpt" ]] ; then

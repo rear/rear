@@ -36,7 +36,7 @@ if [ ! -b "$BLOCKCLONE_SOURCE_DEV" ]; then
         # and as we are in GNU/Linux world, we let user to shoot him self
         # in the foot ...
 
-        # Just a naive check if we are dealing with same disk.
+        # A naive check if we are dealing with same disk.
         # At this stage kernel is missing any info about BLOCKCLONE_SOURCE_DEV,
         # so we can't reliably determine relation between disks.
         if [ $(echo $BLOCKCLONE_SOURCE_DEV | \

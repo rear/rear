@@ -30,7 +30,7 @@ if test -s /etc/dracut.conf ; then
     )
 fi
 
-# Debian & Ubuntu use initramfs-tools and we include that as-is in 400_copy_modules.sh because we just
+# Debian & Ubuntu use initramfs-tools and we include that as-is in 400_copy_modules.sh because we
 # append the initrd modules file to the general modules file. Nevertheless we must ensure that those
 # modules are actually included in the rescue system
 if test -s /etc/initramfs-tools/modules ; then

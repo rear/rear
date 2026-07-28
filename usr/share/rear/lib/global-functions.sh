@@ -440,7 +440,7 @@ function scheme_accepts_files() {
 ### The actual path will be returned by backup_path() / output_path().
 ### If returns false, using backup_path() / output_path() has no sense
 ### and one must use a scheme-specific method (like lftp or writing them to a tape)
-### to upload files to the destination instead of just "cp" or other direct filesystem access.
+### to upload files to the destination instead of "cp" or other direct filesystem access.
 ### Returning true does not imply that the URL is currently mounted at a filesystem and usable,
 ### only that it can be mounted (use mount_url() first)
 function scheme_supports_filesystem() {
@@ -820,7 +820,7 @@ function umount_davfs() {
         # Wait for 3 sek. then remove the cache-dir /var/cache/davfs
         sleep 30
         # TODO: put in here the cache-dir from /etc/davfs2/davfs.conf
-        # and delete only the just used cache
+        # and delete only the recently used cache
         #rm -rf /var/cache/davfs2/*<mountpoint-hash>*
         rm -rf /var/cache/davfs2/*outputfs*
     else
@@ -857,7 +857,7 @@ function umount_mountpoint() {
     ### First, try a normal unmount using a timeout in case mountpoint became unresponsive
     ### due to QoS squeezing or due to stale NFS as the NFS server became unreachable (during mkbackup)
     ### That is the reason why we use a timeout in front of the umount command.
-    ### However, when tar is busy and the NFS becomes stale then ReaR processes will just hang forever
+    ### However, when tar is busy and the NFS becomes stale then ReaR processes will hang forever
     ### until we kill them manually.
     Log "Unmounting '$mountpoint'"
     timeout $timeout_secs umount $v "$mountpoint" && return 0
@@ -878,7 +878,7 @@ function umount_mountpoint() {
     Log "$mountpoint is still in use by ('kernel mount' is always there)"
     # The -M option avoids that fuser may show all processes using the '/' filesystem
     # e.g. for mountpoint $TMP_DIR/somedir ($TMP_DIR = $BUILD_DIR/tmp = /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/)
-    # when $TMP_DIR/somedir got umounted just before fuser starts, see "man fuser":
+    # when $TMP_DIR/somedir got umounted before fuser starts, see "man fuser":
     #   The mount -m option will match any file within the same device as the specified file,
     #   use the -M option as well if you mean to specify only the mount point.
     # So when $TMP_DIR/somedir is umounted 'fuser -v -M -m $TMP_DIR/somedir' only shows
@@ -970,7 +970,7 @@ function umount_mountpoint_retry_lazy() {
     Log "$what_is_mounted is still in use by ('kernel mount' is always there)"
     # The -M option avoids that fuser may show all processes using the '/' filesystem
     # e.g. for mountpoint $TMP_DIR/somedir ($TMP_DIR = $BUILD_DIR/tmp = /var/tmp/rear.XXXXXXXXXXXXXXX/tmp/)
-    # when $TMP_DIR/somedir got umounted just before fuser starts, see "man fuser":
+    # when $TMP_DIR/somedir got umounted before fuser starts, see "man fuser":
     #   The mount -m option will match any file within the same device as the specified file,
     #   use the -M option as well if you mean to specify only the mount point.
     # So when $TMP_DIR/somedir is umounted 'fuser -v -M -m $TMP_DIR/somedir' only shows
