@@ -42,6 +42,202 @@ function btrfs_subvolume_exists() {
     # Return awk's exit status
 }
 
+function get_btrfs_version() {
+    if ! has_binary btrfs; then
+        return 127
+    fi
+
+    btrfs version | grep -oP '(?<=btrfs-progs v)[\d.]+'
+}
+
+function get_available_btrfs_features() {
+    if ! has_binary mkfs.btrfs; then
+        return 127
+    fi
+
+    local buffer
+    if ! buffer="$(mkfs.btrfs -O list-all 2>&1)"; then
+        LogPrintError "Failed to get the list of available Btrfs filesystem features using mkfs.btrfs -O list-all."
+        return 1
+    fi
+
+    local features
+    # Filter out aliases such as 'bgt - block-group-tree alias'.
+    features="$(echo "$buffer" | awk 'NR>1 && !/alias$/ {print $1}')"
+
+    # We need to get runtime features using mkfs.btrfs -R list-all for versions
+    # between 5.7 and 6.2. Since 6.3, the -R option has been deprecated,
+    # and all features have been merged into the -O option.
+    if printf '%s\n' "5.7" "$(get_btrfs_version)" "6.2" | sort -V -C; then
+        if ! buffer="$(mkfs.btrfs -R list-all 2>&1)"; then
+            LogPrintError "Failed to get the list of available Btrfs runtime features using mkfs.btrfs -R list-all."
+            return 1
+        fi
+        features+=$'\n'
+        features+="$(echo "$buffer" | awk 'NR>1 {print $1}')"
+    fi
+
+    echo "$features"
+}
+
+# $1 - a filesystem UUID
+function are_btrfs_qgroups_enabled() {
+    local uuid=$1
+    if [ -z "$uuid" ]; then
+        return 3
+    fi
+
+    local qgroups_dir="/sys/fs/btrfs/$uuid/qgroups"
+    if [ ! -f "${qgroups_dir}/enabled" ] || [ ! -f "${qgroups_dir}/mode" ]; then
+        return 1
+    fi
+
+    [ "$(cat "${qgroups_dir}/enabled")" = "1" ] && [ "$(cat "${qgroups_dir}/mode")" = "qgroup" ]
+}
+
+# $1 - a filesystem UUID
+function get_enabled_btrfs_features() {
+    local uuid=$1
+    if [ -z "$uuid" ]; then
+        return 3
+    fi
+
+    local features_dir="/sys/fs/btrfs/$uuid/features/"
+
+    local enabled_features
+    if ! enabled_features=$(find "$features_dir" -maxdepth 1 -type f -exec grep -qx "1" {} \; -printf "%f\n"); then
+        LogPrintError "Failed to get enabled Btrfs filesystem features from '$features_dir'."
+        return 1
+    fi
+    # Translate sysfs feature names to mkfs.btrfs -O flag names
+    enabled_features="${enabled_features//_/-}"
+    enabled_features="${enabled_features/mixed-groups/mixed-bg}"
+    enabled_features="${enabled_features/extended-iref/extref}"
+    enabled_features="${enabled_features/simple-quota/squota}"
+
+    # Check whether qgroups are enabled separately because there isn't a dedicated flag in /sys/fs/btrfs/UUID/features/
+    if are_btrfs_qgroups_enabled "$uuid"; then
+        enabled_features+=$'\n'"quota"
+    fi
+
+    # Filter out filesystem features that can't be passed to the mkfs.btrfs -O option 
+    local available_features
+    if ! available_features=$(get_available_btrfs_features); then
+        LogPrintError "Failed to get the list of available Btrfs features to filter out enabled features for the filesystem with UUID $uuid."
+        return 1
+    fi
+    enabled_features=$(comm -12 <(echo "$available_features" | sort) <(echo "$enabled_features" | sort))
+
+    enabled_features="${enabled_features//$'\n'/,}"
+
+    echo "$enabled_features"
+}
+
+# $1 - a comma-separated list of enabled Btrfs features
+function get_btrfs_features_option_for_mkfs() {
+    local features=$1
+
+    local available_features
+    if ! available_features=$(get_available_btrfs_features); then
+        LogPrintError "Failed to get the list of available Btrfs features to prepare the mkfs.btrfs -O option."
+        return 1
+    fi
+    available_features=$(echo "$available_features" | sort)
+
+    local unsupported_features
+    unsupported_features=$(comm -13 <(echo "$available_features") <(echo "$features" | tr ',' '\n' | sort))
+
+    local unsupported_feature
+    for unsupported_feature in $unsupported_features; do
+        LogPrintError "'$unsupported_feature' is an unsupported Btrfs filesystem feature in the version of mkfs.btrfs used by the rescue system and cannot be recovered."
+        # Remove unsupported features caused by using an older mkfs.btrfs on the rescue system than mkfs.btrfs used to create a filesystem.
+        features=$(echo "$features" | sed -E "s/(^|,)${unsupported_feature}(,|$)/\1/;s/,$//")
+    done
+
+    local disabled_features
+    disabled_features=$(comm -23 <(echo "$available_features") <(echo "$features" | tr ',' '\n' | sort))
+
+    local disabled_feature
+    for disabled_feature in $disabled_features; do
+        # Explicitly turn off disabled features to prevent them from being enabled by default.
+        features+=",^$disabled_feature"
+    done
+
+    local result=""
+
+    # For versions 5.7 through 6.2, runtime features must be controlled using the -R option.
+    if printf '%s\n' "5.7" "$(get_btrfs_version)" "6.2" | sort -V -C; then
+        local runtime_features=""
+        for runtime_feature in free-space-tree quota; do
+            local found
+            if found=$(echo "$features" | grep -oP '(?<![a-z])\^?'"$runtime_feature"',?'); then
+                features="${features/$found/}"
+                runtime_features+=",${found%,}"
+            fi
+        done
+
+        if [ -n "$runtime_features" ]; then
+            result+=" -R ${runtime_features#,}"
+        fi
+
+        features=${features%,}
+    fi
+
+    if [ -n "$features" ]; then
+        result+=" -O ${features#,}"
+    fi
+
+    echo "$result"
+}
+
+# $1 - a filesystem UUID
+function get_btrfs_nodesize() {
+    local uuid=$1
+    if [ -z "$uuid" ]; then
+        return 3
+    fi
+
+    local nodesize_path=/sys/fs/btrfs/$uuid/nodesize
+    if [ ! -f "$nodesize_path" ]; then
+        return 127
+    fi
+
+    cat "$nodesize_path"
+}
+
+# $1 - a filesystem UUID
+function get_btrfs_sectorsize() {
+    local uuid=$1
+    if [ -z "$uuid" ]; then
+        return 3
+    fi
+
+    local sectorsize_path=/sys/fs/btrfs/$uuid/sectorsize
+    if [ ! -f "$sectorsize_path" ]; then
+        return 127
+    fi
+
+    cat "$sectorsize_path"
+}
+
+# $1 - nodesize
+function is_btrfs_nodesize_valid() {
+    local nodesize=$1
+    # The nodesize must be not larger than 64KiB and a power of 2
+    (( nodesize > 0 && nodesize <= 65536 && (nodesize & (nodesize - 1)) == 0 ))
+}
+
+# $1 - sectorsize
+function is_btrfs_sectorsize_valid() {
+    local sectorsize=$1
+    (( sectorsize > 0 && (sectorsize & (sectorsize - 1)) == 0 ))
+}
+
+# $1 - a comma-separated list of features
+function is_btrfs_list_of_features_valid() {
+    local list=$1
+    [ -z "$list" ] || [[ "$list" =~ ^[0-9a-z-]+(,[0-9a-z-]+)*$ ]]
+}
 
 #Parse output from xfs_info for later use by mkfs.xfs
 
