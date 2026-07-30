@@ -2,7 +2,7 @@
 # the minimal system requirements we need to recreate this
 # system in a remote DRP site
 # Output file: /var/lib/rear/sysreqs/Minimal_System_Requirements.txt
-# This is just for your information and the output is nowhere else
+# This is only for your information and the output is nowhere else
 # used by ReaR whatsoever.
 
 # `rear mkopalpba' creates a system where some information gathered below is missing (and not useful anyway): skip it.

@@ -288,7 +288,7 @@ and under normal circumstances contain same functional metadata.
 The binary header size ensures that the binary header is always written to only one sector (atomic write).
 Binary data in the keyslots area is allocated on-demand. There is no redundancy in the binary keyslots area
 ...
-To allow for an easy recovery, the secondary header must start at a fixed offset listed in Table 1.
+For a straightforward recovery, the secondary header must start at a fixed offset listed in Table 1.
  Offset            JSON area
 [bytes]     (hexa)      [kB]
   16384 (0x004000)       12
@@ -582,7 +582,7 @@ do
   pvremove -ff $_pv
 done
 
-# just in case some were missed... (some always are)
+# in case some were missed... (some always are)
 for _pv in $disks
 do
   pvremove -ff $_pv

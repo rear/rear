@@ -3,7 +3,7 @@
 
 ## Bootable ISO
 
-If you simply want a bootable ISO on a central server, you would do:
+If you only want a bootable ISO on a central server, you would do:
 
     OUTPUT=ISO
     OUTPUT_URL=http://server/path-to-push/
@@ -15,7 +15,7 @@ If you rely on your backup software to do the full restore of a system then you 
     OUTPUT=ISO
     BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
 
-When using one of the above backup solution (commercial or open source) then there is no need to use `rear mkbackup` as the backup workflow would be empty. Just use `rear mkrescue`
+When using one of the above backup solution (commercial or open source) then there is no need to use `rear mkbackup` as the backup workflow would be empty. Use `rear mkrescue` instead.
 
 ReaR will incorporate the needed executables and libraries of your chosen backup solution into the rescue image of ReaR.
 
@@ -381,7 +381,7 @@ Using USB devices with Relax-and-Recover can be appealing for several reasons:
  - If you only need to have a bootable rescue environment,
    a USB device is a cheap device to store it (needs up to about 1 GB)
 
- - When you have plenty of space, it could be a simple solution
+ - When you have plenty of space, it could be a solution
    to store complete disaster recovery images (rescue environment + backup)
 
 However USB devices may be slow for backup purposes,
@@ -626,7 +626,7 @@ different system.
 #### Restoring from Bacula tape
 
 Now you need to continue with restoring the actual Bacula backup, for this you
-have multiple options of which `bextract` is the most easy and
+have multiple options of which `bextract` is most
 straightforward, but also the slowest and unsafest.
 
 
@@ -648,7 +648,7 @@ or
     VolSessionId = 1
     VolSessionTime = 108927638
 
-Using a bootstrap file with bextract is easy, simply do:
+Using a bootstrap file with bextract is straightforward, do:
 `bextract -b bootstrap.txt Ultrium-1 /mnt/local`
 
 TIP: It helps to know exactly how many files you need to restore, and using
@@ -880,7 +880,7 @@ restore instructions on screen as an aid during recovery.
 
 #### Making the OBDR rescue tape
 
-To create a rescue environment that can boot from an OBDR tape, simply run
+To create a rescue environment that can boot from an OBDR tape, run
 `rear -v mkrescue` with a *REAR-000* -labeled tape inserted.
 
     [root@system ~]# rear -v mkrescue
@@ -900,7 +900,7 @@ To create a rescue environment that can boot from an OBDR tape, simply run
     Finished in 119 seconds.
 
 WARNING: The message above about _/dev/cciss/c1d0_ not being used makes sense
-as this is not a real disk but simply an entry for manipulating the controller.
+as this is not a real disk but an entry for manipulating the controller.
 This is specific to CCISS controllers with only a tape device attached.
 
 
@@ -1144,7 +1144,7 @@ for more information about how to restore a Bacula tape.
 An OBDR backup tape is similar to an OBDR rescue tape, but next to the rescue
 environment, it also consists of a complete backup of the system. This is
 very convenient in that a single tape can be use for disaster recovery, and
-recovery is much more simple and completely automated.
+recovery is much more straightforward and completely automated.
 
 CAUTION: Please make sure that the system fits onto a single tape uncompressed.
          For an LTO4 Ultrium that would mean no more than 1.6TB.
@@ -1163,7 +1163,7 @@ shows how to use the tape for storing *both* the rescue image and the backup.
 
 #### Making the OBDR backup tape
 
-To create a bootable backup tape that can boot from OBDR, simply run
+To create a bootable backup tape that can boot from OBDR, run
 `rear -v mkbackup` with a *REAR-000* -labeled tape inserted.
 
     [root@system ~]# rear -v mkbackup
@@ -1302,7 +1302,7 @@ Once booted on your recovery image, the `mountonly` workflow will:
 
 thereby making it possible for you to explore your system at will,
 correcting any configuration mistake that may have prevented its startup,
-or allowing you to simply `chroot` into it and further repair it using its
+or allowing you to `chroot` into it and further repair it using its
 own administrative tools.
 
 One important point to remember is that the `mountonly` workflow on its own
@@ -1369,7 +1369,7 @@ verbose):
     Running exit tasks
 
 As you can see in the output above, you will first be asked to confirm
-running the workflow (`Proceed with 'mountonly'`) -- simply press return.
+running the workflow (`Proceed with 'mountonly'`) -- press return.
 All the target filesystems should now be mounted below `/mnt/local` (including
 LUKS-encrypted ones if present and all needed virtual ones). In case any of
 them fails to mount, you will be offered to review the mount script and to

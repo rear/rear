@@ -20,7 +20,7 @@ falsempathdev=$( multipath -l | grep "HP,LOGICAL" | awk '{print $1}' )  # mpatha
 
 blockdev=$( get_parent_components  /dev/mapper/mpatha )   # /dev/sdy
 if [[ ! -b $blockdev ]]; then
-    # not a block device; to be prudent we just return
+    # not a block device; to be prudent we return
     return
 fi
 

@@ -17,7 +17,7 @@ if [[ ${#rsyncbackup[@]} -ge $BACKUP_RSYNC_RETENTION_DAYS ]] ; then
     # the first in the array list is the oldest rsync path
     remove_rsync_backup_path="${rsyncbackup[0]}"
 else
-    # nothing to remove; just return
+    # nothing to remove; return
     return
 fi
 

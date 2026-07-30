@@ -88,7 +88,7 @@ fi
 local grub2_config_generated="yes"
 if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$grub_name/grub.cfg" ; then
     grub2_config_generated="no"
-    # TODO: We should make this fatal.  Outdated/incomplete/just wrong grub2.cfg may result into an unbootable system.
+    # TODO: We should make this fatal. Outdated/incomplete/wrong grub2.cfg may result into an unbootable system.
     LogPrintError "Failed to generate boot/$grub_name/grub.cfg in $TARGET_FS_ROOT - trying to install GRUB2 nevertheless"
 fi
 

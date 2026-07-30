@@ -20,7 +20,7 @@ while read status name type junk ; do
         # The default user input is "Continue" to make it possible to run ReaR unattended
         # so that 'rear recover' proceeds after the timeout regardless that it probably fails
         # when the component is not recreated but perhaps it could succeed in migration mode
-        # on different replacement hardware where it might be even right to simply "Continue".
+        # on different replacement hardware where it might be even right to "Continue".
         # Generate a runtime-specific user_input_ID so that for each missing component
         # a different user_input_ID is used for the UserInput call so that the user can specify
         # for each missing component a different predefined user input.

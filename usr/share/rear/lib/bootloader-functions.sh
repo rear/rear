@@ -376,7 +376,7 @@ function make_syslinux_config {
 
         if [[ ! -r "$SYSLINUX_DIR/chain.c32" ]]; then
             # this should be above under the if chain.c32 section but it comes here because it will work only if localboot is supported
-            # if you use old extlinux then you just cannot boot from other device unless chain.c32 is available :-(
+            # if you use old extlinux then you cannot boot from other device unless chain.c32 is available :-(
             echo "say boot80 - Boot from first BIOS disk 0x80"
             echo "label boot80"
             syslinux_menu "label Boot First ^Local BIOS disk (0x80)"

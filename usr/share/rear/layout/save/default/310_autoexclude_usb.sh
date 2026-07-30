@@ -2,7 +2,7 @@
 # Reason: issue #645
 # /dev/sdb1                           240234164 2996672 225027564   2% /mnt
 # is not detected as an USB path which causing rsync to loop until usb output_url is full
-# If we find an USB device we will just add it to AUTOEXCLUDE_USB_PATH
+# If we find a USB device we will add it to AUTOEXCLUDE_USB_PATH
 
 for URL in "$OUTPUT_URL" "$BACKUP_URL" ; do
     if [[ ! -z "$URL" ]] ; then

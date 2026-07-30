@@ -2,7 +2,7 @@
 # in this directory. If EFI_STUB is enabled, we will automatically set
 # NOBOOTLOADER variable empty to avoid other boot loader installation attempts,
 # which will most probably fail (due missing binaries on original system).
-# If creation process of boot entry later fails, we will just print information
+# If creation process of boot entry later fails, we will print information
 # message to user to create boot entry manually, because ending restore process
 # with error in such late stage is not desirable.
 

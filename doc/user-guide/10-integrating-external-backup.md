@@ -74,7 +74,7 @@ Again, think burp, and you probably also need these directories to be created:
     $ mkdir --mode=755 /usr/share/rear/{finalize,prep,rescue,restore,verify}/BURP
 
 
-Another easy trick is to look at the existing scripts of NBU (as a starter):
+Another approach is to look at the existing scripts of NBU (as a starter):
 
     $ sudo rear -s mkrescue | grep NBU
     Source prep/NBU/default/400_prep_nbu.sh

@@ -75,7 +75,7 @@ function RemoveExitTask () {
 # where each PID is output on a separated line.
 # Calling "ps --ppid $parent_pid -o pid=" recursively is needed
 # because otherwise it does not work on all systems.
-# E.g. on SLES10 and SLES11 it would work to simply call "ps -g $parent_pid -o pid="
+# E.g. on SLES10 and SLES11 it would work to call "ps -g $parent_pid -o pid="
 #   # sleep 20 | grep foo & ( sleep 30 | grep bar & ) ; sleep 1 ; ps f -g $$
 #   [1] 3622
 #     PID TTY      STAT   TIME COMMAND

@@ -36,7 +36,7 @@ function my_udevtrigger () {
         test "$udevd_pid" && kill $udevd_pid
         udevstart </dev/null &>/dev/null && return 0
     fi
-    # as final fallback just wait a bit and hope for the best
+    # as final fallback wait a bit and hope for the best
     sleep 10
 }
 
@@ -57,7 +57,7 @@ function my_udevsettle () {
         done
         return 0
     fi
-    # as final fallback just wait a bit and hope for the best
+    # as final fallback wait a bit and hope for the best
     sleep 10
 }
 

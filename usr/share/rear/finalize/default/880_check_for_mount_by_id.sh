@@ -126,7 +126,7 @@ while read major minor blocks name ; do
         # Perhaps ID_SERIAL could be used because it is not set for a non-existent device
         # but it seems to be set for existent devices, see https://github.com/rear/rear/issues/3383
         # but how far could or should we rely on possibly changing scsi_id behaviour in general?
-        # So we keep it simple and straightforward and focus on what we are actually interested in
+        # So we keep it straightforward and focus on what we are actually interested in
         # i.e. only the scsi_id output of ID_VENDOR ID_MODEL ID_SERIAL (as a string without newlines):
         scsi_id_output="$( /usr/lib/udev/scsi_id -x -g -d $device_path | grep -E "$egrep_pattern" | tr -s '\n' ' ' )"
     else
