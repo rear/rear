@@ -1579,7 +1579,7 @@ function is_writable_only_by_owner () {
     # When there is an ACL, the group permission bits specify the ACL mask.
     # When the ACL mask has no write permission it masks all ACL write permissions of named users and groups.
     # So no write permission for the group means no write permission for any ACL named users and groups.
-    # Therfore it is not needed here to analyze and check what an ACL may additionally specify.
+    # Therefore it is not needed here to analyze and check what an ACL may additionally specify.
     # Test that group_write_permission and others_write_permission are explicitly '-' (i.e. explicitly no write permission):
     test "$group_write_permission" = '-' -a "$others_write_permission" = '-' && return 0
     return 1
