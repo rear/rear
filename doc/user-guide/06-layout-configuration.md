@@ -681,7 +681,7 @@ They can be excluded when hand-crafting a layout file line.
 
 ### Filesystems
 
-    fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [options=<filesystem options>]
+    fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [nodesize=<btrfs node size>] [sectorsize=<btrfs sector size>] [features=<btrfs filesystem features>] [options=<filesystem options>]
 
 
 ### Btrfs Default SubVolumes
