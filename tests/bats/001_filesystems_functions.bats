@@ -150,6 +150,33 @@ squota"
     [ "$output" = "$features" ]
 }
 
+@test "Get available Btrfs features: failed to get version to check whether mkfs.btrfs -R list-all must be used" {
+    function has_binary() {
+        [ "$1" = "mkfs.btrfs" ]
+    }
+
+    function mkfs.btrfs() {
+        [ "$1 $2" = "-O list-all" ] || return 1
+        {
+            echo "Filesystem features available:"
+            echo "mixed-bg            - mixed data and metadata block groups (0x4, compat=2.6.37, safe=2.6.37)"
+            echo "extref              - increased hardlink limit per file to 65536 (0x40, compat=3.7, safe=3.12, default=3.12)"
+            echo "raid56              - raid56 extended format (0x80, compat=3.9)"
+            echo "skinny-metadata     - reduced-size metadata extent refs (0x100, compat=3.10, safe=3.18, default=3.18)"
+            echo "no-holes            - no explicit hole extents for files (0x200, compat=3.14, safe=4.0, default=5.15)"
+            echo "raid1c34            - RAID1 with 3 or 4 copies (0x800, compat=5.5)"
+            echo "zoned               - support zoned devices (0x1000, compat=5.12)"
+        } >&2
+    }
+
+    function get_btrfs_version() {
+        return 1
+    }
+
+    run -1 get_available_btrfs_features
+    [ "$output" = "Failed to determine the Btrfs version to check whether mkfs.btrfs -R list-all must be used." ]
+}
+
 @test "Get available Btrfs features: failed to get runtime features on v5.16.2" {
     function has_binary() {
         [ "$1" = "mkfs.btrfs" ]
@@ -368,6 +395,24 @@ no-holes"
     [ "$output" = "Failed to get the list of available Btrfs features to prepare the mkfs.btrfs -O option." ]
 }
 
+
+@test "Get Btrfs features option for mkfs: failed to get version to check whether mkfs.btrfs -R list-all must be used" {
+    function get_available_btrfs_features() {
+        echo "mixed-bg"
+        echo "quota"
+        echo "extref"
+        echo "no-holes"
+        echo "free-space-tree"
+    }
+
+    function get_btrfs_version() {
+        return 1
+    }
+
+    run -1 get_btrfs_features_option_for_mkfs
+    [ "$output" = "Failed to determine the Btrfs version to check whether mkfs.btrfs -R list-all must be used." ]
+}
+
 @test "Get Btrfs features option for mkfs: disable all features v6.14" {
     function get_available_btrfs_features() {
         echo "mixed-bg"
@@ -547,7 +592,7 @@ no-holes"
     is_btrfs_sectorsize_valid 16384
 }
 
-@test "Is Btrfs nodesize valid: sectorsize must be a power of 2" {
+@test "Is Btrfs sectorsize valid: sectorsize must be a power of 2" {
     run -1 is_btrfs_sectorsize_valid 1023
 }
 

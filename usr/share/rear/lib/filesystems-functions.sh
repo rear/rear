@@ -68,7 +68,13 @@ function get_available_btrfs_features() {
     # We need to get runtime features using mkfs.btrfs -R list-all for versions
     # between 5.7 and 6.2. Since 6.3, the -R option has been deprecated,
     # and all features have been merged into the -O option.
-    if printf '%s\n' "5.7" "$(get_btrfs_version)" "6.2" | sort -V -C; then
+    local btrfs_version
+    if ! btrfs_version=$(get_btrfs_version); then
+        LogPrintError "Failed to determine the Btrfs version to check whether mkfs.btrfs -R list-all must be used."
+        return 1
+    fi
+
+    if printf '%s\n' "5.7" "$btrfs_version" "6.2" | sort -V -C; then
         if ! buffer="$(mkfs.btrfs -R list-all 2>&1)"; then
             LogPrintError "Failed to get the list of available Btrfs runtime features using mkfs.btrfs -R list-all."
             return 1
@@ -166,7 +172,12 @@ function get_btrfs_features_option_for_mkfs() {
     local result=""
 
     # For versions 5.7 through 6.2, runtime features must be controlled using the -R option.
-    if printf '%s\n' "5.7" "$(get_btrfs_version)" "6.2" | sort -V -C; then
+    local btrfs_version
+    if ! btrfs_version=$(get_btrfs_version); then
+        LogPrintError "Failed to determine the Btrfs version to check whether mkfs.btrfs -R list-all must be used."
+        return 1
+    fi
+    if printf '%s\n' "5.7" "$btrfs_version" "6.2" | sort -V -C; then
         local runtime_features=""
         for runtime_feature in free-space-tree quota; do
             local found
@@ -223,6 +234,7 @@ function get_btrfs_sectorsize() {
 # $1 - nodesize
 function is_btrfs_nodesize_valid() {
     local nodesize=$1
+    [[ "$nodesize" =~ ^[0-9]+$ ]] || return 1
     # The nodesize must be not larger than 64KiB and a power of 2
     (( nodesize > 0 && nodesize <= 65536 && (nodesize & (nodesize - 1)) == 0 ))
 }
@@ -230,6 +242,8 @@ function is_btrfs_nodesize_valid() {
 # $1 - sectorsize
 function is_btrfs_sectorsize_valid() {
     local sectorsize=$1
+    [[ "$sectorsize" =~ ^[0-9]+$ ]] || return 1
+    # The sectorsize must be a power of 2
     (( sectorsize > 0 && (sectorsize & (sectorsize - 1)) == 0 ))
 }
 
