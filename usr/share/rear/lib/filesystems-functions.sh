@@ -66,7 +66,7 @@ function get_available_btrfs_features() {
     features="$(echo "$buffer" | awk 'NR>1 && !/alias$/ {print $1}')"
 
     # We need to get runtime features using mkfs.btrfs -R list-all for versions
-    # between 5.7 and 6.2. Since 6.3, the -R option has been deprecated,
+    # between 5.7 and 6.2.2. Since 6.3, the -R option has been deprecated,
     # and all features have been merged into the -O option.
     local btrfs_version
     if ! btrfs_version=$(get_btrfs_version); then
@@ -74,7 +74,7 @@ function get_available_btrfs_features() {
         return 1
     fi
 
-    if printf '%s\n' "5.7" "$btrfs_version" "6.2" | sort -V -C; then
+    if printf '%s\n' "5.7" "$btrfs_version" "6.2.2" | sort -V -C; then
         if ! buffer="$(mkfs.btrfs -R list-all 2>&1)"; then
             LogPrintError "Failed to get the list of available Btrfs runtime features using mkfs.btrfs -R list-all."
             return 1
@@ -171,13 +171,13 @@ function get_btrfs_features_option_for_mkfs() {
 
     local result=""
 
-    # For versions 5.7 through 6.2, runtime features must be controlled using the -R option.
+    # For versions 5.7 through 6.2.2, runtime features must be controlled using the -R option.
     local btrfs_version
     if ! btrfs_version=$(get_btrfs_version); then
         LogPrintError "Failed to determine the Btrfs version to check whether mkfs.btrfs -R list-all must be used."
         return 1
     fi
-    if printf '%s\n' "5.7" "$btrfs_version" "6.2" | sort -V -C; then
+    if printf '%s\n' "5.7" "$btrfs_version" "6.2.2" | sort -V -C; then
         local runtime_features=""
         for runtime_feature in free-space-tree quota; do
             local found

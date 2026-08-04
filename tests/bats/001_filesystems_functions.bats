@@ -283,6 +283,51 @@ no-holes"
     [ "$output" = "$features" ]
 }
 
+@test "Get available Btrfs features: v6.2.2" {
+    function has_binary() {
+        [ "$1" = "mkfs.btrfs" ]
+    }
+
+    function mkfs.btrfs() {
+        [ "$1 $2" = "-O list-all" ] && {
+            echo "Filesystem features available:"
+            echo "mixed-bg            - mixed data and metadata block groups (compat=2.6.37, safe=2.6.37)"
+            echo "extref              - increased hardlink limit per file to 65536 (compat=3.7, safe=3.12, default=3.12)"
+            echo "raid56              - raid56 extended format (compat=3.9)"
+            echo "skinny-metadata     - reduced-size metadata extent refs (compat=3.10, safe=3.18, default=3.18)"
+            echo "no-holes            - no explicit hole extents for files (compat=3.14, safe=4.0, default=5.15)"
+            echo "raid1c34            - RAID1 with 3 or 4 copies (compat=5.5)"
+            echo "zoned               - support zoned devices (compat=5.12)"
+            return 0
+        } >&2
+        [ "$1 $2" = "-R list-all" ] && {
+            echo "Runtime features available:"
+            echo "quota               - quota support (qgroups) (compat=3.4)"
+            echo "free-space-tree     - free space tree (space_cache=v2) (compat=4.5, safe=4.9, default=5.15)"
+            return 0
+        } >&2
+
+        return 1
+    }
+
+    function get_btrfs_version() {
+        echo "6.2.2"
+    }
+
+    local features="mixed-bg
+extref
+raid56
+skinny-metadata
+no-holes
+raid1c34
+zoned
+quota
+free-space-tree"
+
+    run -0 get_available_btrfs_features
+    [ "$output" = "$features" ]
+}
+
 @test "Get enabled Btrfs features: a filesystem UUID is not passed" {
     run -3 get_enabled_btrfs_features
 }
