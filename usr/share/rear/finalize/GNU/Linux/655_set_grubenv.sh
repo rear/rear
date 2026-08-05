@@ -1,4 +1,27 @@
+#!/bin/bash
 # Set up grubenv (GRUB environment block)
+
+function cleanup_grubenv() {
+    # It is assumed that grubenv is located at either /boot/grub2/grubenv or /boot/grub/grubenv.
+    # If grubenv is a regular file, it is removed. If grubenv is a symlink, the symlink target
+    # is removed while the symlink itself is kept, becoming a dangling symlink. grub-editenv
+    # follows the symlink and initializes grubenv at the target location.
+    local grubenv
+    for grubenv in "${GRUBENV_LOCATIONS[@]}"; do
+        grubenv="${TARGET_FS_ROOT}${grubenv}"
+        if [ -h "$grubenv" ]; then
+            local actual_path
+            actual_path=$(readlink -e "$grubenv") || return 1
+            rm -f "$actual_path"
+            return
+        elif [ -f "$grubenv" ]; then
+            rm -f "$grubenv"
+            return
+        fi
+    done
+
+    return 1
+}
 
 function set_grubenv() {
     local grub_editenv
@@ -33,5 +56,9 @@ function set_grubenv() {
 }
 
 if is_grubenv_set_required; then
+    if ! cleanup_grubenv; then
+        LogPrintError "Failed to clean up grubenv before setting it"
+        return 1
+    fi
     set_grubenv
 fi

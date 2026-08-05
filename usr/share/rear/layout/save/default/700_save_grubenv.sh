@@ -1,3 +1,4 @@
+#!/bin/bash
 # Save grubenv (GRUB environment block) to $VAR_DIR/recovery/grubenv.
 # See https://www.gnu.org/software/grub/manual/grub/html_node/Environment-block.html
 # for more details about grubenv.

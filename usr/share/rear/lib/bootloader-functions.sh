@@ -1074,19 +1074,37 @@ function is_grub2_used() {
 
 GRUBENV_PATH="$VAR_DIR/recovery/grubenv"
 
+# Standard GRUB environment block locations
+GRUBENV_LOCATIONS=(/boot/grub2/grubenv /boot/grub/grubenv)
+
 function is_grubenv_set_required() {
     if ! is_grub2_used; then
-        return 1;
+        return 1
     fi
 
     if test "$RECOVERY_MODE"; then
         [ -f "$GRUBENV_PATH" ]
+        return
     else
+        local grubenv grubenv_found=0
+        for grubenv in "${GRUBENV_LOCATIONS[@]}"; do
+            if [ -e "$grubenv" ]; then
+                grubenv_found=1
+                break
+            fi
+        done
+
+        if [ $grubenv_found -ne 1 ]; then
+            LogPrintError "Failed to find grubenv to check whether an external env_block is used and whether saving it is needed"
+            return 1
+        fi
+
         # env_block sets the external raw block where GRUB can store environment block.
         # See https://www.gnu.org/software/grub/manual/grub/html_node/env_005fblock.html
         # for more details about env_block.
         # As env_block may be located in filesystem blocks, it is accessible only during backup.
         list_grubenv | grep -q "^env_block="
+        return
     fi
 }
 
