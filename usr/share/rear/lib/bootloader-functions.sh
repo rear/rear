@@ -1,4 +1,4 @@
- auto_recover $ISO_RECOVER_MODE# Test for the syslinux version
+# Test for the syslinux version
 function get_syslinux_version {
     local syslinux_version
 
@@ -607,6 +607,9 @@ function create_grub2_cfg {
     local grub2_default_menu_entry="$GRUB2_DEFAULT_BOOT"
     test "$grub2_default_menu_entry" || grub2_default_menu_entry="chainloader"
 
+    local grub2_timeout="$GRUB2_TIMEOUT"
+    test "$grub2_timeout" || grub2_timeout=300
+
     case "$ISO_DEFAULT" in
       (automatic)
           grub2_default_menu_entry="rear_automatic"   # not secure-boot variant
@@ -624,9 +627,6 @@ function create_grub2_cfg {
           ;;
       # boothd / empty: keep GRUB2_DEFAULT_BOOT (usually chainloader)
     esac
-
-    local grub2_timeout="$GRUB2_TIMEOUT"
-    test "$grub2_timeout" || grub2_timeout=300
 
     local root_uuid=$( get_root_disk_UUID )
     test -b /dev/disk/by-uuid/$root_uuid || Error "root_uuid device '/dev/disk/by-uuid/$root_uuid' is no block device"
@@ -738,7 +738,7 @@ menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrd $grub2_initrd
 }
-menuentry "Autoamtic Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear_automatic {
+menuentry "Automatic Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear_automatic {
     insmod gzio
     insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
