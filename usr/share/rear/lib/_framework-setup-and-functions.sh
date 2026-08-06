@@ -1521,6 +1521,22 @@ function ProgressInfo () {
 
 # Sourcing functions to enforce trusted sourcing:
 
+# Check the file (i.e. with symlinks resolved) is trusted
+# regardless of owner / path / permissions
+# see https://github.com/rear/rear/pull/3621#issuecomment-5175531546
+function is_trusted_file () {
+    local file="$1"
+    local actual_file=""
+    local trusted_file=""
+    # Get the full path of the actual file (i.e. with leading / and symlinks resolved)
+    # e.g. /etc/os-release is a symbolic link to /usr/lib/os-release (at least on openSUSE Leap 15.6):
+    actual_file="$( readlink -e "$file" )" || Error "is_trusted_file(): 'readlink -e $file' failed"
+    for trusted_file in "${TRUSTED_FILES[@]}" ; do
+        test "$actual_file" = "$trusted_file" && return 0
+    done
+    return 1
+}
+
 # Specify default TRUSTED_OWNERS (used by the is_trusted_owner function):
 #
 # The owner of sbin/rear is always trusted.
@@ -1550,6 +1566,35 @@ function is_trusted_owner () {
     for trusted_owner in "${TRUSTED_OWNERS[@]}" ; do
         test "$owner_name" = "$trusted_owner" && return 0
     done
+    return 1
+}
+
+# Check that none except the file owner has write permissions
+# i.e. check that there is no write permission for the group or for others:
+function is_writable_only_by_owner () {
+    local file="$1"
+    local permission_chars=""
+    # Do not error out in 'stat' when it is neither a regular file nor a link to a regular file
+    # but it is not trusted when it is neither a regular file nor a link to a regular file:
+    test -f "$file" || return 1
+    # '-L' forces stat to follow symlinks (and error out if that fails):
+    permission_chars="$( stat -L -c %A "$file" )" || Error "is_writable_only_by_owner(): 'stat -L -c %A $file' failed"
+    # permission_chars are e.g. -rwxrw-r-- so
+    # the character offsets are 0123456789 so that
+    # the character at offset 5 is the write permission for the group and
+    # the character at offset 8 is the write permission for others
+    # so group_write_permission and others_write_permission are 'w' or '-'
+    local group_write_permission="${permission_chars:5:1}"
+    local others_write_permission="${permission_chars:8:1}"
+    # To check that none except the file owner has write permissions
+    # we only need to check if there is a write permission for the group or for others.
+    # We do not check owner permissions because they do not matter for this function.
+    # When there is an ACL, the group permission bits specify the ACL mask.
+    # When the ACL mask has no write permission it masks all ACL write permissions of named users and groups.
+    # So no write permission for the group means no write permission for any ACL named users and groups.
+    # Therefore it is not needed here to analyze and check what an ACL may additionally specify.
+    # Test that group_write_permission and others_write_permission are explicitly '-' (i.e. explicitly no write permission):
+    test "$group_write_permission" = '-' -a "$others_write_permission" = '-' && return 0
     return 1
 }
 
@@ -1715,10 +1760,14 @@ function source () {
         Debug "Skipped sourcing '$source_file' (no regular file)"
         return 1
     fi
-    # Enforce source file owner is trusted:
-    is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]})"
-    # Enforce source file starts with a trusted path:
-    is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS: ${TRUSTED_PATHS[*]})"
+    if ! is_trusted_file "$source_file" ; then
+        # Enforce source file owner is trusted:
+        is_trusted_owner "$source_file" || Error "Forbidden to source '$source_file' (not a TRUSTED_OWNERS: ${TRUSTED_OWNERS[*]})"
+        # Enforce source file is at most writable by its owner:
+        is_writable_only_by_owner "$source_file" || Error "Forbidden to source '$source_file' (group or others have write permission)"
+        # Enforce source file starts with a trusted path:
+        is_trusted_path "$source_file" || Error "Forbidden to source '$source_file' (not below TRUSTED_PATHS: ${TRUSTED_PATHS[*]})"
+    fi
   } 2>>/dev/$DISPENSABLE_OUTPUT_DEV
     # The actual work (source the source file):
     builtin source "$@"
