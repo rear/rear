@@ -18,7 +18,7 @@ case $scheme in
         # it results a backup.tar.gz that contains itself (but in a not-yet-complete state)
         # because all of the '/' filesystem is included in the backup.
         # To avoid various weird issues when the backup contains itself
-        # a backup directory in the '/' filesystem is simply forbidden
+        # a backup directory in the '/' filesystem is forbidden
         # regardless that a backup inside itself may not result fatal errors
         # see https://github.com/rear/rear/issues/926
         if ! test -e "$backup_directory" ; then

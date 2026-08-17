@@ -84,7 +84,7 @@ local actually_found_library_symlink_target_relpath=""
 local actually_missing_libraries="no"
 # Third-party backup tools may use LD_LIBRARY_PATH to find their libraries
 # so that for testing such third-party backup tools we must also use their
-# special LD_LIBRARY_PATH here, otherwise just use the default:
+# special LD_LIBRARY_PATH here, otherwise use the default:
 if contains_visible_char "$LD_LIBRARY_PATH_FOR_BACKUP_TOOL" ; then
     if test $LD_LIBRARY_PATH; then
         backup_tool_LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LD_LIBRARY_PATH_FOR_BACKUP_TOOL"
@@ -225,7 +225,7 @@ for binary in $( find "$ROOTFS_DIR" -xdev -type f \( -executable -o -name '*.so'
         # Show files from inside the recovery system to the user as relative path without leading slashes
         # (extglob is set in usr/sbin/rear):
         not_found_library_relpath="${not_found_library##+(/)}"
-        # We prefer a simple grep pipe over dealing with 'find' and its -name versus -path options.
+        # We prefer a grep pipe over dealing with 'find' and its -name versus -path options.
         # 'find' what the full path is from within the recovery system i.e. without leading ROOTFS_DIR but with leading slash
         # so e.g. /var/tmp/rear.XXXXXXXXXXXXXXX/rootfs/usr/lib64/libparted.so.2.0.1 is output as /usr/lib64/libparted.so.2.0.1
         # to ensure that grep matches e.g. when not_found_library="/usr/lib64/libparted.so.2.0.1" (has a leading slash).
@@ -322,7 +322,7 @@ fi
 # Finally after all tests had been done (so that the user gets all result messages) error out if needed:
 
 # It is a BugError when at this stage required programs are missing in the recovery system
-# because just before this script the script build/default/950_check_missing_programs.sh
+# because before this script the script build/default/950_check_missing_programs.sh
 # was run which errors out when there are missing required programs on the original system
 # so that at this stage it means the required programs exist on the original system
 # and something went wrong when making the recovery system:

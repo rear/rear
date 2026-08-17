@@ -156,7 +156,7 @@ at least `BACKUP_URL=usb` requires USB_SUFFIX to be set
 to work with incremental or differential backup.
 
 * BACKUP=REQUESTRESTORE:
-No backup, just ask user to somehow restore the filesystems.
+No backup, request the user to somehow restore the filesystems.
 
 * BACKUP=EXTERNAL:
 Use a custom strategy by providing backup and restore commands.
@@ -188,7 +188,7 @@ To backup to NFS disk, use `BACKUP_URL=nfs://nfs-server-name/share/path`
 
 * BACKUP_URL=tape://:
 To backup to tape device, use `BACKUP_URL=tape:///dev/nst0` or alternatively,
-simply define `TAPE_DEVICE=/dev/nst0`
+define `TAPE_DEVICE=/dev/nst0`
 
 * BACKUP_URL=cifs://:
 To backup to a Samba share (CIFS), use

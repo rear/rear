@@ -1,5 +1,5 @@
 
-# check if SELinux is in use, if not, just return
+# check if SELinux is in use, if not, return
 if [ -f /selinux/enforce ] ; then
     SELINUX_ENFORCE=/selinux/enforce
 elif [ -f /sys/fs/selinux/enforce ] ; then
@@ -21,7 +21,7 @@ fi
 # SELinux is found to be available on this system;
 # depending on backup program we may need to do different things
 # So far, only rsync and tar has special options for selinux.
-# Others, just disable SELinux during backup only!
+# Others, disable SELinux during backup only!
 case $(basename $BACKUP_PROG) in
 
     (rsync)

@@ -15,7 +15,7 @@ SocketMode=0666
 # is the main syslog daemon in the system. Another syslog
 # implementation (which might be started via on-boot or another
 # non-socket activation) can take over possession of the socket and
-# terminate systemd-kmsg-syslogd. It could also simply replace the
+# terminate systemd-kmsg-syslogd. It could also replace the
 # socket in the file system, and leave systemd-kmsg-syslogd untouched.
 
 Service=rsyslog.service

@@ -36,9 +36,20 @@ fi
 cp -L $v "$KERNEL_FILE" "$pxe_tftp_local_path/$PXE_KERNEL" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
 cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$pxe_tftp_local_path/$PXE_INITRD" || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 echo "$VERSION_INFO" >"$pxe_tftp_local_path/$PXE_MESSAGE"
+# Copy overlay squashfs if present (created by pack/GNU/Linux/500_create_rear_overlay.sh)
+if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
+    if [[ "$PXE_TFTP_UPLOAD_URL" ]] ; then
+        PXE_OVERLAY="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}rear-overlay.sqsh"
+    else
+        PXE_OVERLAY="${PXE_TFTP_PREFIX}rear-overlay.sqsh"
+    fi
+    cp -L $v "$TMP_DIR/rear-overlay.sqsh" "$pxe_tftp_local_path/$PXE_OVERLAY" || Error "Failed to copy overlay 'rear-overlay.sqsh'"
+fi
+
 # files must be readable for others for PXE
 # files should be writebale by owner or overwriting it on later runs will fail
 chmod 644 "$pxe_tftp_local_path/$PXE_KERNEL" "$pxe_tftp_local_path/$PXE_INITRD" "$pxe_tftp_local_path/$PXE_MESSAGE"
+test -f "$pxe_tftp_local_path/$PXE_OVERLAY" && chmod 644 "$pxe_tftp_local_path/$PXE_OVERLAY"
 
 if [[ "$PXE_TFTP_UPLOAD_URL" ]] && [[ "$PXE_RECOVER_MODE" = "unattended" ]] ; then
     # If we have chosen for "unattended" recover mode then we also copy the

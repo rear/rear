@@ -69,7 +69,7 @@ described in a later section. It is already clear that this file is human
 readable and thus human editable. It is also machine readable and all
 information necessary to restore a system is listed.
 
-It's easy to see that there are 3 disks attached to the system. `/dev/sda` is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has just normal partitions. The other one has a physical volume on one of the partitions.
+It is clear that there are 3 disks attached to the system. `/dev/sda` is the internal disk of the system. Its filesystems are normally mounted. The other devices are external disks. One of them has only normal partitions. The other one has a physical volume on one of the partitions.
 
 ## Excluding components
 
@@ -184,7 +184,7 @@ Another approach would be to exclude the backup volume group. This is achieved b
 
 ## Restore to the same hardware
 
-Restoring the system to the same hardware is simple. Type `rear recover` in
+Restoring the system to the same hardware is straightforward. Type `rear recover` in
 the rescue system prompt. Relax-and-Recover will detect that it's restoring to
 the same system and will make sure things like UUIDs match. It also asks for
 your LUKS encryption password.
@@ -255,7 +255,7 @@ partitions.
 Let's try to restore our system to a different system. Instead of one 160G
 disk, there is now one 5G and one 10G disk. That's not enough space to restore
 the complete system, but for purposes of this demonstration, we do not care
-about that. We're also not going to use the first disk, but we just want to
+about that. We're also not going to use the first disk, but we only want to
 show that Relax-and-Recover handles the renaming automatically.
 
     RESCUE firefly:~ # rear recover
@@ -328,7 +328,7 @@ The renaming operation was successful.
 
 On the other hand, we can already see quite a few problems. A partition with negative sizes. I do not think any tool would like to create that. Still, we don't care at this moment. Do you like entering partition sizes in bytes? Neither do I. There has to be a better way to handle it. We will show it during the next step.
 
-The `/kvm` and `/vmware` filesystems are quite big. We don't care about them, so just put some nice comments on them and their logical volumes.
+The `/kvm` and `/vmware` filesystems are quite big. We don't care about them, so comment out them and their logical volumes.
 
 The resulting layout file looks like this:
 
@@ -400,7 +400,7 @@ Now, this is where human friendly resizes are possible. Edit the file. Find the 
     sleep 10
 
 
-It's simple bash code. Change it to use better values. Parted is happy to accept partitions in Megabytes.
+It is bash code. Change it to use better values. Parted accepts partitions in Megabytes.
 
     if create_component "/dev/sdb" "disk" ; then
     # Create /dev/sdb (disk)
@@ -482,7 +482,7 @@ Relax-and-Recover produces exceptionally good logs. Let's check them.
 
 Yes, we resized the home partition from 20GB to 2G in the previous step. The root user wants more reserved blocks than the total number of available blocks.
 
-Fixing it is simple. Edit the restore script, option 4. Find the code responsible for filesystem creation.
+Fixing it is straightforward. Edit the restore script, option 4. Find the code responsible for filesystem creation.
 
     if create_component "fs:/home" "fs" ; then
     # Create fs:/home (fs)
@@ -498,7 +498,7 @@ Fixing it is simple. Edit the restore script, option 4. Find the code responsibl
         LogPrint "Skipping fs:/home (fs) as it has already been created."
     fi
  
-The `-r` parameter is causing the error. We just remove it and do the same for the other filesystems.
+The `-r` parameter is causing the error. We remove it and do the same for the other filesystems.
 
     if create_component "fs:/home" "fs" ; then
     # Create fs:/home (fs)
@@ -581,7 +581,7 @@ where keyword denotes one kind of component (disk, partition, filesystem, ...)
 and keyword and all the values are separated by single space characters
 (which means spaces in values are forbidden - there is neither quoting nor escaping)
 so that one can get the lines that belong to a particular component
-with particular value1 and value2 via simple commands like
+with particular value1 and value2 via basic commands like
 
     grep "^keyword value1 value2 " /var/lib/rear/layout/disklayout.conf
 
@@ -681,7 +681,7 @@ They can be excluded when hand-crafting a layout file line.
 
 ### Filesystems
 
-    fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [options=<filesystem options>]
+    fs <device> <mountpoint> <filesystem type> [uuid=<uuid>] [label=<label>] [blocksize=<block size(B)>] [<reserved_blocks=<nr of reserved blocks>] [max_mounts=<nr>] [check_interval=<number of days>d] [nodesize=<btrfs node size>] [sectorsize=<btrfs sector size>] [features=<btrfs filesystem features>] [options=<filesystem options>]
 
 
 ### Btrfs Default SubVolumes

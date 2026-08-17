@@ -29,7 +29,7 @@
 # We read the backup query output line by line and store the SSID for every Asset Name ONCE. That gives us the
 # most recent SSID for every Asset Name and we use that to restore the filesystems.
 #
-# For point-in-time recovery we simply skip all lines where the Backup Time is newer that the PIT time. If a user
+# For point-in-time recovery we skip all lines where the Backup Time is newer that the PIT time. If a user
 # happens to choose a PIT time that falls between the backup times of the different file systems on the same server,
 # then it can happen that a PIT recovery can use different backup job runs for different filesystems. For example here,
 # if the PIT would be Wed Jan 17 20:00:14 2024 then / would be restored from Wed Jan 17 20:00:14 2024 and /boot from

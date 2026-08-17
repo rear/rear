@@ -116,7 +116,7 @@ echo "ssh:23:respawn:/etc/scripts/run-sshd" >>$ROOTFS_DIR/etc/inittab
   fi
 } 2>>/dev/$SECRET_OUTPUT_DEV
 
-# Set the SSH root password; if pw is encrypted just copy it otherwise use openssl (for backward compatibility)
+# Set the SSH root password; if pw is encrypted copy it otherwise use openssl (for backward compatibility)
 # Encryption syntax is detected as a '$D$' or '$Dx$' prefix in the password, where D is a single digit and x is one lowercase character.
 # For more information on encryption IDs, check out the NOTES section of the man page for crypt(3).
 # The extglob shell option is required for this to work.

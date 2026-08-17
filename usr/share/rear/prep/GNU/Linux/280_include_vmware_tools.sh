@@ -1,6 +1,6 @@
 # $Id$
 #
-# recent vmware tools (or maybe it is just open-vm-tools on SUSE) keep their modules
+# recent vmware tools (or maybe it is open-vm-tools on SUSE) keep their modules
 # outside the /lib/modules path. To cope with that we add the vmware-tools if vmxnet
 # is loaded but modinfo cannot find it.
 

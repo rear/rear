@@ -53,7 +53,7 @@ mount_fs() {
         (btrfs)
             # The following commands are basically the same as in the default/fallback case.
             # The explicit case for btrfs is only there to be prepared for special adaptions for btrfs related file systems.
-            # Because the btrfs filesystem was created anew just before by the create_fs function in 131_include_filesystem_code.sh
+            # Because the btrfs filesystem was created anew before by the create_fs function in 131_include_filesystem_code.sh
             # the code here mounts the whole btrfs filesystem because by default when creating a btrfs filesystem
             # its top-level/root subvolume is the btrfs default subvolume which gets mounted when no other subvolume is specified.
             # For a plain btrfs filesystem without subvolumes it is effectively the same as for other filesystems (like ext2/3/4).

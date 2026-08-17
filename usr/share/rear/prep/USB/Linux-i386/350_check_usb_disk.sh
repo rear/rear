@@ -25,7 +25,7 @@ elif [ "$TEMP_USB_DEVICE" -a -d "/sys/block/$TEMP_USB_DEVICE" ]; then
 # If we're passed a raw device, ala /dev/sdb, TEMP_USB_DEVICE will be set to "block"
 # and RAW_USB_DEVICE won't be set.  "block" is not useful.  TEMP_USB_DEVICE will not be
 # set if udev doesn't know anything about the device we were passed. So, if we've 
-# gotten here and either are not set, let's just assert what we know from udev
+# gotten here and either are not set, let's assert what we know from udev
 # about the device.
 elif [ -z "$TEMP_USB_DEVICE" ] || [ -z "$RAW_USB_DEVICE" ] ; then
     RAW_USB_DEVICE="/dev/$(my_udevinfo -q name -n "$REAL_USB_DEVICE")"

@@ -36,9 +36,16 @@ PXE_MESSAGE="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}message"
 cp -L $v "$KERNEL_FILE" "$pxe_http_local_path/$PXE_KERNEL" || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
 cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$pxe_http_local_path/$PXE_INITRD" || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 echo "$VERSION_INFO" >"$pxe_http_local_path/$PXE_MESSAGE"
+# Copy overlay squashfs if present
+if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
+    PXE_OVERLAY="$OUTPUT_PREFIX_PXE/${PXE_TFTP_PREFIX}rear-overlay.sqsh"
+    cp -L $v "$TMP_DIR/rear-overlay.sqsh" "$pxe_http_local_path/$PXE_OVERLAY" || Error "Failed to copy overlay 'rear-overlay.sqsh'"
+fi
+
 # files must be readable for others for PXE
 # files should be writebale by owner or overwriting it on later runs will fail
 chmod 644 "$pxe_http_local_path/$PXE_KERNEL" "$pxe_http_local_path/$PXE_INITRD" "$pxe_http_local_path/$PXE_MESSAGE"
+test -f "$pxe_http_local_path/$PXE_OVERLAY" && chmod 644 "$pxe_http_local_path/$PXE_OVERLAY"
 
 LogPrint "Copied kernel+initrd $( du -shc $KERNEL_FILE "$TMP_DIR/$REAR_INITRD_FILENAME" | tail -n 1 | tr -s "\t " " " | cut -d " " -f 1 ) to $PXE_HTTP_UPLOAD_URL/$OUTPUT_PREFIX_PXE"
 umount_url "$PXE_HTTP_UPLOAD_URL" "$BUILD_DIR/httpbootfs"

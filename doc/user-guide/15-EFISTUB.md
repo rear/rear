@@ -5,7 +5,7 @@ EFISTUB booting allows EFI firmware to directly load Linux kernel as an EFI exec
 When using traditional boot-loaders ((E)LILO, Grub), ReaR does not auto-magically recreate booting information on restore, but respective code must exist and this also applies for EFISTUB booting.
 
 ## Prerequisites
-There is plenty of ways how EFISTUB can be setup on source system but for the start I've decided to keep first EFISTUB implementation as simple as possible and eventually cover more robust configuration later (if need arise). For this reason ReaR currently offers very basic implementation, where:
+There is plenty of ways how EFISTUB can be setup on source system but for the start I've decided to keep first EFISTUB implementation as basic as possible and eventually cover more robust configuration later (if need arise). For this reason ReaR currently offers very basic implementation, where:
 
 - active Linux kernel must be compiled with **CONFIG_EFI_STUB=y**
 - active Linux kernel and initrd are located directly on **vfat** partition
@@ -23,7 +23,7 @@ To enable EFISTUB booting in ReaR one must specify following variable in _local.
 
 ## Migration
 Migrating from traditional boot-loader to EFISTUB is kind of side effect of current implementation. Current EFISTUB code can't reliably determine if system is configured with EFISTUB boot hence user must explicitly specify that he wishes his system is considered EFISTUB bootable by ReaR.
-If operating system is set to boot using intermediate boot loaders and despite this `EFI_STUB="yes"` is explicitly set, ReaR will omit installation of intermediate boot loaders and just creates UEFI boot entry pointing directly to EFISTUB boot capable kernel when system is restored.
+If operating system is set to boot using intermediate boot loaders and despite this `EFI_STUB="yes"` is explicitly set, ReaR will omit installation of intermediate boot loaders and only create a UEFI boot entry pointing directly to EFISTUB boot capable kernel when system is restored.
 
 ## Checks done by ReaR
 When user enables EFISTUB, ReaR does some basic checks and tries to ensure that ReaR recovery runs without problems and resulting operating system is able to boot. However it is very hard to cover all configuration possibilities and corner cases, so it is important to ALWAYS TEST full ReaR backup and restore before relying on it. Short list of checks done by ReaR during `rear mkbackup/mkrescue` includes:

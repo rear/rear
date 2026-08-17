@@ -222,11 +222,34 @@ while read keyword volume_group pv_device junk ; do
    grep -q "^lvmvol $volume_group " "$DISKLAYOUT_FILE" || broken_lvm_errors+=( "LVM no 'lvmvol $volume_group' for 'lvmdev $volume_group'" )
 done < <( grep "^lvmdev " "$DISKLAYOUT_FILE" )
 
+Log "Verifying that the Btrfs filesystem entries in $DISKLAYOUT_FILE are correct"
+local broken_btrfs_errors=()
+while read -r _ device _ _ _ _ options; do
+    local option="" name="" value=""
+    for option in $options ; do
+        name=${option%=*}
+        value=${option#*=}
+        case "$name" in
+            (features)
+                is_btrfs_list_of_features_valid "$value" \
+                    || broken_btrfs_errors+=( "$device Btrfs features $value is not empty and is not a comma-separated list of features" )
+                ;;
+            (nodesize)
+                is_btrfs_nodesize_valid "$value" || \
+                    broken_btrfs_errors+=( "$device Btrfs nodesize $value is not valid (must be a power of 2 and not larger than 65536)" )
+                ;;
+            (sectorsize)
+                is_btrfs_sectorsize_valid "$value" || \
+                    broken_btrfs_errors+=( "$device Btrfs sectorsize $value is not valid (must be a power of 2)" )
+                ;;
+        esac
+    done
+done < <( awk '$1 == "fs" && $4 == "btrfs"' "$DISKLAYOUT_FILE" )
 
 # Finally after all tests had been done (so that the user gets all result messages) error out if needed:
 
 # It is a BugError when at this stage the entries in disklayout.conf are broken
-# because just before this script the entries in disklayout.conf were created
+# because before this script the entries in disklayout.conf were created
 # by various 'layout/save' scripts where each of those 'layout/save' scripts should error out
 # when it cannot create a valid entry (e.g. because of whatever reasons outside of ReaR).
 local disklayout_file_is_broken=""
@@ -254,6 +277,12 @@ if is_false $FEATURE_PARTED_RESIZEPART && is_false $FEATURE_PARTED_RESIZE ; then
 fi
 # LVM errors:
 for error_message in "${broken_lvm_errors[@]}" ; do
+    contains_visible_char "$error_message" || continue
+    LogPrintError "$error_message"
+    disklayout_file_is_broken="yes"
+done
+# Btrfs errors:
+for error_message in "${broken_btrfs_errors[@]}" ; do
     contains_visible_char "$error_message" || continue
     LogPrintError "$error_message"
     disklayout_file_is_broken="yes"

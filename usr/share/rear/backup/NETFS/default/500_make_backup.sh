@@ -291,6 +291,10 @@ transfertime="$((SECONDS-starttime))"
 wait $BackupPID
 backup_prog_rc=$?
 
+# Save the backup log file in any case
+# see https://github.com/rear/rear/issues/3616
+cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${opath}/${BACKUP_PROG_ARCHIVE}.log" >&2
+
 if [[ $BACKUP_INTEGRITY_CHECK =~ ^[yY1] && "$(basename ${BACKUP_PROG})" = "tar" ]] ; then
     (cd $(dirname "$backuparchive") && md5sum $(basename "$backuparchive") > "${backuparchive}".md5 || md5sum $(basename "$backuparchive").?? > "${backuparchive}".md5)
 fi
@@ -354,8 +358,5 @@ if [ $backup_prog_rc -eq 0 -a "$tar_message" ] ; then
 elif [ "$size" ]; then
     LogPrint "Archived $((size/1024/1024)) MiB in $((transfertime)) seconds [avg $((size/1024/transfertime)) KiB/sec]"
 fi
-
-### Copy progress log to backup media
-cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${opath}/${BACKUP_PROG_ARCHIVE}.log" >&2
 
 # vim: set et ts=4 sw=4:

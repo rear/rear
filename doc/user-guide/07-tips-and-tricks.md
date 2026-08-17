@@ -28,7 +28,7 @@ This results in the following useful tips and tricks:
     troubleshoot, or modify an important file during recovery.
 
  4. If you have keyboard problems using a HP iLO 2 Remote Console, type the
-    following command +loadkeys -d+ (or simply use the up arrow key to get
+    following command +loadkeys -d+ (or use the up arrow key to get
     this command from your shell history).
 
  5. If the original system was configured to log on remotely through the use

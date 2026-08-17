@@ -17,7 +17,6 @@ if test "no_modules" = "$MODULES" ; then
 fi
 
 # As general condition the /lib/modules/$KERNEL_VERSION directory must exist:
-test "$KERNEL_VERSION" || KERNEL_VERSION="$( uname -r )"
 if ! test -d "/lib/modules/$KERNEL_VERSION" ; then
     Error "Cannot copy kernel modules because /lib/modules/$KERNEL_VERSION does not exist"
 fi

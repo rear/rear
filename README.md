@@ -304,3 +304,15 @@ The ReaR project was initiated in 2006 by [Schlomo Schapiro](https://github.com/
 As time passed the project was lucky to get the support of additional developers to also help as maintainers: [Dag Wieers](https://github.com/dagwieers), [Jeroen Hoekx](https://github.com/jhoekx), [Johannes Meixner](https://github.com/jsmeix), [Vladimir Gozora](https://github.com/gozora), [Sébastien Chabrolles](https://github.com/schabrolles), [Renaud Métrich](https://github.com/rmetrich) and [Pavel Cahyna](https://github.com/pcahyna). We hope that ReaR continues to prove useful and to attract more developers who agree to be maintainers. Please refer to the [MAINTAINERS](MAINTAINERS) file for the list of active and past maintainers.
 
 To see the full list of authors and their contributions please look at the [git history](https://github.com/rear/rear/graphs/contributors). We are very thankful to all authors and encourage anybody interested to take a look at our source code and to contribute what you find important.
+
+## Star History
+
+<div align="center">
+
+<a href="https://star-history.com/#rear/rear&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=rear/rear&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=rear/rear&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=rear/rear&type=Date" />
+  </picture>
+</a>

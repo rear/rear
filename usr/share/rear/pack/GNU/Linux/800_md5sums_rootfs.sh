@@ -1,8 +1,11 @@
 
-# build/default/995_md5sums_rootfs.sh
+# pack/GNU/Linux/800_md5sums_rootfs.sh
 #
-# Create md5sums for all regular files in ROOTFS_DIR
-# and store the result in ROOTFS_DIR as md5sums.txt
+# Create md5sums for all regular files in ROOTFS_DIR.
+# This runs in the pack stage (after rootfs modifications like the overlay
+# split in 500_create_rear_overlay.sh) so that md5sums match the final
+# initramfs content.
+# The result is stored in ROOTFS_DIR as md5sums.txt
 # so that in the recovery system one can test via
 #   pushd / ; md5sum --quiet --check md5sums.txt ; popd
 # if the regular files in the recovery system are intact.
@@ -50,6 +53,8 @@ pushd $ROOTFS_DIR 1>&2
     # firmware/brcm/brcmfmac43430a0-sdio.ONDA-V80 PLUS.txt
     # firmware/brcm/brcmfmac43455-sdio.MINIX-NEO Z83-4.txt
     # cf. https://github.com/rear/rear/issues/2407
-    find . -xdev -type f -print0 | grep -E -z -v '/md5sums\.txt|/\.gitignore|~$|/dev/' | xargs -0 md5sum -b >>$md5sums_file || cat /dev/null >$md5sums_file
+    # Also exclude module metadata files (modules.dep, modules.alias, etc.)
+    # because depmod regenerates them at boot time after overlay application
+    find . -xdev -type f -print0 | grep -E -z -v '/md5sums\.txt|/\.gitignore|~$|/dev/|/modules\.(dep|alias|symbols|devname|softdep)(\.bin)?$' | xargs -0 md5sum -b >>$md5sums_file || cat /dev/null >$md5sums_file
 popd 1>&2
 

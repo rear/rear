@@ -245,6 +245,24 @@ fi
                 label=$( btrfs filesystem show $device | grep -o 'Label: [^ ]*' | cut -d ':' -f 2 | tr -d '[:space:]' )
                 test "none" = "$label" && label=
                 echo -n " uuid=$uuid label=$label"
+
+                if nodesize=$(get_btrfs_nodesize "$uuid"); then
+                    echo -n " nodesize=$nodesize"
+                else
+                    LogPrintError "Failed to get Btrfs nodesize for $device"
+                fi
+
+                if sectorsize=$(get_btrfs_sectorsize "$uuid"); then
+                    echo -n " sectorsize=$sectorsize"
+                else
+                    LogPrintError "Failed to get Btrfs sectorsize for $device"
+                fi
+
+                if features=$(get_enabled_btrfs_features "$uuid" ); then
+                    echo -n " features=$features"
+                else
+                    LogPrintError "Failed to get enabled Btrfs features for $device"
+                fi
                 ;;
         esac
         # Remove parenthesis (from the traditional mount command output) from the list of options:

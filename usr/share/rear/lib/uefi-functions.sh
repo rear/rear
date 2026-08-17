@@ -64,7 +64,7 @@ function build_boot_efi {
     else
         # This build_boot_efi function is only called in 250_populate_efibootimg.sh
         # and 100_create_efiboot.sh and 940_grub2_rescue.sh
-        # only if UEFI is used so that we simply error out here if we cannot make a bootable EFI image of GRUB2
+        # only if UEFI is used so that we error out here if we cannot make a bootable EFI image of GRUB2
         # (normally a function should not exit but return to its caller with a non-zero return code):
         Error "Cannot make bootable EFI image of GRUB2 (neither grub-mkstandalone nor grub2-mkstandalone found)"
     fi

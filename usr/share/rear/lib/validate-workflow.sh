@@ -82,7 +82,7 @@ Example: LVM, MD, SCSI, $BACKUP, $OUTPUT, EMAIL, ...
 -------------------
 Please let us know any comments you have about $PRODUCT in your
 environment that would help others to better use $PRODUCT or have
-less trouble installing it or maybe simply that you employ $PRODUCT
+less trouble installing it or maybe that you employ $PRODUCT
 in a very large data centre with thousands of servers and that
 $PRODUCT is the central component of your disaster recovery
 preparations for your data centre.

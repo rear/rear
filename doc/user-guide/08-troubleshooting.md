@@ -87,7 +87,7 @@ _Here is a list of known issues during recovery:_
 * Failed to clear HP SmartArray controller 1:
 This error may be caused by trying to clear an HP SmartArray controller
 that does not have a configuration or does not exist. Since we have no
-means to know whether this is a fatal condition or not we simply try to
+means to know whether this is a fatal condition or not we try to
 recreate the logical drive(s) and see what happens.
 
     This message is harmless, but may help troubleshoot the subsequent error

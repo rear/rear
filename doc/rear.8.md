@@ -344,7 +344,7 @@ To backup to NFS disk, use `BACKUP_URL=nfs://nfs-server-name/share/path`
 
 * BACKUP_URL=*tape://*:
 To backup to tape device, use `BACKUP_URL=tape:///dev/nst0` or alternatively,
-simply define `TAPE_DEVICE=/dev/nst0`
+define `TAPE_DEVICE=/dev/nst0`
 
 * BACKUP_URL=*rsync://*:
 When backup method `BACKUP=RSYNC` is chosen then we need to define a corresponding `BACKUP_URL` rule:

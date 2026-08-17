@@ -132,7 +132,7 @@ See '$SHARE_DIR/lib/config-functions.sh' for more details."
     esac
 
     # Set master version to the MAJOR release version. ReaR assumes that OS_MASTER_VERSION
-    # is just the major release number extracted from OS_VERSION and not the version of the derived OS.
+    # is the major release number extracted from OS_VERSION and not the version of the derived OS.
     # If OS_VERSION is of the form 12.34.56, OS_MASTER_VERSION is only the first part '12'.
     #
     # Because openSUSE Tumbleweed has rolling releases, OS_VERSION is a date of the form YYYYMMDD.
