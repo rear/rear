@@ -1022,4 +1022,94 @@ function get_sysconfig_bootloader() {
     echo "$sysconfig_bootloader"
 }
 
+: "${GRUB_EDITENV_PATH:=""}"
+
+function get_grub_editenv() {
+    # Check cached path first
+    if [ -n "$GRUB_EDITENV_PATH" ]; then
+        echo "$GRUB_EDITENV_PATH"
+        return 0
+    fi
+
+    local grub_editenv_path_cmd="type -P grub-editenv || type -P grub2-editenv"
+
+    if test "$RECOVERY_MODE"; then
+        GRUB_EDITENV_PATH="$(run_in_target_fs_root "$grub_editenv_path_cmd")"
+    else
+        GRUB_EDITENV_PATH="$($grub_editenv_path_cmd)"
+    fi
+
+    if [ -z "$GRUB_EDITENV_PATH" ]; then
+        return 1
+    fi
+
+    echo "$GRUB_EDITENV_PATH"
+}
+
+function list_grubenv() {
+    local grub_editenv
+    if ! grub_editenv=$(get_grub_editenv); then
+        LogPrintError "Failed to list grubenv: neither grub-editenv nor grub2-editenv was found"
+        return 1
+    fi
+
+    "$grub_editenv" - list
+}
+
+function is_grub2_used() {
+    local bootloader_path="$VAR_DIR/recovery/bootloader"
+
+    if [ ! -f "$bootloader_path" ]; then
+        return 1
+    fi
+
+    local used_bootloader
+    used_bootloader="$( cat "$bootloader_path" )"
+
+    case $used_bootloader in
+        (GRUB2|GRUB2-EFI)
+            return 0
+            ;;
+        (*)
+            return 1
+            ;;
+    esac
+}
+
+GRUBENV_PATH="$VAR_DIR/recovery/grubenv"
+
+# Standard GRUB environment block locations
+GRUBENV_LOCATIONS=(/boot/grub2/grubenv /boot/grub/grubenv)
+
+function is_grubenv_set_required() {
+    if ! is_grub2_used; then
+        return 1
+    fi
+
+    if test "$RECOVERY_MODE"; then
+        [ -f "$GRUBENV_PATH" ]
+        return
+    else
+        local grubenv grubenv_found=0
+        for grubenv in "${GRUBENV_LOCATIONS[@]}"; do
+            if [ -e "$grubenv" ]; then
+                grubenv_found=1
+                break
+            fi
+        done
+
+        if [ $grubenv_found -ne 1 ]; then
+            LogPrintError "Failed to find grubenv to check whether an external env_block is used and whether saving it is needed"
+            return 1
+        fi
+
+        # env_block sets the external raw block where GRUB can store environment block.
+        # See https://www.gnu.org/software/grub/manual/grub/html_node/env_005fblock.html
+        # for more details about env_block.
+        # As env_block may be located in filesystem blocks, it is accessible only during backup.
+        list_grubenv | grep -q "^env_block="
+        return
+    fi
+}
+
 # vim: set et ts=4 sw=4
