@@ -228,7 +228,7 @@ for dummy in "once" ; do
         fi
         # $module_files can be empty because modinfo_filename outputs nothing in the builtin kernel "module" case:
         test "$module_files" || continue
-        COPY_MODULES+=( modinfo -F name $module_files )
+        COPY_MODULES+=( $( modinfo -F name $module_files ) )
         if ! cp $verbose -t $ROOTFS_DIR -L --preserve=all --parents $module_files 1>&2 ; then
             Error "Failed to copy '$module_files'"
         fi
