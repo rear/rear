@@ -73,12 +73,20 @@ for module in "${COPY_MODULES[@]}" ; do
         # and for amdgpu/navi12_gpu_info.bin the actual firmware files could be
         # /lib/firmware/amdgpu/navi12_gpu_info.bin.xz
         # so what is listed by modinfo is only a part of the actual firmware file
-        # without leading path and without suffix so we need to find the actual firmware file:
-        firmware_complete_filename=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
-        if ! test -r "$firmware_complete_filename" ; then
+        # without leading path and without suffix so we need to find the actual firmware file.
+        # 'find' might return multiple matching files for one firmware_partial_filename
+        # cf. https://github.com/rear/rear/pull/3553#discussion_r3861464764
+        firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
+        if ! test "$firmware_complete_filenames" ; then
             DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for '$module')"
             continue
         fi
-        cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+        for firmware_complete_filename in $firmware_complete_filenames ; do
+            if ! test -r "$firmware_complete_filename" ; then
+                Debug "Cannot copy firmware file (cannot read $firmware_complete_filename)"
+                continue
+            fi
+            cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+        done
     done
 done
