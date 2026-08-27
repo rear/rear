@@ -11,6 +11,38 @@ if is_false "$FIRMWARE_FILES" ; then
     return
 fi
 
+# Firmware files for built-in kernel drivers should get copied into the recovery system if possible
+# (preconditions: /lib/modules/$KERNEL_VERSION/modules.builtin that newer kernels provide
+#  and a sufficiently new modinfo to query even builtin modules
+#  see https://github.com/rear/rear/pull/3553#issuecomment-4129123318)
+# except explicit user setting FIRMWARE_FILES=( 'no' ) forbids ReaR to copy firmware files
+# see https://github.com/rear/rear/pull/3553#issuecomment-5425860422
+LogPrint "Copying firmware files that belong to built-in kernel drivers"
+if test -r /lib/modules/$KERNEL_VERSION/modules.builtin ; then
+    for module_path in $( cat /lib/modules/$KERNEL_VERSION/modules.builtin ) ; do
+        module=$( basename $module_path | cut -s -d '.' -f1 )
+        # Here is a copy of the code (without the comment) of the place below
+        # when "Copying firmware files that belong to the copied kernel modules":
+        firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) || continue
+        for firmware_partial_filename in $firmware_partial_filenames ; do
+            firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
+            if ! test "$firmware_complete_filenames" ; then
+                DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for '$module')"
+                continue
+            fi
+            for firmware_complete_filename in $firmware_complete_filenames ; do
+                if ! test -r "$firmware_complete_filename" ; then
+                    Debug "Cannot copy firmware file (cannot read $firmware_complete_filename)"
+                    continue
+                fi
+                cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+            done
+        done
+    done
+else
+    LogPrintError "Cannot copy firmware for built-in drivers (cannot read /lib/modules/$KERNEL_VERSION/modules.builtin)"
+fi
+
 # COPY_MODULES=( all_modules ) is set when MODULES contains 'all_modules'
 # in the previous 400_copy_modules.sh script and then usually all firmware files
 # in the /lib*/firmware/ directories should get included in the rescue/recovery system:
