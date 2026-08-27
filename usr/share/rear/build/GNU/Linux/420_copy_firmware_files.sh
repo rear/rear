@@ -41,7 +41,7 @@ fi
 #  see https://github.com/rear/rear/pull/3553#issuecomment-4129123318)
 # except explicit user setting FIRMWARE_FILES=( 'no' ) forbids to copy firmware files
 # see https://github.com/rear/rear/pull/3553#issuecomment-5425860422
-# and ecxept via FIRMWARE_FILES=( 'yes' ) all firmware files were already copied above.
+# and except via FIRMWARE_FILES=( 'yes' ) all firmware files were already copied above.
 LogPrint "Copying firmware files that belong to built-in kernel drivers"
 if test -r /lib/modules/$KERNEL_VERSION/modules.builtin ; then
     for module_path in $( cat /lib/modules/$KERNEL_VERSION/modules.builtin ) ; do
