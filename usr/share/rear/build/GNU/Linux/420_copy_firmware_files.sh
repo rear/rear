@@ -65,7 +65,18 @@ if test -r /lib/modules/$KERNEL_VERSION/modules.builtin ; then
         done
     done
 else
-    LogPrintError "Cannot copy firmware for built-in drivers (cannot read /lib/modules/$KERNEL_VERSION/modules.builtin)"
+    if test "${FIRMWARE_FILES[*]}" ; then
+        # When FIRMWARE_FILES are specified (here FIRMWARE_FILES is neither 'yes' nor 'no')
+        # and when we cannot determine firmware files for built-in kernel drivers
+        # we inform the user to ensure firmware for built-in drivers is specified in FIRMWARE_FILES
+        # but we cannot know if the user had such firmware already specified in FIRMWARE_FILES:
+        LogPrint "Ensure firmware for built-in drivers is specified in FIRMWARE_FILES (cannot read /lib/modules/$KERNEL_VERSION/modules.builtin)"
+    else
+        # When FIRMWARE_FILES is empty and when we cannot determine firmware files for built-in kernel drivers
+        # we error out to be on the safe side to avoid missing firmware for built-in drivers in the recovery system
+        # see https://github.com/rear/rear/pull/3553#issuecomment-5425860422
+        Error "If built-in drivers need firmware it is missing (FIRMWARE_FILES not specified)"
+    fi
 fi
 
 # FIRMWARE_FILES is set but neither 'yes' nor 'no'
