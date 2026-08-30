@@ -4,9 +4,17 @@ is_true $TSM_RM_ISOFILE || return 0
 
 Log "Verify if the ISO file '$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso' was archived correctly with dsmc"
 if [[ -z "$TSM_ARCHIVE_MGMT_CLASS" ]]; then
-    LC_ALL=${LANG_RECOVER} dsmc q backup "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    if test "$TSM_DSMC_OPTFILE" ; then
+        LC_ALL=${LANG_RECOVER} dsmc q backup -optfile="$TSM_DSMC_OPTFILE" "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    else
+        LC_ALL=${LANG_RECOVER} dsmc q backup "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    fi
 else
-    LC_ALL=${LANG_RECOVER} dsmc q archive "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    if test "$TSM_DSMC_OPTFILE" ; then
+        LC_ALL=${LANG_RECOVER} dsmc q archive -optfile="$TSM_DSMC_OPTFILE" "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    else
+        LC_ALL=${LANG_RECOVER} dsmc q archive "$TSM_RESULT_FILE_PATH/$ISO_PREFIX.iso" >/dev/null
+    fi
 fi
 if [[ $? -eq 0 ]]; then
     Log "Removing $ISO_DIR/$ISO_PREFIX.iso to preserve space"
