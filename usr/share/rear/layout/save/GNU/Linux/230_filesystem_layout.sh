@@ -101,6 +101,23 @@ fi
             Log "$device is not a block device, skipping."
             continue
         fi
+        # Skip filesystems on disks skipped due to unsupported partition table type:
+        if test -s "$VAR_DIR/layout/skipped_unsupported_disks" ; then
+            skip_fs_on_unsupported_disk=""
+            while read skipped_disk junk ; do
+                test "$skipped_disk" || continue
+                case "$device" in
+                    (${skipped_disk}|${skipped_disk}*)
+                        skip_fs_on_unsupported_disk="yes"
+                        break
+                        ;;
+                esac
+            done < "$VAR_DIR/layout/skipped_unsupported_disks"
+            if is_true "$skip_fs_on_unsupported_disk" ; then
+                LogPrint "Skipping filesystem $mountpoint on $device (disk has unsupported partition table, skipped in layout save)"
+                continue
+            fi
+        fi
         # Skip saving filesystem layout for CD/DVD type devices:
         if [ "$fstype" = "iso9660" ] ; then
             Log "$device is CD/DVD type device [fstype=$fstype], skipping."
