@@ -387,10 +387,21 @@ builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an er
 # Generic signal reporting:
 # Signals are an error handling problem because one would have to implement
 # additional signal (error) handling everywhere as signals can appear everywhere at any time.
-# So we have at least generic signal reporting to notify the user which signal it was
-# when a signal terminated ReaR so we only do this for signals which terminate ReaR
-# and we terminate ReaR because we must obey to signals which are meant to terminate
-# (otherwise e.g. the user could not press Ctrl+C in the terminal to terminate ReaR).
+# The actual problem is that there is no generic way to get a message when a signal is raised
+# so in particular when a signal terminates ReaR there is no message about the signal
+# which makes it almost impossible for the user to find out why ReaR had terminated,
+# cf. https://github.com/rear/rear/pull/3631
+# A generic issue is that subshells cannot inherit traps of the parent shell
+# so when a subshell gets a signal it cannot be reported by a trap in the main shell.
+# Because bash runs programs within subshells it means when a program gets a signal
+# (as in https://github.com/rear/rear/pull/3631) that signal cannot be caught by a trap
+# neither in the main shell nor in a subshell where the program is called.
+# Only the program itself could catch and report the signal it got.
+# So all we can do is providing a generic signal reporting function
+# that can be used as signal handler at other code places as needed and
+# register that function here as signal handler for the ReaR main shell
+# to notify the user when the ReaR main shell process (MASTER_PID)
+# got a signal that would usually terminate ReaR.
 # Google AI tells that those signals terminate bash in non-interactive mode:
 # TODO: Verify that what Google AI tells is actually right.
 # -------------------------------------------------------------------------------------------------------------------------------
@@ -416,10 +427,46 @@ builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an er
 # -------------------------------------------------------------------------------------------------------------------------------
 # From this list we exclude SIGKILL (9) because it cannot be trapped and
 # we exclude SIGUSR1 (10) to not overwrite the above actually intended trap for USR1.
-for sig in 15 2 1 3 11 8 4 6 7 13 14 12
-do signame="SIG$( kill -l $sig )"
-   exitcode=$(( 128 + $sig ))
-   trap "echo 'got signal $sig ($signame) - terminating with exit code $exitcode (128 + $sig)' 1>&8 ; exit $exitcode" $signame
+function handle_terminating_signal () {
+    local sig_num="$1"
+    local sig_name="$2"
+    local current_pid=""
+    # Return 0 regardless that a missing signal number is an error condition to avoid
+    # what Google AI tells when a trap handler function returns 1 and 'set -e' is set:
+    #  "Returning 1 from the handler causes a tricky edge case.
+    #   In older Bash versions, a non-zero exit from an ERR trap handler
+    #   could cause an immediate, unexpected exit.
+    #   In modern Bash, the script will typically exit based on the original command failure,
+    #   but relying on the trap handler return code to control script flow under 'set -e'
+    #   is generally considered unsafe practice."
+    test $sig_num || return 0
+    # Cf. BASHPID in the above function terminate_descendants_from_children_to_grandchildren:
+    test "$BASHPID" && current_pid=$BASHPID || read current_pid junk </proc/self/stat
+    # Return 0 regardless that a missing current_pid is an error condition to avoid
+    # issues when a trap handler function returns 1 and 'set -e' is set (see above):
+    test $current_pid || return 0
+    # Report the terminating signal:
+    LogPrintError "Process (PID $current_pid) got signal $sig_num ($sig_name) that is terminating by default"
+    # Restore the default action for this signal:
+    # ('builtin trap' is crucial to avoid the BugError of our trap function below)
+    builtin trap - "$sig_num"
+    # Re-send the signal to ourselves to perform the default action
+    # so the process exits with the correct exit code (128 + signal number)
+    # and dumps core if applicable according to the default behavior for that signal:
+    kill -n "$sig_num" "$current_pid"
+    # Because the signal should be terminating the code below should not be reached.
+    # Nevertheless to be on the safe side we re-register the trap
+    # if (for whatever reason) the behavior was non-terminating
+    # to handle subsequent same signals in the same way:
+    # ('builtin trap' is crucial, see above)
+    builtin trap "handle_terminating_signal $sig_num $sig_name" "$sig_num"
+}
+# Register handle_terminating_signal() for all by default terminating signals
+# except SIGKILL and SIGUSR1 (see the description above):
+for sig in 15 2 1 3 11 8 4 6 7 13 14 12 ; do
+    # Use the signal number as fallback to avoid empty signal name handling:
+    signame="SIG$( kill -l $sig )" || signame="$sig"
+    trap "handle_terminating_signal $sig $signame" "$sig"
 done
 
 # Make sure nobody else can use trap:
