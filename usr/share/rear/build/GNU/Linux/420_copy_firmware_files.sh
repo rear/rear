@@ -44,37 +44,56 @@ fi
 # and except via FIRMWARE_FILES=( 'yes' ) all firmware files were already copied above.
 LogPrint "Copying firmware files that belong to built-in kernel drivers"
 if test -r /lib/modules/$KERNEL_VERSION/modules.builtin ; then
+    modinfo_success="yes"
     for module_path in $( cat /lib/modules/$KERNEL_VERSION/modules.builtin ) ; do
         module=$( basename $module_path | cut -s -d '.' -f1 )
         # Here is a copy of the code (without comment) from the place below
         # when "Copying firmware files that belong to the copied kernel modules":
-        firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) || continue
+        if ! firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) ; then
+            DebugPrint "modinfo failed to determine firmware for built-in kernel driver '$module'"
+            modinfo_success="no"
+            continue
+        fi
         for firmware_partial_filename in $firmware_partial_filenames ; do
             firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
             if ! test "$firmware_complete_filenames" ; then
-                DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for '$module')"
+                DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for built-in kernel driver '$module')"
                 continue
             fi
             for firmware_complete_filename in $firmware_complete_filenames ; do
                 if ! test -r "$firmware_complete_filename" ; then
-                    Debug "Cannot copy firmware file (cannot read $firmware_complete_filename)"
+                    Debug "Cannot copy firmware file for built-in kernel driver '$module' (cannot read $firmware_complete_filename)"
                     continue
                 fi
                 cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
             done
         done
     done
+    if is_false "$modinfo_success" ; then
+        if test "${FIRMWARE_FILES[*]}" ; then
+            # When FIRMWARE_FILES are specified (here FIRMWARE_FILES is neither 'yes' nor 'no')
+            # and there was a modinfo failure when determining firmware files for built-in kernel drivers,
+            # we inform the user to ensure firmware for built-in drivers is specified in FIRMWARE_FILES
+            # but we cannot know if the user had such firmware already specified in FIRMWARE_FILES:
+            LogPrint "Ensure firmware for built-in drivers is specified in FIRMWARE_FILES (modinfo failed to determine firmware)"
+        else
+            # When FIRMWARE_FILES is empty and when there was a modinfo failure when determining firmware files for built-in kernel drivers,
+            # we error out to be on the safe side to avoid missing firmware for built-in drivers in the recovery system
+            # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
+            Error "If built-in drivers need firmware it is missing (FIRMWARE_FILES not specified and modinfo failed to determine firmware)"
+        fi
+    fi
 else
     if test "${FIRMWARE_FILES[*]}" ; then
         # When FIRMWARE_FILES are specified (here FIRMWARE_FILES is neither 'yes' nor 'no')
-        # and when we cannot determine firmware files for built-in kernel drivers
+        # and when we cannot determine firmware files for built-in kernel drivers,
         # we inform the user to ensure firmware for built-in drivers is specified in FIRMWARE_FILES
         # but we cannot know if the user had such firmware already specified in FIRMWARE_FILES:
         LogPrint "Ensure firmware for built-in drivers is specified in FIRMWARE_FILES (cannot read /lib/modules/$KERNEL_VERSION/modules.builtin)"
     else
-        # When FIRMWARE_FILES is empty and when we cannot determine firmware files for built-in kernel drivers
+        # When FIRMWARE_FILES is empty and when we cannot determine firmware files for built-in kernel drivers,
         # we error out to be on the safe side to avoid missing firmware for built-in drivers in the recovery system
-        # see https://github.com/rear/rear/pull/3553#issuecomment-5425860422
+        # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
         Error "If built-in drivers need firmware it is missing (FIRMWARE_FILES not specified)"
     fi
 fi
@@ -106,8 +125,13 @@ fi
 # Automatically also copy the matching firmware files here, see
 # https://github.com/rear/rear/issues/3551
 LogPrint "Copying firmware files that belong to the copied kernel modules (FIRMWARE_FILES not specified)"
+modinfo_success="yes"
 for module in "${COPY_MODULES[@]}" ; do
-    firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) || continue
+    if ! firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) ; then
+        DebugPrint "modinfo failed to determine firmware for kernel module '$module'"
+        modinfo_success="no"
+        continue
+    fi
     for firmware_partial_filename in $firmware_partial_filenames ; do
         # For example the command "modinfo -F firmware amdgpu" may show
         # amdgpu/cyan_skillfish_gpu_info.bin
@@ -123,15 +147,22 @@ for module in "${COPY_MODULES[@]}" ; do
         # cf. https://github.com/rear/rear/pull/3553#discussion_r3861464764
         firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
         if ! test "$firmware_complete_filenames" ; then
-            DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for '$module')"
+            DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for kernel module '$module')"
             continue
         fi
         for firmware_complete_filename in $firmware_complete_filenames ; do
             if ! test -r "$firmware_complete_filename" ; then
-                Debug "Cannot copy firmware file (cannot read $firmware_complete_filename)"
+                Debug "Cannot copy firmware file for kernel module '$module' (cannot read $firmware_complete_filename)"
                 continue
             fi
             cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
         done
     done
 done
+if is_false "$modinfo_success" ; then
+    # When FIRMWARE_FILES is empty and when there was a modinfo failure when determining firmware files for kernel modules,
+    # we error out to be on the safe side to avoid missing firmware for kernel modules in the recovery system
+    # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
+    Error "If kernel modules need firmware it is missing (FIRMWARE_FILES not specified and modinfo failed to determine firmware)"
+fi
+
