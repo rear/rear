@@ -4,11 +4,29 @@
 # OR Request the user to hit ENTER to do a normal restore to the same client.
 
 # read NBU vars from NBU config file bp.conf
-while read KEY VALUE ; do
-    echo "$KEY" | grep -qi '^#' && continue
-    test -z "$KEY" && continue
-    KEY="$( echo "$KEY" | tr '[:lower:]' '[:upper:]' )"
-    export NBU_$KEY="$( echo "$VALUE" | sed -e 's/=//' -e 's/ //g' )"
+while read -r line || [[ -n "$line" ]]; do
+    # Skip comments and empty lines
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    
+    # Split on '=' if present, otherwise on the first whitespace
+    if [[ "$line" == *=* ]]; then
+        KEY="${line%%=*}"
+        VALUE="${line#*=}"
+    else
+        read -r KEY VALUE <<< "$line"
+    fi
+    
+    # Strip leading/trailing whitespaces
+    KEY=$(echo "$KEY" | xargs)
+    VALUE=$(echo "$VALUE" | xargs)
+    
+    # Ensure KEY is not empty after trimming
+    [[ -z "$KEY" ]] && continue
+    
+    # Convert KEY to uppercase and export
+    KEY="$(echo "$KEY" | tr '[:lower:]' '[:upper:]')"
+    export "NBU_${KEY}=${VALUE}"
 done </usr/openv/netbackup/bp.conf
 
 NBU_CLIENT_SOURCE="${NBU_CLIENT_NAME}"
