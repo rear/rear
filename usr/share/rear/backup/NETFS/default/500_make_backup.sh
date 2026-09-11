@@ -306,7 +306,26 @@ sleep 1
 case "$(basename $BACKUP_PROG)" in
     (tar)
         if (( $backup_prog_rc != 0 )); then
-            prog="$(cat $FAILING_BACKUP_PROG_FILE)"
+            # The backup subshell records the failing pipe component in
+            # $FAILING_BACKUP_PROG_FILE / $FAILING_BACKUP_PROG_RC_FILE only when it
+            # reaches its PIPESTATUS-processing loop above. If the subshell (or its
+            # tar/dd/... children) was terminated by a signal before that loop ran
+            # (e.g. SIGTERM from a timeout, the OOM killer, or a session/scope teardown,
+            # which makes 'wait' report backup_prog_rc = 128 + signal number), those
+            # files do not exist. Read them only when present and otherwise fall back
+            # to basename($BACKUP_PROG) and the known backup_prog_rc, instead of emitting
+            # "cat: .../failing_backup_prog: No such file or directory" and reporting an
+            # empty program name and empty return code.
+            if [ -s "$FAILING_BACKUP_PROG_FILE" ] ; then
+                prog="$(cat "$FAILING_BACKUP_PROG_FILE")"
+            else
+                prog="$(basename "$BACKUP_PROG")"
+            fi
+            if [ -s "$FAILING_BACKUP_PROG_RC_FILE" ] ; then
+                rc="$(cat "$FAILING_BACKUP_PROG_RC_FILE")"
+            else
+                rc="$backup_prog_rc"
+            fi
             # Suppress purely informational tar messages from output like
             #   tar: Removing leading / from member names
             #   tar: Removing leading / from hard link targets
@@ -327,8 +346,21 @@ or may not be a perfect copy of the system. Relax-and-Recover
 will continue, however it is highly advisable to verify the
 backup in order to be sure to safely recover this system.
 "
+            elif (( backup_prog_rc > 128 )); then
+                # The backup program was terminated by a signal (128 + signal number).
+                # No pipe component return code was recorded, so report the signal
+                # instead of an empty/misleading "failed with return code" message.
+                signum=$(( backup_prog_rc - 128 ))
+                signame="$( kill -l $signum 2>/dev/null )"
+                Error "$prog was terminated by signal $signum (SIG$signame), exit code $backup_prog_rc.
+The archiving process was killed before it could record which pipe
+component failed. This is usually caused by an external termination
+(e.g. a timeout, the OOM killer, or a session/scope teardown) or by a
+broken output pipe (e.g. the backup target became unavailable).
+As a result it is unlikely you can recover this system properly.
+Relax-and-Recover is therefore aborting execution.
+"
             else
-                rc=$(cat $FAILING_BACKUP_PROG_RC_FILE)
                 Error "$prog failed with return code $rc and below output (last 5 lines):
   ---snip---
 $( sed -n -e '/^tar: .*\(socket ignored\|Removing leading\)/d;/^'"$prog"':/s/^/  /p' "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" | tail -n5 )
