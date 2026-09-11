@@ -384,6 +384,91 @@ QuietAddExitTask "(( EXIT_FAIL_MESSAGE )) && echo '${MESSAGE_PREFIX}$PROGRAM $WO
 # shellcheck disable=SC2218
 builtin trap "EXIT_FAIL_MESSAGE=0 ; echo '${MESSAGE_PREFIX}Aborting due to an error, check $RUNTIME_LOGFILE for details' 1>&8 ; kill $MASTER_PID" USR1
 
+# Generic signal reporting:
+# Signals are an error handling problem because one would have to implement
+# additional signal (error) handling everywhere as signals can appear everywhere at any time.
+# The actual problem is that there is no generic way to get a message when a signal is raised
+# so in particular when a signal terminates ReaR there is no message about the signal
+# which makes it almost impossible for the user to find out why ReaR had terminated,
+# cf. https://github.com/rear/rear/pull/3631
+# A generic issue is that subshells cannot inherit traps of the parent shell
+# so when a subshell gets a signal it cannot be reported by a trap in the main shell.
+# Because bash runs programs within subshells it means when a program gets a signal
+# (as in https://github.com/rear/rear/pull/3631) that signal cannot be caught by a trap
+# neither in the main shell nor in a subshell where the program is called.
+# Only the program itself could catch and report the signal it got.
+# So all we can do is providing a generic signal reporting function
+# that can be used as signal handler at other code places as needed and
+# register that function here as signal handler for the ReaR main shell
+# to notify the user when the ReaR main shell process (MASTER_PID)
+# got a signal that would usually terminate ReaR.
+# Google AI tells that those signals terminate bash in non-interactive mode:
+# TODO: Verify that what Google AI tells is actually right.
+# -------------------------------------------------------------------------------------------------------------------------------
+# 1. Standard Termination Signals
+#    These signals are designed to cleanly or forcefully shut down processes:
+#    SIGTERM (15): The default termination signal sent by the kill command.
+#    SIGINT (2): Triggered by pressing Ctrl+C in a terminal.
+#    SIGHUP (1): Triggered when the controlling terminal closes.
+#    SIGQUIT (3): Triggered by pressing Ctrl+\. It terminates the script and attempts to write a core dump.
+#    SIGKILL (9): Forcefully and immediately kills the process. Cannot be trapped or ignored.
+# 2. Standard Fatal Error Signals (Core Dump)
+#    If Bash encounters a hardware exception, a major system constraint, or an internal error,
+#    these signals terminate the process with a core dump:
+#    SIGSEGV (11): Invalid memory reference (Segmentation fault).
+#    SIGFPE (8): Fatal arithmetic error (e.g., division by zero).
+#    SIGILL (4): Illegal hardware instruction.
+#    SIGABRT (6): Sent by the process to itself when a critical failure occurs.
+#    SIGBUS (7): Bus error (bad memory access).
+# 3. Other Termination Signals
+#    SIGPIPE (13): Broken pipe. This occurs if a script pipes data into a command that exits early (e.g., script.sh | head -n 1).
+#    SIGALRM (14): Sent when a real-time timer or alarm expires.
+#    SIGUSR1 (10) & SIGUSR2 (12): User-defined signals. Their default POSIX behavior is to terminate the process
+# -------------------------------------------------------------------------------------------------------------------------------
+# From this list we exclude SIGKILL (9) because it cannot be trapped and
+# we exclude SIGUSR1 (10) to not overwrite the above actually intended trap for USR1.
+function handle_terminating_signal () {
+    local sig_num="$1"
+    local sig_name="$2"
+    local current_pid=""
+    # Return 0 regardless that a missing signal number is an error condition to avoid
+    # what Google AI tells when a trap handler function returns 1 and 'set -e' is set:
+    #  "Returning 1 from the handler causes a tricky edge case.
+    #   In older Bash versions, a non-zero exit from an ERR trap handler
+    #   could cause an immediate, unexpected exit.
+    #   In modern Bash, the script will typically exit based on the original command failure,
+    #   but relying on the trap handler return code to control script flow under 'set -e'
+    #   is generally considered unsafe practice."
+    test $sig_num || return 0
+    # Cf. BASHPID in the above function terminate_descendants_from_children_to_grandchildren:
+    test "$BASHPID" && current_pid=$BASHPID || read current_pid junk </proc/self/stat
+    # Return 0 regardless that a missing current_pid is an error condition to avoid
+    # issues when a trap handler function returns 1 and 'set -e' is set (see above):
+    test $current_pid || return 0
+    # Report the terminating signal:
+    LogPrintError "Process (PID $current_pid) got signal $sig_num ($sig_name) that is terminating by default"
+    # Restore the default action for this signal:
+    # ('builtin trap' is crucial to avoid the BugError of our trap function below)
+    builtin trap - "$sig_num"
+    # Re-send the signal to ourselves to perform the default action
+    # so the process exits with the correct exit code (128 + signal number)
+    # and dumps core if applicable according to the default behavior for that signal:
+    kill -n "$sig_num" "$current_pid"
+    # Because the signal should be terminating the code below should not be reached.
+    # Nevertheless to be on the safe side we re-register the trap
+    # if (for whatever reason) the behavior was non-terminating
+    # to handle subsequent same signals in the same way:
+    # ('builtin trap' is crucial, see above)
+    builtin trap "handle_terminating_signal $sig_num $sig_name" "$sig_num"
+}
+# Register handle_terminating_signal() for all by default terminating signals
+# except SIGKILL and SIGUSR1 (see the description above):
+for sig in 15 2 1 3 11 8 4 6 7 13 14 12 ; do
+    # Use the signal number as fallback to avoid empty signal name handling:
+    signame="SIG$( kill -l $sig )" || signame="$sig"
+    trap "handle_terminating_signal $sig $signame" "$sig"
+done
+
 # Make sure nobody else can use trap:
 function trap () {
     BugError "Forbidden usage of trap with '$*'. Use AddExitTask instead."
