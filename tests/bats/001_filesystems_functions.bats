@@ -15,6 +15,12 @@ function setup() {
     # shellcheck disable=SC1091
     source "$REAR_SHARE_DIR/lib/filesystems-functions.sh"
 
+    # shellcheck disable=SC1091
+    source "$REAR_SHARE_DIR/lib/array-functions.sh"
+
+    # shellcheck disable=SC2034
+    DISPENSABLE_OUTPUT_DEV="null"
+
     function LogPrintError() {
         echo "$@"
     }
@@ -740,4 +746,27 @@ free-space-tree"
 
 @test "Is Btrfs list of devices valid: ._- are allowed" {
     run -0 is_btrfs_list_of_devices_valid "/dev/mapper/ubuntu--vg-ubuntu--lv,/dev/mapper/ubuntu._-"
+}
+
+@test "Get Btrfs profile: UUID is missing" {
+    run -3 get_btrfs_profile "" "data"
+}
+
+@test "Get Btrfs profile: profile type is wrong" {
+    run -3 get_btrfs_profile "4374e8da-f332-4fbf-9237-de98ffc4736c" "mydata"
+}
+
+@test "Get Btrfs profile: sysfs allocation dir does not exist" {
+    local uuid="4374e8da-xxxx-xxxx-xxxx-de98ffc4736c"
+    local type="data"
+    run -1 get_btrfs_profile "$uuid" "$type"
+    [ "$output" = "Failed to get Btrfs $type profile because '/sys/fs/btrfs/$uuid/allocation/$type' is missing." ]
+}
+
+@test "Is Btrfs profile valid: raid7 is invalid" {
+    run -1 is_btrfs_profile_valid "raid7"
+}
+
+@test "Is Btrfs profile valid: single is valid" {
+    run -0 is_btrfs_profile_valid "single"
 }

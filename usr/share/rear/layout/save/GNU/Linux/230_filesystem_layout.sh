@@ -262,6 +262,19 @@ fi
                 else
                     LogPrintError "Failed to get a list of Btrfs device paths for $mountpoint"
                 fi
+
+                if dprofile=$(get_btrfs_data_profile "$uuid"); then
+                    echo -n " dprofile=$dprofile"
+                else
+                    LogPrintError "Failed to get Btrfs data profile for $device"
+                fi
+
+                if mprofile=$(get_btrfs_metadata_profile "$uuid"); then
+                    echo -n " mprofile=$mprofile"
+                else
+                    LogPrintError "Failed to get Btrfs metadata profile for $device"
+                fi
+
                 ;;
         esac
         # Remove parenthesis (from the traditional mount command output) from the list of options:
