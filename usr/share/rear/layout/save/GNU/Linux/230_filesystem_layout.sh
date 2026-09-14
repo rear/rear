@@ -9,6 +9,9 @@ Log "Begin saving filesystem layout"
 has_binary wipefs && REQUIRED_PROGS+=( wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
+# At least tell what happens for unsupported filesystems,
+# cf. https://github.com/rear/rear/pull/3632#issuecomment-5664168360
+LogPrint "Supported filesystems: $supported_filesystems (what belongs to unsupported filesystems gets automatically excluded)"
 # Read filesystem information from the system by default using the traditional mount command
 # limited to only the supported filesystems which results output lines of the form
 #   device mountpoint filesystem (list,of,options)
