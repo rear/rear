@@ -58,7 +58,7 @@ The configuration must define the `BACKUP` and `OUTPUT` methods. Valid choices a
 |BLOCKCLONE  | BACKUP  | Block device cloning via dd             | done
 |BORG        | BACKUP  | Borg Backup                             | done
 |CDM         | BACKUP  | Rubrik Cloud Data Management            | done
-|COH         | BACKUP  | Cohesity DataProtect                    | draft
+|COH         | BACKUP  | Cohesity DataProtect                    | done
 |DP          | BACKUP  | OpenText Data Protector                 | done
 |DUPLICITY   | BACKUP  | Duplicity / Duply                       | done
 |EXTERNAL    | BACKUP  | External custom restore method          | done
