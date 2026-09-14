@@ -1,8 +1,8 @@
 # 430_check_coh_agent_identity.sh
 # Compares agent.cfg's registered hostname/IP against the current system.
-# On a mismatch the agent identity is reset (mandatory); on a match it can
-# still be reset optionally. Renaming (not deleting) is non-destructive: the
-# original server's own agent registration is untouched either way.
+# On a mismatch the agent identity is reset (mandatory). On a match it can
+# still be reset optionally. The original agent registration remains untouched
+# post restore.
 
 COH_AGENT_CFG=/etc/cohesity-agent/agent.cfg
 COH_AGENT_SERVER_CERT=/etc/cohesity-agent/server_cert
@@ -28,10 +28,9 @@ function coh_reset_agent_identity () {
     done
 
     LogPrint "
-The Cohesity agent identity has been reset. This rescue system will come up
-as a fresh, temporary Cohesity agent. Register it with the Cohesity cluster
-and run a Physical Server File & Folder recovery job to restore the data onto
-it. The original server's own agent registration/identity is untouched and
+The Cohesity agent identity has been reset in the recovery environment. Register the
+new agent with the Cohesity cluster and run a Physical Server File & Folder recovery
+job when instructed. The original agent registration/identity remains untouched and
 does not need to be re-registered.
 "
 }
@@ -45,10 +44,13 @@ local current_ips="$( ip -o addr show | awk '{print $4}' | cut -d / -f 1 | grep 
 local current_ips_global="$( echo "$current_ips" | grep -vi '^fe80:' | grep -v '^169\.254\.' )"
 
 LogPrint ""
-LogPrint "Registered Cohesity agent hostname: ${cfg_hostname:-<unknown>}"
-LogPrint "Registered Cohesity agent IP address(es): ${cfg_ipaddrs_global:-<none>}"
+LogPrint "Registered Cohesity agent hostname:"
+LogPrint "${cfg_hostname:-<unknown>}"
+LogPrint "Registered Cohesity agent IP address(es):"
+LogPrint "${cfg_ipaddrs_global:-<none>}"
 LogPrint ""
-LogPrint "Current hostname: $current_hostname"
+LogPrint "Current hostname:"
+LogPrint "$current_hostname"
 LogPrint "Current IP addresses on this system:"
 LogPrint "$current_ips"
 LogPrint ""
@@ -95,7 +97,7 @@ else
     done
 fi
 
-local reset_prompt="Reset the Cohesity agent identity anyway (e.g. if the original client-server registration is lost or invalid)?"
+local reset_prompt="Reset the Cohesity agent identity anyway (e.g. if the original agent registration is lost or invalid)?"
 local reset_answer=""
 while true ; do
     reset_answer="$( UserInput -I COH_RESET_AGENT_IDENTITY -p "$reset_prompt" -D 'no' )"
