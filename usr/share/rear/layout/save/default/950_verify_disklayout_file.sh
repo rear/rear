@@ -242,6 +242,10 @@ while read -r _ device _ _ _ _ options; do
                 is_btrfs_sectorsize_valid "$value" || \
                     broken_btrfs_errors+=( "$device Btrfs sectorsize $value is not valid (must be a power of 2)" )
                 ;;
+            (devices)
+                is_btrfs_list_of_devices_valid "$value" || \
+                    broken_btrfs_errors+=( "$device Btrfs devices $value is not a comma-separated list of device paths" )
+                ;;
         esac
     done
 done < <( awk '$1 == "fs" && $4 == "btrfs"' "$DISKLAYOUT_FILE" )

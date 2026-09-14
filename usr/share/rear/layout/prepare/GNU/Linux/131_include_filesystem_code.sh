@@ -45,12 +45,25 @@ function create_fs () {
         cleanup_info_message="Using dd to cleanup the first 512 bytes on '$device' before creating filesystem."
     fi
 
-    # Tell what will be done:
-    local create_filesystem_info_message="Creating filesystem of type '$fstype' with mount point '$mountpoint' on '$device'."
-    Debug "$create_filesystem_info_message"
-    echo "LogPrint '$create_filesystem_info_message'" >> "$LAYOUT_CODE"
-    Debug "$cleanup_info_message"
-    echo "# $cleanup_info_message" >> "$LAYOUT_CODE"
+    function print_start_fs_creation_info_msg() {
+        # fstype, mountpoint and cleanup_info_message are captured from the parent scope
+        local devices=$1
+
+        local create_filesystem_info_message="Creating filesystem of type '$fstype' with mount point '$mountpoint' on '$devices'."
+        Debug "$create_filesystem_info_message"
+        echo "LogPrint '$create_filesystem_info_message'" >> "$LAYOUT_CODE"
+        Debug "$cleanup_info_message"
+        echo "# $cleanup_info_message" >> "$LAYOUT_CODE"
+    }
+
+    # Tell what will be done.
+    #
+    # Since Btrfs can be created on top of multiple block devices, and
+    # the list of device paths is parsed later, the start message for Btrfs
+    # is printed separately once the list of device paths is known.
+    if [ "$fstype" != "btrfs" ]; then
+        print_start_fs_creation_info_msg "$device"
+    fi
 
     # Actually do it:
     case "$fstype" in
@@ -221,7 +234,7 @@ function create_fs () {
             ;;
         (btrfs)
             # Btrfs filesystem parameters:
-            local features="" nodesize="" sectorsize=""
+            local features="" nodesize="" sectorsize="" devices=""
             local option="" name="" value=""
             for option in $options ; do
                 name=${option%=*}
@@ -236,8 +249,19 @@ function create_fs () {
                     (sectorsize)
                         sectorsize=" -s $value"
                         ;;
+                    (devices)
+                        devices=" ${value//,/ }"
+                        ;;
                 esac
             done
+
+            # Fallback for backward compatibility when a list of devices is not included
+            # in disklayout.conf, e.g., due to errors while retrieving the device paths.
+            if [ -z "$devices" ]; then
+                devices=" $device"
+            fi
+
+            print_start_fs_creation_info_msg "${devices# }"
 
             # Cleanup disk partition provided the disk partition is not already mounted:
             echo "mount | grep -q $device || $cleanup_command" >> "$LAYOUT_CODE"
@@ -253,10 +277,10 @@ function create_fs () {
                 # User -f [force] to force overwriting an existing btrfs on that disk partition
                 # when the disk was already used before, see https://bugzilla.novell.com/show_bug.cgi?id=878870
                 (   echo "  # Try to create btrfs with UUID"
-                    echo "  if ! mkfs -t $fstype -U $uuid -f ${nodesize}${sectorsize}${features} $device >&2 ; then"
+                    echo "  if ! mkfs -t $fstype -U $uuid -f ${nodesize}${sectorsize}${features} $devices >&2 ; then"
                     # Problem with old btrfs version is that UUID cannot be set during mkfs! So, we must map it and
                     # change later the /etc/fstab, /boot/grub/menu.lst, etc.
-                    echo "      mkfs -t $fstype -f ${nodesize}${sectorsize}${features} $device >&2"
+                    echo "      mkfs -t $fstype -f ${nodesize}${sectorsize}${features} $devices >&2"
                     echo "      new_uuid=\$( btrfs filesystem show $device 2>/dev/null | grep -o 'uuid: .*' | cut -d ':' -f 2 | tr -d '[:space:]' )"
                     echo "      if [ $uuid != \$new_uuid ] ; then"
                     echo "          # The following grep command intentionally also"
@@ -276,7 +300,7 @@ function create_fs () {
             else
                 # UUID is not provided. Create FS without UUID
                 # Latest version of btrfs provides -U option to specify UUID druring the filesystem creation.
-                echo "  mkfs -t $fstype -f ${nodesize}${sectorsize}${features} $device" >> "$LAYOUT_CODE"
+                echo "  mkfs -t $fstype -f ${nodesize}${sectorsize}${features} $devices" >> "$LAYOUT_CODE"
             fi
 
             # Set the label:

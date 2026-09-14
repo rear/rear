@@ -253,6 +253,59 @@ function is_btrfs_list_of_features_valid() {
     [ -z "$list" ] || [[ "$list" =~ ^[0-9a-z-]+(,[0-9a-z-]+)*$ ]]
 }
 
+# $1 - a mountpoint
+function get_btrfs_devices() {
+    local mountpoint=$1
+    if [ -z "$mountpoint" ]; then
+        return 3
+    fi
+
+    local fs_info
+    if ! fs_info="$(btrfs filesystem show "$mountpoint")"; then
+        LogPrintError "Failed to get Btrfs filesystem structure for $mountpoint."
+        return 1
+    fi
+
+    # Example of 'btrfs filesystem show <mountpoint>' output:
+    # Label: 'sles16'  uuid: f8abe312-ae4f-4115-8a8e-3603bba79604
+    #         Total devices 2 FS bytes used 18.38GiB
+    #         devid    1 size 29.50GiB used 22.57GiB path /dev/sda2
+    #         devid    2 size 1.00GiB used 0.00B path /dev/sdb1
+
+    local devices
+    devices="$(echo "$fs_info" | awk '$1 == "devid" && $(NF-1) == "path" {print $NF}')"
+    devices=${devices//$'\n'/,}
+
+    if [ -z "$devices" ]; then
+        LogPrintError "Couldn't find any device paths in the output of 'btrfs filesystem show $mountpoint'."
+        return 1
+    fi
+
+    echo "$devices"
+}
+
+# $1 - a comma-separated list of device paths
+function is_btrfs_list_of_devices_valid() {
+    local paths
+    IFS=',' read -ra paths <<< "$1"
+
+    # An empty list is not valid
+    if [ ${#paths[@]} -eq 0 ]; then
+        return 1
+    fi
+
+    local path
+    for path in "${paths[@]}"; do
+        # Regex is created based on the https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_282
+        # It will fail if a non-portable character is used, e.g., '<' or '('.
+        if [[ ! "$path" =~ ^/dev/[[:alnum:]/._-]+$ ]]; then
+            return 1
+        fi
+    done
+
+    return 0
+}
+
 #Parse output from xfs_info for later use by mkfs.xfs
 
 function xfs_parse

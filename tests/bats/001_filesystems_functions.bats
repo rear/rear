@@ -652,3 +652,92 @@ free-space-tree"
 @test "Is Btrfs list of features valid: malicious code injected" {
     run -1 is_btrfs_list_of_features_valid "mixed-bg,;rm -rf /;extref"
 }
+
+@test "Get Btrfs devices: mountpoint is missing" {
+    run -3 get_btrfs_devices
+}
+
+@test "Get Btrfs devices: btrfs filesystem show failed" {
+    local mountpoint="/btrfs"
+    function btrfs {
+        [ "$1" != "filesystem" ] && [ "$2" != "show" ] && [ "$3" != "$mountpoint" ]
+    }
+    run -1 get_btrfs_devices "$mountpoint"
+    [ "$output" = "Failed to get Btrfs filesystem structure for $mountpoint." ]
+}
+
+@test "Get Btrfs devices: filesystem created on 3 partitions" {
+    local mountpoint="/btrfs"
+    function btrfs {
+        [ "$1" = "filesystem" ] && [ "$2" = "show" ] && [ "$3" = "$mountpoint" ] || return 1
+        echo "Label: none  uuid: ed2fc783-9d65-4f20-9068-051b089def69"
+        echo "Total devices 3 FS bytes used 144.00KiB"
+        echo "devid    1 size 1.00GiB used 8.00MiB path /dev/sdb1"
+        echo "devid    2 size 1.00GiB used 264.00MiB path /dev/sdb2"
+        echo "devid    3 size 1.00GiB used 264.00MiB path /dev/sdb3"
+    }
+    run -0 get_btrfs_devices "$mountpoint"
+    [ "$output" = "/dev/sdb1,/dev/sdb2,/dev/sdb3" ]
+}
+
+@test "Get Btrfs devices: filesystem created on 1 partition" {
+    local mountpoint="/"
+    function btrfs {
+        [ "$1" = "filesystem" ] && [ "$2" = "show" ] && [ "$3" = "$mountpoint" ] || return 1
+        echo "btrfs filesystem show /"
+        echo "Label: none  uuid: f8abe312-ae4f-4115-8a8e-3603bba79604"
+        echo "Total devices 1 FS bytes used 13.03GiB"
+        echo "devid    1 size 29.50GiB used 17.07GiB path /dev/sda2"
+    }
+    run -0 get_btrfs_devices "$mountpoint"
+    [ "$output" = "/dev/sda2" ]
+}
+
+@test "Get Btrfs devices: there is no 'devid' in btrfs filesystem show output" {
+    local mountpoint="/"
+    function btrfs {
+        [ "$1" = "filesystem" ] && [ "$2" = "show" ] && [ "$3" = "$mountpoint" ] || return 1
+        echo "btrfs filesystem show /"
+        echo "Label: none  uuid: f8abe312-ae4f-4115-8a8e-3603bba79604"
+        echo "Total devices 1 FS bytes used 13.03GiB"
+    }
+    run -1 get_btrfs_devices "$mountpoint"
+    [ "$output" = "Couldn't find any device paths in the output of 'btrfs filesystem show $mountpoint'." ]
+}
+
+@test "Get Btrfs devices: there is no 'path' in btrfs filesystem show output" {
+    local mountpoint="/"
+    function btrfs {
+        [ "$1" = "filesystem" ] && [ "$2" = "show" ] && [ "$3" = "$mountpoint" ] || return 1
+        echo "btrfs filesystem show /"
+        echo "Label: none  uuid: f8abe312-ae4f-4115-8a8e-3603bba79604"
+        echo "Total devices 1 FS bytes used 13.03GiB"
+        echo "devid    1 size 29.50GiB used 17.07GiB /dev/sda2"
+    }
+    run -1 get_btrfs_devices "$mountpoint"
+    [ "$output" = "Couldn't find any device paths in the output of 'btrfs filesystem show $mountpoint'." ]
+}
+
+@test "Is Btrfs list of devices valid: empty list is invalid" {
+    run -1 is_btrfs_list_of_devices_valid ""
+}
+
+@test "Is Btrfs list of devices valid: not absolute paths are not allowed" {
+    run -1 is_btrfs_list_of_devices_valid "/dev/sda1,sda2"
+}
+
+@test "Is Btrfs list of devices valid: only device paths under /dev are allowed" {
+    run -1 is_btrfs_list_of_devices_valid "/bin/bash"
+}
+
+@test "Is Btrfs list of devices valid: single device path is valid" {
+    run -0 is_btrfs_list_of_devices_valid "/dev/sda1"
+}
+
+@test "Is Btrfs list of devices valid: comma-separated device paths are valid" {
+    run -0 is_btrfs_list_of_devices_valid "/dev/sda1,/dev/sda2,/dev/sda3"
+}
+
+@test "Is Btrfs list of devices valid: ._- are allowed" {
+    run -0 is_btrfs_list_of_devices_valid "/dev/mapper/ubuntu--vg-ubuntu--lv,/dev/mapper/ubuntu._-"
+}
