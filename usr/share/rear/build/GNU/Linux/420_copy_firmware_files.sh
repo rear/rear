@@ -11,13 +11,15 @@ if is_false "$FIRMWARE_FILES" ; then
     return
 fi
 
-# The by default empty FIRMWARE_FILES array means that
-# usually all files in the /lib*/firmware/ directories
-# get included in the rescue/recovery system but on certain
-# architectures like ppc64 or ppc64le FIRMWARE_FILES could be set different
-# (cf. the conf/Linux-ppc64.conf and conf/Linux-ppc64le.conf scripts)
-# or FIRMWARE_FILES was specified by the user:
-test "${FIRMWARE_FILES[*]}" || FIRMWARE_FILES=( 'yes' )
+# COPY_MODULES=( all_modules ) is set when MODULES contains 'all_modules'
+# in the previous 400_copy_modules.sh script and then usually all firmware files
+# in the /lib*/firmware/ directories should get included in the rescue/recovery system:
+if IsInArray "all_modules" "${COPY_MODULES[@]}" ; then
+    # On certain architectures like ppc64 or ppc64le FIRMWARE_FILES could be set different
+    # (cf. the conf/Linux-ppc64.conf and conf/Linux-ppc64le.conf scripts)
+    # or FIRMWARE_FILES was specified by the user so do not overwrite that here:
+    test "${FIRMWARE_FILES[*]}" || FIRMWARE_FILES=( 'yes' )
+fi
 
 # The special value FIRMWARE_FILES=( 'yes' ) or any value that
 # is recognized as 'yes' by the is_true function enforces that
@@ -33,18 +35,134 @@ if is_true "$FIRMWARE_FILES" ; then
     return
 fi
 
-# Finally the more complicated case,
-# cf. "Return early, return often" in https://github.com/rear/rear/wiki/Coding-Style
-LogPrint "Copying files from /lib*/firmware/ that match ${FIRMWARE_FILES[@]}"
-for find_ipath_pattern in "${FIRMWARE_FILES[@]}" ; do
-    # No need to test if find_ipath_pattern is empty because 'find' does not find anything with empty '-ipath'.
-    # The 'cp --parents' does not copy empty directories which should not matter (a directory without a firmware file is useless) and
-    # it may report "cp: omitting directory ..." so that this particular stderr message is filtered out because it is meaningless here
-    # and 'cp -L' ensures that when during 'find -ipath' only a symbolic link name matches, the actual firmware file gets copied
-    # (note that 'find -L' would not work because it still outputs the symbolic link name).
-    # Ignore errors in this complicated case because it is in practice impossible to decide what errors should be fatal.
-    # For example when 'find' does not find anything for a find_ipath_pattern 'cp' fails with "cp: missing file operand"
-    # and 'grep -v foo' results exit code 1 if 'foo' is in all input lines (i.e. when 'grep -v' results no output):
-    find /lib*/firmware -ipath "$find_ipath_pattern" | xargs cp $verbose -t $ROOTFS_DIR -p -L --parents 2>&1 | grep -v 'omitting directory' 1>&2 || true
+# Firmware files for built-in kernel drivers should get copied into the recovery system if possible
+# (preconditions: /lib/modules/$KERNEL_VERSION/modules.builtin that newer kernels provide
+#  and a sufficiently new modinfo to query even builtin modules
+#  see https://github.com/rear/rear/pull/3553#issuecomment-4129123318)
+# except explicit user setting FIRMWARE_FILES=( 'no' ) forbids to copy firmware files
+# see https://github.com/rear/rear/pull/3553#issuecomment-5425860422
+# and except via FIRMWARE_FILES=( 'yes' ) all firmware files were already copied above.
+LogPrint "Copying firmware files that belong to built-in kernel drivers"
+if test -r /lib/modules/$KERNEL_VERSION/modules.builtin ; then
+    modinfo_success="yes"
+    for module_path in $( cat /lib/modules/$KERNEL_VERSION/modules.builtin ) ; do
+        module=$( basename $module_path | cut -s -d '.' -f1 )
+        # Here is a copy of the code (without comment) from the place below
+        # when "Copying firmware files that belong to the copied kernel modules":
+        if ! firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) ; then
+            DebugPrint "modinfo failed to determine firmware for built-in kernel driver '$module'"
+            modinfo_success="no"
+            continue
+        fi
+        for firmware_partial_filename in $firmware_partial_filenames ; do
+            firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
+            if ! test "$firmware_complete_filenames" ; then
+                DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for built-in kernel driver '$module')"
+                continue
+            fi
+            for firmware_complete_filename in $firmware_complete_filenames ; do
+                if ! test -r "$firmware_complete_filename" ; then
+                    Debug "Cannot copy firmware file for built-in kernel driver '$module' (cannot read $firmware_complete_filename)"
+                    continue
+                fi
+                cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+            done
+        done
+    done
+    if is_false "$modinfo_success" ; then
+        if test "${FIRMWARE_FILES[*]}" ; then
+            # When FIRMWARE_FILES are specified (here FIRMWARE_FILES is neither 'yes' nor 'no')
+            # and there was a modinfo failure when determining firmware files for built-in kernel drivers,
+            # we inform the user to ensure firmware for built-in drivers is specified in FIRMWARE_FILES
+            # but we cannot know if the user had such firmware already specified in FIRMWARE_FILES:
+            LogPrint "Ensure firmware for built-in drivers is specified in FIRMWARE_FILES (modinfo failed to determine firmware)"
+        else
+            # When FIRMWARE_FILES is empty and when there was a modinfo failure when determining firmware files for built-in kernel drivers,
+            # we error out to be on the safe side to avoid missing firmware for built-in drivers in the recovery system
+            # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
+            Error "If built-in drivers need firmware it is missing (FIRMWARE_FILES not specified and modinfo failed to determine firmware)"
+        fi
+    fi
+else
+    if test "${FIRMWARE_FILES[*]}" ; then
+        # When FIRMWARE_FILES are specified (here FIRMWARE_FILES is neither 'yes' nor 'no')
+        # and when we cannot determine firmware files for built-in kernel drivers,
+        # we inform the user to ensure firmware for built-in drivers is specified in FIRMWARE_FILES
+        # but we cannot know if the user had such firmware already specified in FIRMWARE_FILES:
+        LogPrint "Ensure firmware for built-in drivers is specified in FIRMWARE_FILES (cannot read /lib/modules/$KERNEL_VERSION/modules.builtin)"
+    else
+        # When FIRMWARE_FILES is empty and when we cannot determine firmware files for built-in kernel drivers,
+        # we error out to be on the safe side to avoid missing firmware for built-in drivers in the recovery system
+        # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
+        Error "If built-in drivers need firmware it is missing (FIRMWARE_FILES not specified)"
+    fi
+fi
+
+# FIRMWARE_FILES is set but neither 'yes' nor 'no'
+# so the user has specified which FIRMWARE_FILES should be copied.
+# In this case copy exactly what the user has specified
+# (plus firmware for built-in drivers in any case if possible, see above):
+if test "${FIRMWARE_FILES[*]}" ; then
+    LogPrint "Copying files from /lib*/firmware/ that match ${FIRMWARE_FILES[@]}"
+    for find_ipath_pattern in "${FIRMWARE_FILES[@]}" ; do
+        # No need to test if find_ipath_pattern is empty because 'find' does not find anything with empty '-ipath'.
+        # The 'cp --parents' does not copy empty directories which should not matter (a directory without a firmware file is useless) and
+        # it may report "cp: omitting directory ..." so that this particular stderr message is filtered out because it is meaningless here
+        # and 'cp -L' ensures that when during 'find -ipath' only a symbolic link name matches, the actual firmware file gets copied
+        # (note that 'find -L' would not work because it still outputs the symbolic link name).
+        # Ignore errors in this complicated case because it is in practice impossible to decide what errors should be fatal.
+        # For example when 'find' does not find anything for a find_ipath_pattern 'cp' fails with "cp: missing file operand"
+        # and 'grep -v foo' results exit code 1 if 'foo' is in all input lines (i.e. when 'grep -v' results no output):
+        find /lib*/firmware -ipath "$find_ipath_pattern" | xargs cp $verbose -t $ROOTFS_DIR -p -L --parents 2>&1 | grep -v 'omitting directory' 1>&2 || true
+    done
+    return
+fi
+
+# FIRMWARE_FILES is not specified and MODULES is not the default 'all_modules'
+# for example when MODULES=( 'loaded_modules' ) and FIRMWARE_FILES is empty.
+# COPY_MODULES contains the kernel module names of the modules
+# which should have been copied in the previous 400_copy_modules.sh script.
+# Automatically also copy the matching firmware files here, see
+# https://github.com/rear/rear/issues/3551
+LogPrint "Copying firmware files that belong to the copied kernel modules (FIRMWARE_FILES not specified)"
+modinfo_success="yes"
+for module in "${COPY_MODULES[@]}" ; do
+    if ! firmware_partial_filenames=$( modinfo -k $KERNEL_VERSION -F firmware "$module" ) ; then
+        DebugPrint "modinfo failed to determine firmware for kernel module '$module'"
+        modinfo_success="no"
+        continue
+    fi
+    for firmware_partial_filename in $firmware_partial_filenames ; do
+        # For example the command "modinfo -F firmware amdgpu" may show
+        # amdgpu/cyan_skillfish_gpu_info.bin
+        # amdgpu/navi12_gpu_info.bin
+        # ...
+        # The actual firmware files could be none for amdgpu/cyan_skillfish_gpu_info.bin
+        # because firmware files which are listed by modinfo may not exist on the system
+        # and for amdgpu/navi12_gpu_info.bin the actual firmware files could be
+        # /lib/firmware/amdgpu/navi12_gpu_info.bin.xz
+        # so what is listed by modinfo is only a part of the actual firmware file
+        # without leading path and without suffix so we need to find the actual firmware file.
+        # 'find' might return multiple matching files for one firmware_partial_filename
+        # cf. https://github.com/rear/rear/pull/3553#discussion_r3861464764
+        firmware_complete_filenames=$( find /lib*/firmware -path "*$firmware_partial_filename*" )
+        if ! test "$firmware_complete_filenames" ; then
+            DebugPrint "No file in /lib*/firmware matching '$firmware_partial_filename' (reported by modinfo for kernel module '$module')"
+            continue
+        fi
+        for firmware_complete_filename in $firmware_complete_filenames ; do
+            if ! test -r "$firmware_complete_filename" ; then
+                Debug "Cannot copy firmware file for kernel module '$module' (cannot read $firmware_complete_filename)"
+                continue
+            fi
+            cp $verbose -t $ROOTFS_DIR -p -L --parents $firmware_complete_filename
+        done
+    done
 done
+if is_false "$modinfo_success" ; then
+    # When FIRMWARE_FILES is empty and when there was a modinfo failure when determining firmware files for kernel modules,
+    # we error out to be on the safe side to avoid missing firmware for kernel modules in the recovery system
+    # see https://github.com/rear/rear/pull/3553#issuecomment-5452724929
+    Error "If kernel modules need firmware it is missing (FIRMWARE_FILES not specified and modinfo failed to determine firmware)"
+fi
 
