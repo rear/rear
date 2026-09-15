@@ -17,7 +17,7 @@ supported_filesystems_array=( ext2 ext3 ext4 vfat xfs reiserfs btrfs )
 used_unsupported_filesystems=""
 # I <jsmeix@suse.de> use findmnt because after some experiments findmnt worked not good but better for me than e.g. lsblk or mount.
 # At least findmnt from util-linux-systemd-2.40 reports e.g. 'fuse.portal' as '--real filesystem so we skip '^fuse' lines:
-for used_real_filesystem in $( findmnt -mnv --real -o FSTYPE | sort -u | grep -v '^fuse' ) ; do
+for used_real_filesystem in $( findmnt -mnr --real -o FSTYPE | sort -u | grep -v '^fuse' ) ; do
     IsInArray "$used_real_filesystem" "${supported_filesystems_array[@]}" && continue
     # For now only report used unsupported filesystems but do not error out to avoid false error exits
     # as long as it is unknown how reliable this functionality actually works out there in practice.
