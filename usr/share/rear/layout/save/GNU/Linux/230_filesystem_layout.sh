@@ -9,26 +9,33 @@ Log "Begin saving filesystem layout"
 has_binary wipefs && REQUIRED_PROGS+=( wipefs ) || true
 # Comma separated list of filesystems that is used for "mount/findmnt -t <list,of,filesystems>" below:
 supported_filesystems="ext2,ext3,ext4,vfat,xfs,reiserfs,btrfs"
-# In general tell what happens for unsupported filesystems,
+
+# Check and report when there are unsupported filesystems in use
 # cf. https://github.com/rear/rear/pull/3632#issuecomment-5664168360
-LogPrint "Supported filesystems: $supported_filesystems (what belongs to unsupported filesystems gets automatically excluded)"
-# Check and report if there are unsupported filesystems in use:
-supported_filesystems_array=( ext2 ext3 ext4 vfat xfs reiserfs btrfs )
-used_unsupported_filesystems=""
-# I <jsmeix@suse.de> use findmnt because after some experiments findmnt worked not good but better for me than e.g. lsblk or mount.
-# At least findmnt from util-linux-systemd-2.40 reports e.g. 'fuse.portal' as '--real filesystem so we skip '^fuse' lines:
-for used_real_filesystem in $( findmnt -mnr --real -o FSTYPE | sort -u | grep -v '^fuse' ) ; do
-    IsInArray "$used_real_filesystem" "${supported_filesystems_array[@]}" && continue
-    # For now only report used unsupported filesystems but do not error out to avoid false error exits
-    # as long as it is unknown how reliable this functionality actually works out there in practice.
-    # TODO: Enhance this functionality to make it working sufficiently reliable to error out,
-    # cf. https://github.com/rear/rear/pull/3632#issuecomment-5664598315
-    # Show the supported filesystems also here because the above LogPrint shows them only in verbose mode:
-    LogPrintError "Unsupported filesystem '$used_real_filesystem' in use (supported filesystems: $supported_filesystems)"
-done
-# At least tell what happens for unsupported filesystems,
-# cf. https://github.com/rear/rear/pull/3632#issuecomment-5664168360
-LogPrint "Supported filesystems: $supported_filesystems (what belongs to unsupported filesystems gets automatically excluded)"
+# Tell what filesystems are supported to have the user informed to be more on the safe side
+# because the following check for used unsupported filesystems may not yet work reliably:
+LogPrint "Supported filesystems: $supported_filesystems"
+# I <jsmeix@suse.de> use findmnt because after some experiments findmnt worked not good but better for me than e.g. lsblk or mount:
+findmnt_command="$( type -P findmnt )"
+if test -x "$findmnt_command" ; then
+    supported_filesystems_array=( ext2 ext3 ext4 vfat xfs reiserfs btrfs )
+    used_unsupported_filesystems=""
+    # At least findmnt from util-linux-systemd-2.40 reports e.g. 'fuse.portal' as a '--real' filesystem so we skip '^fuse' lines:
+    for used_real_filesystem in $( findmnt -mnr --real -o FSTYPE | sort -u | grep -v '^fuse' ) ; do
+        IsInArray "$used_real_filesystem" "${supported_filesystems_array[@]}" && continue
+        # For now only report used unsupported filesystems but do not error out to avoid false error exits
+        # as long as it is unknown how reliable this functionality actually works out there in practice.
+        # Also do not report it as LogPrintError because the user may have excluded what belongs to it
+        # and then the LogPrintError message would needlessly still be shown to the user in any case.
+        # TODO: Enhance this functionality to make it working sufficiently reliable to error out,
+        # cf. https://github.com/rear/rear/pull/3632#issuecomment-5664598315
+        LogPrint "Unsupported filesystem '$used_real_filesystem' in use (what belongs to '$used_real_filesystem' gets excluded)"
+    done
+else
+    # Generic fallback user information when findmnt is not available:
+    LogPrint "What belongs to unsupported filesystems gets excluded"
+fi
+
 # Read filesystem information from the system by default using the traditional mount command
 # limited to only the supported filesystems which results output lines of the form
 #   device mountpoint filesystem (list,of,options)
@@ -48,7 +55,6 @@ read_filesystems_command="mount -t $supported_filesystems | cut -d ' ' -f 1,3,5,
 #   /dev/sda2 /.snapshots btrfs rw,relatime,space_cache
 #   /dev/sda2 /var/tmp btrfs rw,relatime,space_cache
 # The only difference is that the traditional mount command output has the list of options in parenthesis.
-findmnt_command="$( type -P findmnt )"
 if test -x "$findmnt_command" ; then
     # Use the (deprecated) "findmnt -m" to avoid issues
     # as in https://github.com/rear/rear/issues/882
