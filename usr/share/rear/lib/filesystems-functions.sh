@@ -253,6 +253,27 @@ function is_btrfs_list_of_features_valid() {
     [ -z "$list" ] || [[ "$list" =~ ^[0-9a-z-]+(,[0-9a-z-]+)*$ ]]
 }
 
+# $1 - a filesystem UUID
+# $2 - a devid
+function is_btrfs_seeding_device() {
+    local uuid=$1
+    if [ -z "$uuid" ]; then
+        return 3
+    fi
+
+    local devid=$2
+    if [ -z "$devid" ]; then
+        return 3
+    fi
+
+    local writeable_path="/sys/fs/btrfs/$uuid/devinfo/$devid/writeable"
+    if [ ! -f "$writeable_path" ]; then
+        return 1
+    fi
+
+    [ "$(cat "$writeable_path")" = "0" ]
+}
+
 # $1 - a mountpoint
 function get_btrfs_devices() {
     local mountpoint=$1
@@ -272,9 +293,22 @@ function get_btrfs_devices() {
     #         devid    1 size 29.50GiB used 22.57GiB path /dev/sda2
     #         devid    2 size 1.00GiB used 0.00B path /dev/sdb1
 
+    local uuid
+    uuid=$(echo "$fs_info" | awk '$(NF-1) == "uuid:" {print $NF}')
+    if [ -z "$uuid" ]; then
+        LogPrintError "Couldn't find a filesystem UUID in the output of 'btrfs filesystem show $mountpoint'."
+        return 1
+    fi
+
     local devices
-    devices="$(echo "$fs_info" | awk '$1 == "devid" && $(NF-1) == "path" {print $NF}')"
-    devices=${devices//$'\n'/,}
+    local devid device_path
+    while read -r devid device_path; do
+        if is_btrfs_seeding_device "$uuid" "$devid"; then
+            LogPrintError "Warning: The Btrfs seeding device '$device_path' will become a regular read-write device at recovery time."
+        fi
+        devices+="$device_path,"
+    done < <(echo "$fs_info" | awk '$1 == "devid" && $(NF-1) == "path" {printf "%s %s\n", $2, $NF}')
+    devices=${devices%,}
 
     if [ -z "$devices" ]; then
         LogPrintError "Couldn't find any device paths in the output of 'btrfs filesystem show $mountpoint'."
