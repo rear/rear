@@ -4,12 +4,12 @@
 # still be reset optionally. The original agent registration remains untouched
 # post restore.
 
-COH_AGENT_CFG=/etc/cohesity-agent/agent.cfg
-COH_AGENT_SERVER_CERT=/etc/cohesity-agent/server_cert
-COH_AGENT_HOSTUUID=/var/cohesity/telemetry/hostuuid
+local coh_agent_cfg=/etc/cohesity-agent/agent.cfg
+local coh_agent_server_cert=/etc/cohesity-agent/server_cert
+local coh_agent_hostuuid=/var/cohesity/telemetry/hostuuid
 
-if ! test -s "$COH_AGENT_CFG" ; then
-    LogPrint "Cohesity agent config $COH_AGENT_CFG not found, skipping identity check."
+if ! test -s "$coh_agent_cfg" ; then
+    LogPrint "Cohesity agent config $coh_agent_cfg not found, skipping identity check."
     return 0
 fi
 
@@ -21,7 +21,7 @@ function coh_reset_agent_identity () {
     fi
 
     local f=""
-    for f in "$COH_AGENT_CFG" "$COH_AGENT_SERVER_CERT" "$COH_AGENT_HOSTUUID" ; do
+    for f in "$coh_agent_cfg" "$coh_agent_server_cert" "$coh_agent_hostuuid" ; do
         if test -e "$f" ; then
             mv -f "$f" "${f}_rear" || LogPrintError "Failed to rename $f to ${f}_rear"
         fi
@@ -35,13 +35,15 @@ does not need to be re-registered.
 "
 }
 
-local cfg_hostname="$( sed -n 's/^[[:space:]]*hostname:[[:space:]]*"\([^"]*\)".*/\1/p' "$COH_AGENT_CFG" | head -n1 )"
-local cfg_ipaddrs="$( sed -n 's/^[[:space:]]*ip_addr:[[:space:]]*"\([^"]*\)".*/\1/p' "$COH_AGENT_CFG" )"
-local cfg_ipaddrs_global="$( echo "$cfg_ipaddrs" | grep -vi '^fe80:' | grep -v '^169\.254\.' )"
+local cfg_hostname cfg_ipaddrs cfg_ipaddrs_global
+cfg_hostname="$( sed -n 's/^[[:space:]]*hostname:[[:space:]]*"\([^"]*\)".*/\1/p' "$coh_agent_cfg" | head -n1 )" || Error "Failed to read hostname from $coh_agent_cfg"
+cfg_ipaddrs="$( sed -n 's/^[[:space:]]*ip_addr:[[:space:]]*"\([^"]*\)".*/\1/p' "$coh_agent_cfg" )" || Error "Failed to read IP addresses from $coh_agent_cfg"
+cfg_ipaddrs_global="$( echo "$cfg_ipaddrs" | grep -vi '^fe80:' | grep -v '^169\.254\.' )" || true
 
-local current_hostname="$( hostname -f 2>/dev/null || hostname )"
-local current_ips="$( ip -o addr show | awk '{print $4}' | cut -d / -f 1 | grep -vE '^(127\.0\.0\.1|::1)$' )"
-local current_ips_global="$( echo "$current_ips" | grep -vi '^fe80:' | grep -v '^169\.254\.' )"
+local current_hostname current_ips current_ips_global
+current_hostname="$( hostname -f 2>/dev/null || hostname )" || Error "Failed to determine current hostname"
+current_ips="$( ip -o addr show | awk '{print $4}' | cut -d / -f 1 | grep -vE '^(127\.0\.0\.1|::1)$' )" || true
+current_ips_global="$( echo "$current_ips" | grep -vi '^fe80:' | grep -v '^169\.254\.' )" || true
 
 LogPrint ""
 LogPrint "Registered Cohesity agent hostname:"
@@ -73,7 +75,7 @@ if test -n "$cfg_hostname" && test -n "$cfg_ipaddrs_global" ; then
     if ! $hostname_match || ! $ip_match ; then
         LogPrint "
 Detected: hostname and/or IP address differ from what is registered in
-$COH_AGENT_CFG. Resetting the Cohesity agent identity for this recovery
+$coh_agent_cfg. Resetting the Cohesity agent identity for this recovery
 session is required.
 "
         coh_reset_agent_identity
@@ -81,7 +83,7 @@ session is required.
     fi
     LogPrint "Detected: hostname and IP address both match the registered Cohesity agent identity."
 else
-    LogPrint "Could not automatically verify hostname/IP against $COH_AGENT_CFG."
+    LogPrint "Could not automatically verify hostname/IP against $coh_agent_cfg."
     local prompt="Does this recovery host have the same IP address and hostname as the original system?"
     local answer=""
     while true ; do
