@@ -9,8 +9,19 @@ function create_fs () {
     label=${label#label=}
     uuid=${uuid#uuid=}
 
+    # The devices variable stores a single device for a non-Btrfs filesystem, or
+    # multiple devices if a Btrfs filesystem is created on top of multiple block devices.
+    local devices=$device
+    if [ "$fstype" = "btrfs" ]; then
+        local found_devices
+        found_devices=$(echo "$options" | grep -oP '(?<=\bdevices=)\S+')
+        if [ -n "$found_devices" ]; then
+            devices="${found_devices//,/ }"
+        fi
+    fi
+
     # Wait until udev had created the disk partition device node before creating a filesystem there:
-    (   echo "# Wait until udev had created '$device' before creating a filesystem there:"
+    (   echo "# Wait until udev had created '$devices' before creating a filesystem there:"
         echo "my_udevsettle"
     ) >> "$LAYOUT_CODE"
 
@@ -22,7 +33,7 @@ function create_fs () {
     # and https://github.com/rear/rear/issues/1327
     # and https://github.com/rear/rear/issues/799
     # TODO: Enhancements welcome from whoever likes to maintain them ;-)
-    local cleanup_command="" cleanup_info_message=""
+    local cleanup_info_message=""
     if has_binary wipefs ; then
         # First try wipefs that supports '--force' in order to also erase the partition table on a block device.
         # If that fails and regardless why it fails (i.e. play dumb), try a more conservative approach with 'wipefs --all'.
@@ -32,8 +43,11 @@ function create_fs () {
         # Because the cleanup_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
         # and the LAYOUT_CODE script is run with 'set -e' have a final 'true' in order to
         # not let "rear recover" abort only because cleanup of disk partitions failed:
-        cleanup_command="wipefs --all --force $device || wipefs --all $device || dd if=/dev/zero of=$device bs=512 count=1 || true"
-        cleanup_info_message="Using wipefs to cleanup '$device' before creating filesystem."
+        function get_cleanup_command() {
+            local device=$1
+            echo "wipefs --all --force $device || wipefs --all $device || dd if=/dev/zero of=$device bs=512 count=1 || true"
+        }
+        cleanup_info_message="Using wipefs to cleanup '$devices' before creating filesystem."
     else
         # As generic fallback use plain dd to erase dos partition tables
         # on systems that do not have wipefs which should at least avoid
@@ -41,29 +55,19 @@ function create_fs () {
         # Because the cleanup_command is added to the LAYOUT_CODE script (i.e. diskrestore.sh)
         # and the LAYOUT_CODE script is run with 'set -e' have a final 'true' in order to
         # not let "rear recover" abort only because cleanup of disk partitions failed:
-        cleanup_command="dd if=/dev/zero of=$device bs=512 count=1 || true"
-        cleanup_info_message="Using dd to cleanup the first 512 bytes on '$device' before creating filesystem."
+        function get_cleanup_command() {
+            local device=$1
+            echo "dd if=/dev/zero of=$device bs=512 count=1 || true"
+        }
+        cleanup_info_message="Using dd to cleanup the first 512 bytes on '$devices' before creating filesystem."
     fi
 
-    function print_start_fs_creation_info_msg() {
-        # fstype, mountpoint and cleanup_info_message are captured from the parent scope
-        local devices=$1
-
-        local create_filesystem_info_message="Creating filesystem of type '$fstype' with mount point '$mountpoint' on '$devices'."
-        Debug "$create_filesystem_info_message"
-        echo "LogPrint '$create_filesystem_info_message'" >> "$LAYOUT_CODE"
-        Debug "$cleanup_info_message"
-        echo "# $cleanup_info_message" >> "$LAYOUT_CODE"
-    }
-
-    # Tell what will be done.
-    #
-    # Since Btrfs can be created on top of multiple block devices, and
-    # the list of device paths is parsed later, the start message for Btrfs
-    # is printed separately once the list of device paths is known.
-    if [ "$fstype" != "btrfs" ]; then
-        print_start_fs_creation_info_msg "$device"
-    fi
+    # Tell what will be done:
+    local create_filesystem_info_message="Creating filesystem of type '$fstype' with mount point '$mountpoint' on '$devices'."
+    Debug "$create_filesystem_info_message"
+    echo "LogPrint '$create_filesystem_info_message'" >> "$LAYOUT_CODE"
+    Debug "$cleanup_info_message"
+    echo "# $cleanup_info_message" >> "$LAYOUT_CODE"
 
     # Actually do it:
     case "$fstype" in
@@ -105,7 +109,7 @@ function create_fs () {
                 esac
             done
             # Cleanup disk partition:
-            echo "$cleanup_command" >> "$LAYOUT_CODE"
+            get_cleanup_command "$device" >> "$LAYOUT_CODE"
             # Use the right program to adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             local tunefs="tune2fs"
             # On RHEL 5, tune2fs does not work on ext4.
@@ -146,7 +150,7 @@ function create_fs () {
         (xfs)
             Log "Begin generating code to create XFS on $device ..."
             # Cleanup disk partition:
-            echo "$cleanup_command" >> "$LAYOUT_CODE"
+            get_cleanup_command "$device" >> "$LAYOUT_CODE"
 
             # Load xfs options from configuration files saved during
             # 'rear mkbackup/mkrescue' by xfs_info.
@@ -220,7 +224,7 @@ function create_fs () {
             ;;
         (reiserfs)
             # Cleanup disk partition:
-            echo "$cleanup_command" >> "$LAYOUT_CODE"
+            get_cleanup_command "$device" >> "$LAYOUT_CODE"
             # Actually create the filesystem:
             echo "mkfs -t $fstype -q $device" >> "$LAYOUT_CODE"
             # Set the label:
@@ -235,7 +239,7 @@ function create_fs () {
         (btrfs)
             # Btrfs filesystem parameters:
             local features="" nodesize="" sectorsize=""
-            local devices="" dprofile="" mprofile=""
+            local dprofile="" mprofile=""
             local option="" name="" value=""
             for option in $options ; do
                 name=${option%=*}
@@ -250,9 +254,6 @@ function create_fs () {
                     (sectorsize)
                         sectorsize=" -s $value"
                         ;;
-                    (devices)
-                        devices=" ${value//,/ }"
-                        ;;
                     (dprofile)
                         dprofile=" -d $value"
                         ;;
@@ -262,16 +263,19 @@ function create_fs () {
                 esac
             done
 
-            # Fallback for backward compatibility when a list of devices is not included
-            # in disklayout.conf, e.g., due to errors while retrieving the device paths.
-            if [ -z "$devices" ]; then
-                devices=" $device"
-            fi
+            # Cleanup disk partition provided the disk partition is not already mounted.
+            # For group devices, any device from the group can be used to determine whether
+            # the whole group is mounted.
+            {
+                echo "if ! mount | grep -q $device ; then"
+                local device_path
+                for device_path in $devices; do
+                    echo "  $(get_cleanup_command "$device_path")"
+                done
+                echo "fi"
+            } >> "$LAYOUT_CODE"
 
-            print_start_fs_creation_info_msg "${devices# }"
-
-            # Cleanup disk partition provided the disk partition is not already mounted:
-            echo "mount | grep -q $device || $cleanup_command" >> "$LAYOUT_CODE"
+            devices=" $devices"
 
             # Actually create the filesystem provided the disk partition is not already mounted.
             (   echo "# if $device is already mounted, skip"
@@ -319,7 +323,7 @@ function create_fs () {
             ;;
         (vfat)
             # Cleanup disk partition:
-            echo "$cleanup_command" >> "$LAYOUT_CODE"
+            get_cleanup_command "$device" >> "$LAYOUT_CODE"
             # Actually create the filesystem with or without label:
             if [ -n "$label" ] ; then
                 # we substituted all " " with "\\b" in savelayout (\\b becomes \b by reading label)
@@ -363,7 +367,7 @@ EOF
             ;;
         (*)
             # Cleanup disk partition:
-            echo "$cleanup_command" >> "$LAYOUT_CODE"
+            get_cleanup_command "$device" >> "$LAYOUT_CODE"
             # Actually create the filesystem:
             echo "mkfs -t $fstype $device >&2" >> "$LAYOUT_CODE"
             ;;
