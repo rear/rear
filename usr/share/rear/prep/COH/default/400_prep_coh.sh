@@ -3,7 +3,7 @@
 
 COPY_AS_IS+=( "${COPY_AS_IS_COH[@]}" )
 COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_COH[@]}" )
-PROGS+=( "${PROGS_COH[@]}" )
+REQUIRED_PROGS+=( "${REQUIRED_PROGS_COH[@]}" )
 
 # The Cohesity agent ships its own bundled shared libraries (protobuf, absl, rocksdb, ...)
 # next to its binaries instead of relying on system libraries, so 'ldd' can only resolve
