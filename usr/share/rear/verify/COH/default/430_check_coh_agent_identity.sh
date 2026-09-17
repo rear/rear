@@ -16,8 +16,7 @@ fi
 function coh_reset_agent_identity () {
     if has_binary systemctl && systemctl is-active --quiet cohesity-agent ; then
         LogPrint "Stopping cohesity-agent before resetting its identity..."
-        systemctl stop cohesity-agent
-        StopIfError $? "Unable to stop the cohesity-agent systemd service"
+        systemctl stop cohesity-agent || Error "Unable to stop the cohesity-agent systemd service"
     fi
 
     local f=""

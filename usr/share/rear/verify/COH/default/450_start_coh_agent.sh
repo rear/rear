@@ -5,12 +5,10 @@
 local coh_agent_wrapper=/opt/cohesity/agent/software/crux/bin/cohesity_linux_agent.sh
 
 if has_binary systemctl && systemctl list-unit-files cohesity-agent.service &>/dev/null ; then
-    systemctl start cohesity-agent
-    StopIfError $? "Unable to start the cohesity-agent systemd service"
+    systemctl start cohesity-agent || Error "Unable to start the cohesity-agent systemd service"
 else
     test -x "$coh_agent_wrapper" || Error "Cannot execute $coh_agent_wrapper to start the Cohesity agent"
-    "$coh_agent_wrapper" start
-    StopIfError $? "Unable to start the Cohesity agent via $coh_agent_wrapper"
+    "$coh_agent_wrapper" start || Error "Unable to start the Cohesity agent via $coh_agent_wrapper"
 fi
 
 LogPrint "Cohesity agent started."
