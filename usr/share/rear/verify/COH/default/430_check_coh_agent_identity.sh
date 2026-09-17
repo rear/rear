@@ -95,7 +95,7 @@ else
             coh_reset_agent_identity
             return 0
         fi
-        UserOutput "Please answer 'yes' or 'no'"
+        UserOutput "Answer 'yes' or 'no'"
     done
 fi
 
@@ -111,5 +111,5 @@ while true ; do
         LogPrint "Keeping the existing Cohesity agent identity."
         return 0
     fi
-    UserOutput "Please answer 'yes' or 'no'"
+    UserOutput "Answer 'yes' or 'no'"
 done

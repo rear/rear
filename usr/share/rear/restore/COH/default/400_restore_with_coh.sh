@@ -3,7 +3,7 @@
 # and/or its REST API, then wait for confirmation before continuing 'rear recover'.
 
 LogPrint "
-Please initiate and monitor the restore of this host's data from the
+Initiate and monitor the restore of this host's data from the
 Cohesity Data Cloud console and/or its REST API now.
 
 Restore the data into: $TARGET_FS_ROOT
