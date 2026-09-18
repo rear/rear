@@ -372,16 +372,24 @@ function get_btrfs_profile() {
         return 1
     fi
 
-    local profile
+    local profile profiles=()
     for profile in "${BTRFS_PROFILES[@]}"; do
         if [ -d "$sysfs_alloc_path/$type/$profile" ]; then
-            echo "$profile"
-            return
+            profiles+=("$profile")
         fi
     done
 
-    LogPrintError "No Btrfs profile directory found in '$sysfs_alloc_path/$type'."
-    return 1
+    if (( ${#profiles[@]} == 0 )); then
+        LogPrintError "No Btrfs profile directory found in '$sysfs_alloc_path/$type'."
+        return 1
+    elif (( ${#profiles[@]} > 1 )); then
+        local joined_profiles
+        joined_profiles=$(printf '%s, ' "${profiles[@]}")
+        joined_profiles=${joined_profiles%, }
+        LogPrintError "Multiple $type profiles detected: $joined_profiles. The '${profiles[0]}' profile will be used as the first one found."
+    fi
+
+    echo "${profiles[0]}"
 }
 
 # $1 - a filesystem UUID
