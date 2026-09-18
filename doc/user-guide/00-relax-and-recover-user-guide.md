@@ -26,3 +26,4 @@ The ultimate goal is to move this user guide to [https://relax-and-recover.org/r
 16. [Rubrik CDM](16-Rubrik-CDM.md)
 17. [Portable Mode](17-Portable-Mode.md)
 18. [iSCSI Devices](18-iSCSI.md)
+19. [Cohesity DataProtect (COH)](19-Cohesity-COH.md)
