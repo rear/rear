@@ -42,6 +42,20 @@ function btrfs_subvolume_exists() {
     # Return awk's exit status
 }
 
+function mkfs_xfs_supports_sparse_inodes() {
+    if ! has_binary mkfs.xfs; then
+        return 127
+    fi
+
+    # mkfs.xfs writes its usage (listing all valid suboptions) to stderr
+    # when it is run without a device argument.
+    # Older xfsprogs (e.g. 4.5.0, as shipped on RHEL 7) already let
+    # 'xfs_info' report a 'spinodes' attribute but their 'mkfs.xfs'
+    # does not yet accept '-i sparse=...' to create such a filesystem,
+    # so probe the actual binary instead of assuming a fixed version cutoff.
+    mkfs.xfs 2>&1 | grep -q 'sparse'
+}
+
 function get_btrfs_version() {
     if ! has_binary btrfs; then
         return 127
@@ -482,6 +496,13 @@ function xfs_parse
             # To avoid messages like "[: -eq: unary operator expected",
             # we will set default value for $crc variable to 0.
             if [ ${crc:-0} -eq 1 ] && [ $var = "ftype" ]; then
+                i=$((i+1))
+                continue
+            fi
+
+            # Skip 'sparse' when the target mkfs.xfs does not support it
+            # (cf. mkfs_xfs_supports_sparse_inodes above).
+            if [ $var = "sparse" ] && ! mkfs_xfs_supports_sparse_inodes; then
                 i=$((i+1))
                 continue
             fi
