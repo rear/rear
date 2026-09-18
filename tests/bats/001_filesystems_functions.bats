@@ -766,8 +766,8 @@ free-space-tree"
         return 1
     }
     run -0 get_btrfs_devices "$mountpoint"
-    [ "${lines[0]}" = "Warning: The Btrfs seeding device '/dev/sdb1' will become a regular read-write device at recovery time." ]
-    [ "${lines[1]}" = "Warning: The Btrfs seeding device '/dev/sdb2' will become a regular read-write device at recovery time." ]
+    [ "${lines[0]}" = "The Btrfs seeding device '/dev/sdb1' will become a regular read-write device at recovery time." ]
+    [ "${lines[1]}" = "The Btrfs seeding device '/dev/sdb2' will become a regular read-write device at recovery time." ]
     [ "${lines[2]}" = "/dev/sdb1,/dev/sdb2,/dev/sdb3" ]
 }
 

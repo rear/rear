@@ -294,7 +294,7 @@ function get_btrfs_devices() {
     #         devid    2 size 1.00GiB used 0.00B path /dev/sdb1
 
     local uuid
-    uuid=$(echo "$fs_info" | awk '$(NF-1) == "uuid:" {print $NF}')
+    uuid=$(echo "$fs_info" | awk '$(NF-1) == "uuid:" {print $NF; exit}')
     if [ -z "$uuid" ]; then
         LogPrintError "Couldn't find a filesystem UUID in the output of 'btrfs filesystem show $mountpoint'."
         return 1
@@ -304,7 +304,7 @@ function get_btrfs_devices() {
     local devid device_path
     while read -r devid device_path; do
         if is_btrfs_seeding_device "$uuid" "$devid"; then
-            LogPrintError "Warning: The Btrfs seeding device '$device_path' will become a regular read-write device at recovery time."
+            LogPrintError "The Btrfs seeding device '$device_path' will become a regular read-write device at recovery time."
         fi
         devices+="$device_path,"
     done < <(echo "$fs_info" | awk '$1 == "devid" && $(NF-1) == "path" {printf "%s %s\n", $2, $NF}')
