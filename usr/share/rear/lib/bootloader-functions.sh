@@ -610,6 +610,24 @@ function create_grub2_cfg {
     local grub2_timeout="$GRUB2_TIMEOUT"
     test "$grub2_timeout" || grub2_timeout=300
 
+    case "$ISO_DEFAULT" in
+      (automatic)
+          grub2_default_menu_entry="rear_automatic"   # not secure-boot variant
+          # If the user set GRUB2_TIMEOUT in local.conf (different from the
+          # default inheritance of USER_INPUT_TIMEOUT), honor it.
+          # Otherwise use 5s — same as SYSLINUX "timeout 50" for automatic.
+          if test -n "$GRUB2_TIMEOUT" && test "$GRUB2_TIMEOUT" != "$USER_INPUT_TIMEOUT" ; then
+              grub2_timeout="$GRUB2_TIMEOUT"
+          else
+              grub2_timeout=5
+          fi
+          ;;
+      (manual)
+          grub2_default_menu_entry="rear"
+          ;;
+      # boothd / empty: keep GRUB2_DEFAULT_BOOT (usually chainloader)
+    esac
+
     local root_uuid=$( get_root_disk_UUID )
     test -b /dev/disk/by-uuid/$root_uuid || Error "root_uuid device '/dev/disk/by-uuid/$root_uuid' is no block device"
 
@@ -691,6 +709,24 @@ menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrdefi $grub2_initrd
 }
+
+menuentry "Automatic Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear_automatic {
+    insmod gzio
+    insmod xzio
+    echo 'Loading kernel $grub2_kernel ...'
+    linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrd $grub2_initrd
+}
+menuentry "Automatic Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot_automatic {
+    insmod gzio
+    insmod xzio
+    echo 'Loading kernel $grub2_kernel ...'
+    linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrdefi $grub2_initrd
+}
+
 EOF
         else
             cat << EOF
@@ -702,6 +738,15 @@ menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     echo 'Loading initial ramdisk $grub2_initrd ...'
     initrd $grub2_initrd
 }
+menuentry "Automatic Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear_automatic {
+    insmod gzio
+    insmod xzio
+    echo 'Loading kernel $grub2_kernel ...'
+    linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE auto_recover $ISO_RECOVER_MODE
+    echo 'Loading initial ramdisk $grub2_initrd ...'
+    initrd $grub2_initrd
+}
+
 EOF
         fi
     # End of function create_grub2_rear_boot_entry
