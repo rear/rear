@@ -53,7 +53,7 @@ function mkfs_xfs_supports_sparse_inodes() {
     # 'xfs_info' report a 'spinodes' attribute but their 'mkfs.xfs'
     # does not yet accept '-i sparse=...' to create such a filesystem,
     # so probe the actual binary instead of assuming a fixed version cutoff.
-    mkfs.xfs 2>&1 | grep -q 'sparse'
+    mkfs.xfs 2>&1 | grep -qw 'sparse'
 }
 
 function get_btrfs_version() {
