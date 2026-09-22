@@ -20,7 +20,7 @@ ifneq ($(OFFICIAL),)
 	distversion = $(version)
 	debrelease = 0
 	rpmrelease = %nil
-	obsproject = Archiving:Backup:Rear
+	obsproject = Archiving:Backup:Rear:Snapshot
 	obspackage = $(name)-$(version)
 
 	date := $(shell date +%Y%m%d%H%M)
