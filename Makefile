@@ -20,7 +20,7 @@ ifneq ($(OFFICIAL),)
 	distversion = $(version)
 	debrelease = 0
 	rpmrelease = %nil
-	obsproject = Archiving:Backup:Rear:Snapshot
+	obsproject = Archiving:Backup:Rear
 	obspackage = $(name)-$(version)
 
 	date := $(shell date +%Y%m%d%H%M)
@@ -53,7 +53,7 @@ else
     distversion = $(version)-git.$(git_stamp)
     debrelease = 0git.$(git_stamp)
     rpmrelease = .git.$(git_stamp)
-    obsproject = Archiving:Backup:Rear:Snapshot
+    obsproject = Archiving:Backup:Rear
     obspackage = $(name)
 
 	date := $(shell date --date="$(git_date)" +%Y%m%d%H%M)
