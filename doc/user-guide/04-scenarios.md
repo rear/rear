@@ -13,7 +13,7 @@ If you only want a bootable ISO on a central server, you would do:
 If you rely on your backup software to do the full restore of a system then you could define:
 
     OUTPUT=ISO
-    BACKUP=[TSM|NSR|DP|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
+    BACKUP=[TSM|NSR|DP|COH|NBU|GALAXY10|SEP|DUPLICITY|BACULA|BAREOS|RBME|FDRUPSTREAM]
 
 When using one of the above backup solution (commercial or open source) then there is no need to use `rear mkbackup` as the backup workflow would be empty. Use `rear mkrescue` instead.
 
