@@ -3,6 +3,30 @@
 
 ## Summary
 
+Cohesity DataProtect provides policy-based backup and recovery for supported workloads. A
+protection policy defines the source, schedule, retention, and storage target. Backup data is
+transferred to a Cohesity cluster and stored as snapshots.
+
+**Backup processing:**
+
+* The client or workload is registered as a protection source.
+* A protection job runs according to its assigned policy.
+* Data is read directly from the workload or through a locally installed agent.
+* The backup stream is sent to the DataProtect cluster.
+* The cluster deduplicates and compresses the backup data.
+* Encryption protects data in transit and at rest.
+* Snapshots can be configured as immutable, preventing modification or deletion during the
+  defined retention period and improving cyber resilience.
+* Recovery operations read the required snapshot and restore the selected files, volumes, or
+  workload data.
+
+**ReaR integration:**
+
+For the ReaR workflow, the lightweight Cohesity agent is installed locally on the Linux client
+and performs either a file system based or block based backup. The agent can perform
+source-side deduplication to reduce network transfer. Backup data is stored on the DataProtect
+cluster in deduplicated, compressed, encrypted, on immutable snapshots.
+
 The `BACKUP=COH` method for ReaR supports bare metal recovery of Linux systems that are
 protected as physical servers by Cohesity DataProtect. It has been validated against a live
 Cohesity cluster, recovering successfully both when the recovery host keeps the original
