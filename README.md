@@ -31,6 +31,7 @@ The complete list of backup methods (`BACKUP=...`) is:
 * `BLOCKCLONE` block device cloning via `dd`
 * `BORG` Borg Backup
 * `CDM` Rubrik Cloud Data Management
+* `COH` Cohesity DataProtect
 * `DP` OpenText Data Protector
 * `DUPLICITY` Duplicity / Duply
 * `EXTERNAL` External custom restore method

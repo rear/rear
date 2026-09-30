@@ -67,6 +67,7 @@ body:
         - SESAM
         - NBKDC
         - CDM
+        - COH
         - RBME
         - BAREOS
         - BACULA

@@ -109,6 +109,10 @@ Use IBM Tivoli Storage Manager programs
 * BACKUP=DP:
 Use Micro Focus Data Protector programs
 
+* BACKUP=COH:
+Use Cohesity DataProtect. Restore is initiated and monitored from the Cohesity Data Cloud
+console and/or its REST API, ReaR only prepares and starts the local Cohesity agent.
+
 * BACKUP=FDRUPSTREAM:
 Use FDR/Upstream
 
