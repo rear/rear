@@ -497,6 +497,13 @@ function make_syslinux_config {
     if [[ -r "$SYSLINUX_DIR/menu.c32" ]]; then
         echo "default menu.c32"
     fi
+
+    # Local nested helper functions must be 'unset' because bash does not support 'local function ...'
+    # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+    # and https://github.com/rear/rear/pull/3647#issuecomment-5951434875
+    unset -f syslinux_menu syslinux_menu_help
+
+# End of function make_syslinux_config
 }
 
 # Create configuration file for elilo
@@ -789,8 +796,9 @@ $( create_grub2_reboot_entry )
 $( create_grub2_exit_entry )
 EOF
 
-    # Local functions must be 'unset' because bash does not support 'local function ...'
+    # Local nested helper functions must be 'unset' because bash does not support 'local function ...'
     # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
+    # and https://github.com/rear/rear/pull/3647#issuecomment-5951434875
     unset -f create_grub2_serial_entry
     unset -f create_grub2_rear_boot_entry
     unset -f create_grub2_boot_next_entry
