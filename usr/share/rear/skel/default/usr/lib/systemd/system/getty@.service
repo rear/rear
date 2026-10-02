@@ -43,4 +43,4 @@ KillSignal=SIGHUP
 
 [Install]
 WantedBy=getty.target
-DefaultInstance=%I
+DefaultInstance=tty1
