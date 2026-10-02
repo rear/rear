@@ -260,28 +260,10 @@ function xfs_parse
     local xfs_opt_file=$1
     local xfs_opts=""
 
-    # Nested helper only used below, cf. the 'sparse' handling further down.
-    # Not meant as a global generic function, so it is nested here
-    # (same pattern as e.g. apply_layout_mappings in lib/layout-functions.sh).
-    function mkfs_xfs_supports_sparse_inodes() {
-        if ! has_binary mkfs.xfs; then
-            return 127
-        fi
-
-        # mkfs.xfs writes its usage (listing all valid suboptions) to stderr
-        # when it is run without a device argument.
-        # Older xfsprogs (e.g. 4.5.0, as shipped on RHEL 7) already let
-        # 'xfs_info' report a 'spinodes' attribute but their 'mkfs.xfs'
-        # does not yet accept '-i sparse=...' to create such a filesystem,
-        # so probe the actual binary instead of assuming a fixed version cutoff.
-        mkfs.xfs 2>&1 | grep -qw 'sparse'
-    }
-
     # Check if we can read configuration file produced by xfs_info.
     # Fall back to mkfs.xfs defaults if trouble with configuration file occur.
     if [ ! -r $xfs_opt_file ]; then
         Log "Can't read $xfs_opt_file, falling back to mkfs.xfs defaults."
-        unset -f mkfs_xfs_supports_sparse_inodes
         return
     fi
 
@@ -504,9 +486,13 @@ function xfs_parse
                 continue
             fi
 
-            # Skip 'sparse' when the target mkfs.xfs does not support it
-            # (cf. mkfs_xfs_supports_sparse_inodes above).
-            if [ $var = "sparse" ] && ! mkfs_xfs_supports_sparse_inodes; then
+            # Skip 'sparse' when the target mkfs.xfs does not support it.
+            # mkfs.xfs writes its usage (listing all valid suboptions) to stderr
+            # when run without a device argument; older xfsprogs (e.g. 4.5.0 on
+            # RHEL 7) already report a 'spinodes' xfs_info attribute but their
+            # mkfs.xfs doesn't yet accept '-i sparse=...', so probe the actual
+            # binary instead of assuming a fixed version cutoff.
+            if [ "$var" = "sparse" ] && ! { mkfs.xfs 2>&1 | grep -qw 'sparse'; } ; then
                 i=$((i+1))
                 continue
             fi
@@ -518,8 +504,6 @@ function xfs_parse
         i=$((i+1))
 
     done
-
-    unset -f mkfs_xfs_supports_sparse_inodes
 
   # Output xfs options for further use
   echo "$xfs_opts"
