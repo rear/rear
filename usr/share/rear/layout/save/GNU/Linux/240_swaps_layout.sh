@@ -24,6 +24,7 @@ Log "Saving Swap information."
         done
 
         # find uuid or label
+        uuid="" label=""
         if has_binary swaplabel ; then
             while read what value junk ; do
                 case $what in

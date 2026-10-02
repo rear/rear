@@ -638,3 +638,4 @@ fi
 
 Log "End saving filesystem layout"
 
+unset uuid label
