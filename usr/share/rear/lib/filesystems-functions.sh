@@ -486,12 +486,8 @@ function xfs_parse
                 continue
             fi
 
-            # Skip 'sparse' when the target mkfs.xfs does not support it.
-            # mkfs.xfs writes its usage (listing all valid suboptions) to stderr
-            # when run without a device argument; older xfsprogs (e.g. 4.5.0 on
-            # RHEL 7) already report a 'spinodes' xfs_info attribute but their
-            # mkfs.xfs doesn't yet accept '-i sparse=...', so probe the actual
-            # binary instead of assuming a fixed version cutoff.
+            # Skip 'sparse' when mkfs.xfs doesn't list it in its usage output,
+            # i.e. the target mkfs.xfs is too old to accept '-i sparse=...'.
             if [ "$var" = "sparse" ] && ! { mkfs.xfs 2>&1 | grep -qw 'sparse'; } ; then
                 i=$((i+1))
                 continue
