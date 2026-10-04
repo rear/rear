@@ -57,7 +57,7 @@ function create_fs () {
         (ext*)
             # File system parameters:
             local blocksize="" reserved_blocks="" max_mounts="" check_interval="" default_mount_options=""
-            local fragmentsize="" bytes_per_inode=""
+            local fragmentsize="" bytes_per_inode="" mkfs_ext_options=""
             local option name value
             for option in $options ; do
                 name=${option%=*}
@@ -91,6 +91,12 @@ function create_fs () {
                         ;;
                 esac
             done
+            # Let the user pass extra options (e.g. '-E nodiscard') to mkfs/mke2fs
+            # for ext2/ext3/ext4 filesystems via MKFS_EXT_OPTIONS in local.conf/site.conf:
+            if test "$MKFS_EXT_OPTIONS" ; then
+                LogPrint "Using mkfs options from MKFS_EXT_OPTIONS for $fstype on $device: $MKFS_EXT_OPTIONS"
+                mkfs_ext_options=" $MKFS_EXT_OPTIONS"
+            fi
             # Cleanup disk partition:
             echo "$cleanup_command" >> "$LAYOUT_CODE"
             # Use the right program to adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
@@ -111,13 +117,13 @@ function create_fs () {
                   echo "# but if that fails assume it failed because of missing support for '-U'"
                   echo "# (e.g. in RHEL 5 it fails, see https://github.com/rear/rear/issues/890)"
                   echo "# then fall back to using mkfs without '-U' plus 'tune2fs/tune4fs -U'"
-                  echo "if ! mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -U $uuid -F $device >&2 ; then"
-                  echo "    mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -F $device >&2"
+                  echo "if ! mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode}${mkfs_ext_options} -U $uuid -F $device >&2 ; then"
+                  echo "    mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode}${mkfs_ext_options} -F $device >&2"
                   echo "    $tunefs -U $uuid $device >&2"
                   echo "fi"
                 ) >> "$LAYOUT_CODE"
             else
-                echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode} -F $device >&2" >> "$LAYOUT_CODE"
+                echo "mkfs -t ${fstype}${blocksize}${fragmentsize}${bytes_per_inode}${mkfs_ext_options} -F $device >&2" >> "$LAYOUT_CODE"
             fi
             # Adjust tunable filesystem parameters on ext2/ext3/ext4 filesystems:
             # Set the label:
