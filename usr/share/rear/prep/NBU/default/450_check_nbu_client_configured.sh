@@ -3,7 +3,7 @@
 # made for this client - no more no less
 
 Log "Running: /usr/openv/netbackup/bin/bplist command"
-LANG=C /usr/openv/netbackup/bin/bplist -l -s `date -d "-5 days" \
+/usr/openv/netbackup/bin/bplist -l -s `date -d "-1 month" \
 	"+%m/%d/%Y"` / >/dev/null
 rc=$?
 [ $rc -gt 0 ] && LogPrint "WARNING: Netbackup bplist check failed with error code ${rc}.
