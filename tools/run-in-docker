@@ -214,6 +214,15 @@ esac
 # set Docker interactive if we have interactive terminal
 test -t 0 && extra_docker_args+=(-i -t)
 
+# ReaR enforces trusted sourcing and refuses to source files that are writable
+# by group or others (see https://github.com/rear/rear/issues/3259 and
+# https://github.com/rear/rear/pull/3379). A host umask of 0002 creates
+# group-writable files (rw-rw-r--), which makes ReaR abort with
+# "Forbidden to source '...' (group or others have write permission)" when the
+# repo is bind-mounted into the container. Strip group/other write bits from the
+# mounted tree so this works regardless of the host umask.
+chmod -R go-w "$rear_toplevel_dir" 2>/dev/null || true
+
 # Note: bash reads --rcfile <file> for interactive shells
 #       bash reads the file specified in BASH_ENV for non-interactive shells
 #       we set both so that our startup file run-in-docker.bashrc is ALWAYS read as it sets the PATH
