@@ -22,11 +22,6 @@ fi
 if grep -q "^/$" $TMP_DIR/restore_fs_list
 then
    echo "!$TARGET_FS_ROOT" >> $TMP_DIR/restore_fs_list
-   # pseudo filesystems are populated by the running rescue kernel, not the backup,
-   # restoring them causes bprestore to fail (status 5 / activity monitor 2800)
-   for pseudofs in /dev /run /proc /sys ; do
-       echo "!${pseudofs}" >> $TMP_DIR/restore_fs_list
-   done
 fi
 if [ ${#EXCLUDE_MOUNTPOINTS[@]} -gt 0 ]
 then
