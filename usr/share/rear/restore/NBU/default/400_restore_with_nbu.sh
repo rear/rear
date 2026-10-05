@@ -17,11 +17,9 @@ fi
 
 LogPrint "RUN: /usr/openv/netbackup/bin/bprestore $bprestore_args"
 LogPrint "Restore progress: see $TMP_DIR/bplog.restore"
-LANG=C /usr/openv/netbackup/bin/bprestore $bprestore_args
+/usr/openv/netbackup/bin/bprestore $bprestore_args
 rc=$?
-if (( rc > 5 )) ; then
-    # According issue #3560 return codes up to 5 are restores with issues,
-    # but not complete failures
+if (( rc != 0 )) ; then
     Error "bprestore failed (return code = $rc)"
 fi
 
