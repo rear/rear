@@ -486,6 +486,13 @@ function xfs_parse
                 continue
             fi
 
+            # Skip 'sparse' when mkfs.xfs doesn't list it in its usage output,
+            # i.e. the target mkfs.xfs is too old to accept '-i sparse=...'.
+            if [ "$var" = "sparse" ] && ! { mkfs.xfs 2>&1 | grep -qw 'sparse'; } ; then
+                i=$((i+1))
+                continue
+            fi
+
             # Add option to mkfs.xfs option list
             xfs_opts+="${xfs_param_opt[$i]} $var=$val "
         fi
