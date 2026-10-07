@@ -1,10 +1,13 @@
-#!/bin/bash
 # Save grubenv (GRUB environment block) to $VAR_DIR/recovery/grubenv.
 # See https://www.gnu.org/software/grub/manual/grub/html_node/Environment-block.html
 # for more details about grubenv.
 
+# Remove the old grubenv from previous runs
+rm -f "$GRUBENV_PATH"
+
 function save_grubenv() {
     if ! list_grubenv > "$GRUBENV_PATH"; then
+        rm -f "$GRUBENV_PATH"
         LogPrintError "Failed to save grubenv to '$GRUBENV_PATH'"
         return 1
     fi

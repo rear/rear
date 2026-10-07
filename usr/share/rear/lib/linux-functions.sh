@@ -256,7 +256,7 @@ function filesystem_name () {
 }
 
 function run_in_target_fs_root() {
-    local cmd="$1"
     test $# -eq 1 || BugError "run_in_target_fs_root() requires exactly 1 argument (command string)"
+    local cmd="$1"
     chroot "$TARGET_FS_ROOT" /bin/bash -c "export PATH=/sbin:/usr/sbin:/usr/bin:/bin; $cmd"
 }

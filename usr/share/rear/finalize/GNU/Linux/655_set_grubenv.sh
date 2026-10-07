@@ -1,4 +1,3 @@
-#!/bin/bash
 # Set up grubenv (GRUB environment block)
 
 function cleanup_grubenv() {
@@ -37,7 +36,7 @@ function set_grubenv() {
     local exit_code=0
     local var_value
     while IFS= read -r var_value; do
-        local var="${var_value%=*}"
+        local var="${var_value%%=*}"
         # env_block is read-only after initialization
         if [ "$var" = "env_block" ] ; then
             continue

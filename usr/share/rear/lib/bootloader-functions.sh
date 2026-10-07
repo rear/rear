@@ -1078,7 +1078,10 @@ function is_grub2_used() {
 
 GRUBENV_PATH="$VAR_DIR/recovery/grubenv"
 
-# Standard GRUB environment block locations
+# Standard GRUB environment block locations.
+#
+# Assume grub-editenv is built with the standard location,
+# which is why '-' is used as the filename in grub-editenv commands.
 GRUBENV_LOCATIONS=(/boot/grub2/grubenv /boot/grub/grubenv)
 
 function is_grubenv_set_required() {
