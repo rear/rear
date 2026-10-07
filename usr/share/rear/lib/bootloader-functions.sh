@@ -668,33 +668,8 @@ function create_grub2_cfg {
     }
 
     function create_grub2_rear_boot_entry {
-        # "ReaR (BIOS or UEFI without Secure Boot)"
-        # is correct in case you don't use EFI (i.e. for BIOS)
-        # and should work for EFI with secure boot disabled.
-        # "ReaR (UEFI and Secure Boot)"
-        # only works with EFI (and you may need secure boot enabled).
-        if is_true $USING_UEFI_BOOTLOADER ; then
-            cat << EOF
-menuentry "Relax-and-Recover (BIOS or UEFI without Secure Boot)" --id=rear {
-    insmod gzio
-    insmod xzio
-    echo 'Loading kernel $grub2_kernel ...'
-    linux $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk $grub2_initrd ...'
-    initrd $grub2_initrd
-}
-menuentry "Relax-and-Recover (UEFI and Secure Boot)" --id=rear_secure_boot {
-    insmod gzio
-    insmod xzio
-    echo 'Loading kernel $grub2_kernel ...'
-    linuxefi $grub2_kernel root=UUID=$root_uuid $KERNEL_CMDLINE
-    echo 'Loading initial ramdisk $grub2_initrd ...'
-    initrdefi $grub2_initrd
-}
-EOF
-        else
-            cat << EOF
-menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
+        cat << EOF
+menuentry "Relax-and-Recover" --id=rear {
     insmod gzio
     insmod xzio
     echo 'Loading kernel $grub2_kernel ...'
@@ -703,8 +678,6 @@ menuentry "Relax-and-Recover (BIOS or UEFI in legacy BIOS mode)" --id=rear {
     initrd $grub2_initrd
 }
 EOF
-        fi
-    # End of function create_grub2_rear_boot_entry
     }
 
     function create_grub2_boot_next_entry {
