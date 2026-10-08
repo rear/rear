@@ -5,6 +5,38 @@
 # This file is part of Relax-and-Recover, licensed under the GNU General
 # Public License. Refer to the included COPYING for full text of license.
 
+# A generic method how to avoid problems
+# how to safely use untrustworthy files, for example
+# safely processing/interpreting untrustworthy files
+# or safely using data from untrustworthy files,
+# is to not use untrustworthy files.
+# The idea behind is that a file is untrustworthy
+# for a particular user account,
+# if other users could have modified that file.
+# In other words:
+# Only those files are trustworthy for a particular user account,
+# where only that particular user could have written the file.
+# For ReaR this means:
+# Only those files are trustworthy to be used by ReaR
+# when only 'root' could have written the file.
+# To check if only 'root' could have written a file
+# the only possible way in practice (there is no history) is
+# to check the current file owner, group, and permissions:
+function is_trustworthy_for_root () {
+    local filename="$1"
+    local resolved_file
+    resolved_file="$( readlink -e "$filename" )" || return 1
+    # ACLs are not checked so treat files with ACL as untrustworthy to be on the safe side.
+    # It seems only 'ls -l' shows when there is an ACL (by '+' appended to the permissions):
+    test "$( ls -ld1 "$resolved_file" | cut -b11 )" = "+" && return 1
+    # Owner name must be 'root':
+    test "$( stat -c '%U' "$resolved_file" )" = "root" || return 1
+    # Neither group nor others must have write permissions
+    # so the human readable permissions string must be '-'
+    # for group and others, for example as in "-rwxr-xr-x"
+    [[ "$( stat -c '%A' "$resolved_file" )" == ?????-??-? ]]
+}
+
 # Extract the real content from a config file provided as argument.
 # It outputs non-empty and non-comment lines that do not start with a space.
 # In other words it strips comments, empty lines, and lines with leading space(s):
@@ -12,6 +44,57 @@ function read_and_strip_file () {
     local filename="$1"
     test -s "$filename" || return 1
     sed -e '/^[[:space:]]/d;/^$/d;/^#/d' "$filename"
+}
+
+# Get the value of a non-array variable that is set in a shell-syntax file.
+# The source_variable_from_file function is meant to be used with files
+# like /etc/os-release or certain files in /etc/sysconfig or /etc/default
+# that basically only do shell-compatible variable assignments (VAR="value").
+# source_variable_from_file must not be used with arbitrary shell scripts
+# because commands in the file are executed via 'source' so any effects of
+# executing those commands will happen like changing things in the system.
+# Zero return code means the variable was set in the file and then
+# stdout is the value of the variable (could be empty or blank).
+# Non-zero return code in all other cases.
+# Usage example:
+#   if my_var="$( source_variable_from_file FILE_NAME VAR_NAME )" ; then
+#       # Code when VAR_NAME was set in FILE_NAME
+#       ...
+#   else
+#       # Code when the value of VAR_NAME is unknown
+#       ...
+#   fi
+function source_variable_from_file() {
+    # The first argument $1 is the file name.
+    # The second argument $2 is the name of the variable.
+    # Do not source files that could have been modified by non-root users:
+    is_trustworthy_for_root "$1" || return 1
+    # We source the file in a separated shell to avoid failures when the variable is readonly in the current shell
+    # so the variable cannot be set in the current shell or in a subshell which inherits variable settings
+    # (see https://github.com/rear/rear/pull/3171#discussion_r1521750947)
+    # and to avoid failures when any other variable that is set in the file is readonly in the current shell
+    # because sourcing a file where a readonly variable is set causes immediate exit of a subshell at that place
+    # when sourcing in a subshell i.e. when source_variable_from_file is called as in the usage example above
+    # (see https://github.com/rear/rear/pull/3165#discussion_r1505473662
+    #  and https://github.com/rear/rear/pull/3165#discussion_r1505520542).
+    # Via 'bash -c' $0 in that bash is set to the first argument so $0 in that bash is the file name
+    # and $1 in that bash is set to the second argument so $1 in that bash is the name of the variable.
+    # The inital "unset $1 || exit 1" ensures that the variable can be set and is set in the file
+    # in particular it exits if the variable is readonly within that 'bash -c'
+    # e.g. "source_variable_from_file some_file UID" results non-zero return code
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2022625255).
+    # The "set -u" after the file was sourced lets the subsequent access of the variable "${!1}"
+    # exit with non-zero return code when the variable was not set in the file.
+    # The 'source' stdout is discarded because the source_variable_from_file stdout must be only the variable value
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2018002598).
+    # The 'source' return code is ignored because 'source' returns the status of the last sourced command
+    # (see https://github.com/rear/rear/pull/3171#issuecomment-2019531750)
+    # but we are not interested in the status of the last command in the file but only whether or not
+    # the variable was set in the file (it could be also set to an empty or blank value).
+    # For details about the reasons behind the source_variable_from_file implementation
+    # see https://github.com/rear/rear/pull/3171 (there the function name had been get_var_from_file)
+    # and https://github.com/rear/rear/pull/3203    
+    bash -c 'unset $1 || exit 1 ; source "$0" >/dev/null ; set -u ; echo "${!1}"' "$1" "$2"
 }
 
 # Output lines in STDIN or in a file without subsequent duplicate lines
