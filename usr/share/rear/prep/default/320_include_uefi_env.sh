@@ -48,8 +48,8 @@ if grep -qw efivars /proc/mounts ; then
     SYSFS_DIR_EFI_VARS=/sys/firmware/efi/efivars
 fi
 
-# Next step is case-sensitive checking /boot for case-insensitive /efi directory (we need it):
-test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
+# Next step is case-sensitive checking /boot and /efi for case-insensitive /efi directory (we need it):
+test "$( find /boot /efi -maxdepth 1 -mindepth 1 -iname efi -type d )" || return 0
 
 # Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
 local esp_proc_mounts_line=()
@@ -63,16 +63,17 @@ local esp_proc_mounts_line=()
 #   /dev/sda1 /boot/efi vfat rw,relatime,fmask=0077,dmask=0077,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro 0 0
 # cf. https://github.com/rear/rear/issues/2095#issuecomment-475684942
 # and https://github.com/rear/rear/issues/2095#issuecomment-481739166
-# The ESP could be mounted on /boot/efi or on /boot.
+# The ESP could be mounted on /boot/efi or on /boot or even /efi.
+# cf. https://wiki.archlinux.org/title/EFI_system_partition#Typical_mount_points
 # First try /boot/efi:
-esp_proc_mounts_line=( $( grep ' /boot/efi ' /proc/mounts || echo false ) )
+local potential_mounts=('/boot/efi' '/efi' '/boot')
+for mount_point in "${potential_mounts[@]}"; do
+    esp_proc_mounts_line=( $( grep " $mount_point " /proc/mounts || echo false ) )
+    is_false $esp_proc_mounts_line || break
+done
 if is_false $esp_proc_mounts_line ; then
-    # If nothing is mounted on /boot/efi try /boot:
-    esp_proc_mounts_line=( $( grep ' /boot ' /proc/mounts || echo false ) )
-    if is_false $esp_proc_mounts_line ; then
-        DebugPrint "No EFI system partition found (nothing mounted on /boot/efi or /boot)"
-        return
-    fi
+	DebugPrint "No EFI system partition found (nothing mounted on ${potential_mounts[*]})"
+	return
 fi
 
 # The ESP filesystem type must be vfat (under Linux):
@@ -81,7 +82,7 @@ if ! test "vfat" = "${esp_proc_mounts_line[2]}" ; then
     return 0
 fi
 
-# When we are still here we have a filesystem type 'vfat' mounted on /boot/efi or on /boot.
+# When we are still here we have a filesystem type 'vfat' mounted on /boot/efi or /efi or /boot.
 # In this case we assume what is mounted there actually is a EFI system partition (ESP)
 # so we assume it is safe to turn on USING_UEFI_BOOTLOADER=1
 DebugPrint "Found EFI system partition ${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} type ${esp_proc_mounts_line[2]}"
