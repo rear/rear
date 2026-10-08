@@ -134,7 +134,7 @@ a migration tool as well.
 Currently Relax-and-Recover supports various boot media (incl. ISO, PXE,
 OBDR tape, USB or eSATA storage), a variety of network protocols (incl.
 sftp, ftp, http, nfs, cifs) as well as a multitude of backup strategies
-(incl.  IBM TSM, MircroFocus Data Protector, Symantec NetBackup, EMC NetWorker,
+(incl.  IBM TSM, MircroFocus Data Protector, Cohesity NetBackup, EMC NetWorker,
 Bacula, Bareos, BORG, Duplicity, rsync).
 
 Relax-and-Recover was designed to be easy to set up, requires no maintenance

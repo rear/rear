@@ -33,17 +33,24 @@ Start with the default configuration file of ReaR:
 
     $ cd /usr/share/rear/conf
     $ grep -r NBU *
-    default.conf:# BACKUP=NBU stuff (Symantec/Veritas NetBackup)
-    default.conf:COPY_AS_IS_NBU=( /usr/openv/bin/vnetd /usr/openv/bin/vopied /usr/openv/lib /usr/openv/netbackup /usr/openv/var/auth/[mn]*.txt )
-    default.conf:COPY_AS_IS_EXCLUDE_NBU=( "/usr/openv/netbackup/logs/*" "/usr/openv/netbackup/bin/bpjava*" "/usr/openv/netbackup/bin/xbp" )
-    default.conf:PROGS_NBU=( )
+    default.conf:# BACKUP=NBU (Cohesity NetBackup)
+    default.conf:COPY_AS_IS_NBU=(
+    default.conf:COPY_AS_IS_EXCLUDE_NBU=(
+    default.conf:NBU_LD_LIBRARY_PATH="/usr/openv/lib:/usr/openv/netbackup/sec/at/lib:/usr/openv/lib/boost"
+    default.conf:NBU_TRUE_IMAGE_RESTORE="true"
+    default.conf:NBU_ALLOW_SERVER_AS_CLIENT="false"
 
+`COPY_AS_IS_NBU` and `COPY_AS_IS_EXCLUDE_NBU` are each defined as a multi-line array in
+`default.conf` (see that file directly for the full element lists), which is why `grep` only
+shows their opening line here rather than every path inside them.
 
 What does this learn you?
 
  * you need to define a backup method name, e.g. `BACKUP=NBU` (must be unique within ReaR!)
  * define some new variables to automatically copy executables into the ReaR rescue image, and one to exclude stuff which is not required by the recovery (this means you have to play with it and fine-tune it)
- * finally, define a place holder array for your backup programs (is empty to start with).
+ * optionally, define your own `BACKUP=<NAME>`-specific variables for anything your integration needs to tune (NBU uses a few, like `NBU_TRUE_IMAGE_RESTORE` above, to toggle behavior without editing the scripts themselves).
+
+Some other `BACKUP=` methods also define a `PROGS_<NAME>` placeholder array of required executables that ReaR checks for before running - NBU does not need one, since its whole NetBackup installation is captured wholesale via `COPY_AS_IS_NBU` rather than as a list of individual binaries.
 
 Now, you have defined a new BACKUP scheme name, right? As an example take the name BURP (http://burp.grke.org/).
 
@@ -67,7 +74,7 @@ This is only the start of learning what others have done before:
     ./skel/NBU
     ./verify/NBU
 
-What does this mean? Well, these are directories created for Netbackup and beneath these directories are scripts that will be included during the `mkrescue` and `recover` work-flows.
+What does this mean? Well, these are directories created for Netbackup and beneath these directories are scripts that will be included during the `mkrescue` and `recover` work-flows. See `20-Cohesity-NBU.md` for a full description of what this particular integration does, if you want a worked example of a complete, real backend rather than just its file layout.
 
 Again, think burp, and you probably also need these directories to be created:
 
@@ -77,16 +84,19 @@ Again, think burp, and you probably also need these directories to be created:
 Another approach is to look at the existing scripts of NBU (as a starter):
 
     $ sudo rear -s mkrescue | grep NBU
+    Source prep/NBU/default/350_check_nbu_client_version.sh
     Source prep/NBU/default/400_prep_nbu.sh
     Source prep/NBU/default/450_check_nbu_client_configured.sh
     Source rescue/NBU/default/450_prepare_netbackup.sh
-    Source rescue/NBU/default/450_prepare_xinetd.sh
 
     $ sudo rear -s recover | grep NBU
-    Source verify/NBU/default/380_request_client_destination.sh
-    Source verify/NBU/default/390_request_point_in_time_restore_parameters.sh
+    Source verify/NBU/default/250_check_nbu_client_name.sh
+    Source verify/NBU/default/300_parse_bp_conf.sh
+    Source verify/NBU/default/350_start_netbackup.sh
     Source verify/NBU/default/400_verify_nbu.sh
-    Source restore/NBU/default/300_create_nbu_restore_fs_list.sh
+    Source verify/NBU/default/450_request_client_source.sh
+    Source verify/NBU/default/500_request_pit_restore_parameters.sh
     Source restore/NBU/default/400_restore_with_nbu.sh
+    Source finalize/NBU/default/900_restore_vxss_credentials.sh
     Source finalize/NBU/default/990_copy_bplogrestorelog.sh
 
