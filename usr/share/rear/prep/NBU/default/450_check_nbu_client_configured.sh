@@ -27,7 +27,7 @@ need to point to another Primary server holding a replicated (or duplicated)
 copy of this client's image. If you understand these implications set
 NBU_ALLOW_SERVER_AS_CLIENT=true in local.conf/site.conf to continue."
     if is_true "$NBU_ALLOW_SERVER_AS_CLIENT" ; then
-        LogPrintError "WARNING: $nbu_server_client_msg"
+        LogPrintError "$nbu_server_client_msg"
     else
         Error "$nbu_server_client_msg"
     fi
@@ -44,7 +44,7 @@ nbu_bplist_since=$( date -d "-1 month" "+%m/%d/%Y" )
 is_false "$NBU_TRUE_IMAGE_RESTORE" || nbu_bplist_tir_flag="-T"
 
 if test -z "$nbu_bplist_tir_flag" ; then
-    LogPrintError "WARNING: True Image Restore is disabled (NBU_TRUE_IMAGE_RESTORE=false).
+    LogPrintError "True Image Restore is disabled (NBU_TRUE_IMAGE_RESTORE=false).
 Without TIR, a Point-In-Time restore of a full backup plus subsequent
 incremental backups may incorrectly restore files or folders deleted
 before the picked incremental. Enable 'Collect true image restore

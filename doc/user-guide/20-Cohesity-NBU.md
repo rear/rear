@@ -37,7 +37,7 @@ Across the whole pipeline, `BACKUP=NBU`:
 * Captures the client's entire NetBackup installation (`/usr/openv`, `/etc/vx`, `/opt/VRTSpbx`,
   `/var/VRTSpbx`) into the rescue image, excluding cloud/plugin libraries, installer packages,
   and NetBackup's own security-state directories (host certificate keystore, CA trust store,
-  credential cache) — those are deliberately left out and recreated fresh at restore time
+  credential cache). Those are deliberately left out and recreated fresh at restore time
   instead of carried over stale.
 * Detects and starts whichever client startup mechanism the source host actually uses: systemd
   (`vxpbx_exchanged.service` and `netbackup.service`), SysV `/etc/init.d`, or the legacy
@@ -49,7 +49,7 @@ Across the whole pipeline, `BACKUP=NBU`:
   onto the rescue image.
 * Detects if the rescue system's live hostname differs from the client name recorded in
   `bp.conf` and updates it automatically, while giving the operator a single pause, before any
-  service starts or certificate gets enrolled, to also hand-edit `bp.conf` directly — for
+  service starts or certificate gets enrolled, to also hand-edit `bp.conf` directly, for
   example to point `SERVER=` at a different primary or media server for an AIR/IRE-style
   disaster-recovery-site restore.
 * Confirms the primary is reachable and genuinely a primary server before asking any restore
@@ -73,8 +73,8 @@ Across the whole pipeline, `BACKUP=NBU`:
   skipped on a cross restore, since the enrolled certificate belongs to the rescue system's own
   hostname, not the client whose data was restored.
 * Refuses, by default, to run against a host whose own `CLIENT_NAME` matches a `SERVER` or
-  `MEDIA_SERVER` entry in its own `bp.conf` — that is, a NetBackup primary or media server
-  itself — since NetBackup services must already be running for `bprestore` to work at all. This
+  `MEDIA_SERVER` entry in its own `bp.conf` (that is, a NetBackup primary or media server
+  itself), since NetBackup services must already be running for `bprestore` to work at all. This
   is checked both at backup time and restore time.
 * Requires NetBackup client 8.1 or newer, the minimum version with host-certificate support that
   this backend depends on.
@@ -93,7 +93,7 @@ Across the whole pipeline, `BACKUP=NBU`:
 
    | Variable | Default | Purpose |
    |---|---|---|
-   | `NBU_TRUE_IMAGE_RESTORE` | `true` | Requires True Image Restore data on backups used for restore, and passes `-T` to `bplist`/`bpclimagelist`/`bprestore`. Set to `false` only if the backup policy does not collect TIR information — restores will then union every file backed up in the window instead of reproducing the exact point in time. |
+   | `NBU_TRUE_IMAGE_RESTORE` | `true` | Requires True Image Restore data on backups used for restore, and passes `-T` to `bplist`/`bpclimagelist`/`bprestore`. Set to `false` only if the backup policy does not collect TIR information. Restores will then union every file backed up in the window instead of reproducing the exact point in time. |
    | `NBU_ALLOW_SERVER_AS_CLIENT` | `false` | Downgrades the primary/media-server safety check from a fatal error to a warning, allowing `rear mkbackup`/`recover` to proceed against a host that is itself a NetBackup server. |
    | `NBU_LD_LIBRARY_PATH` | `/usr/openv/lib:/usr/openv/netbackup/sec/at/lib:/usr/openv/lib/boost` | Library search path needed for NetBackup's own binaries to run during `mkbackup`/`mkrescue`. Only needs changing if the client installs NetBackup libraries somewhere nonstandard. |
 
@@ -114,7 +114,7 @@ Across the whole pipeline, `BACKUP=NBU`:
    * If they differ, ReaR updates `CLIENT_NAME` in `bp.conf` to the current hostname
      automatically.
    Either way, before anything else happens, ReaR pauses once and gives you the chance to
-   hand-edit `bp.conf` directly — for example to point `SERVER=` at a different primary or media
+   hand-edit `bp.conf` directly, for example to point `SERVER=` at a different primary or media
    server if this is a disaster-recovery-site restore. Press ENTER to continue with the current
    `bp.conf`, or type `EXIT` to abort.
 3. ReaR starts the NetBackup client services using whichever startup mechanism this client uses
@@ -126,13 +126,13 @@ Across the whole pipeline, `BACKUP=NBU`:
      the NetBackup web UI or with `nbcertcmd -createtoken` on the primary before starting the
      recovery, if you haven't already. There is no timeout on this prompt, since retrieving a
      token can take a while. If a certificate already exists for this client name, NetBackup
-     will report that a reissue token is required instead — generate one the same way and enter
+     will report that a reissue token is required instead. Generate one the same way and enter
      it when re-prompted.
 5. ReaR confirms the primary is reachable and is genuinely a primary server, and reports the
    primary's and the client's NetBackup version for reference.
 6. ReaR asks which client's backups to restore from, defaulting to this client. Enter a
    different client name here only for a cross restore, and only once that client has been
-   authorized as an altname of this one on the primary — otherwise the restore will fail.
+   authorized as an altname of this one on the primary. Otherwise the restore will fail.
 7. ReaR queries the catalog and presents matching backups as a numbered list, newest first.
    Enter a number to select one, enter an exact date and time as `mm/dd/yyyy HH:MM:SS`, or press
    ENTER to restore the most recent backup. If the catalog can't be queried, ReaR falls back to
@@ -161,7 +161,7 @@ Across the whole pipeline, `BACKUP=NBU`:
   `NBU_ALLOW_SERVER_AS_CLIENT=true` deliberately if you understand the implications.
 * If the rescue system's hostname was renamed during recovery, the certificate gets enrolled
   under that temporary hostname. There is currently no automatic check tying the enrolled
-  certificate to whatever hostname the system ends up with after the final reboot — verify
+  certificate to whatever hostname the system ends up with after the final reboot. Verify
   certificate validity again post-reboot if a rename occurred.
 
 ## Troubleshooting
@@ -170,7 +170,7 @@ Across the whole pipeline, `BACKUP=NBU`:
   recovery issues are due to ReaR's own disk/bootloader configuration, not the NetBackup
   integration.
 * Certificate enrollment failing: confirm the primary is reachable and that you're using the
-  right kind of token — an authorization token for a first enrollment, a reissue token if a
+  right kind of token: an authorization token for a first enrollment, a reissue token if a
   certificate already exists for this client name.
 * `bpclntcmd -is_master_server` failing: `bp.conf`'s `SERVER=` entry is unreachable or is not
   actually a primary server. Check connectivity and `bp.conf` contents (edit them during the

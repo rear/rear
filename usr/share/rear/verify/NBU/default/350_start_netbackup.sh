@@ -30,7 +30,7 @@ elif test -r /etc/xinetd.d/vnetd -o -r /etc/xinetd.d/bpcd -o -r /etc/xinetd.d/vo
     test -f /etc/xinetd.d/vnetd || "$nbu_vnetd" -standalone
     test -f /etc/xinetd.d/bpcd || "$nbu_bpcd" -standalone
 else
-    LogPrint "WARNING: no NetBackup startup mechanism (systemd/SysV/xinetd) found in the rescue system."
+    LogPrintError "No NetBackup startup mechanism (systemd/SysV/xinetd) found in the rescue system."
 fi
 
 LogPrint "NetBackup services started."
