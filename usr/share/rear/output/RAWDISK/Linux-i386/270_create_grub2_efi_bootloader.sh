@@ -104,7 +104,6 @@ else
     # Use the UEFI default boot loader name, so that firmware will find it without an existing boot entry.
     local boot_loader="$efi_boot_directory/BOOT${EFI_ARCH_UPPER}.EFI"
     local grub_modules=( part_gpt fat normal configfile linux video all_video )
-    [[ -f "$efi_modules_directory/linuxefi.mod" ]] && grub_modules+=("$efi_modules_directory/linuxefi.mod")
     $grub2_name-mkimage -O "$GRUB2_IMAGE_FORMAT" -o "$boot_loader" -p "/EFI/BOOT" "${grub_modules[@]}"
     StopIfError "Error occurred during $grub2_name-mkimage of $boot_loader"
 fi
