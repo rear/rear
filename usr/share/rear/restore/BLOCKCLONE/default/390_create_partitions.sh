@@ -9,7 +9,8 @@ if [ -z "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
     return
 fi
 
-local backup_path="$( url_path "$BACKUP_URL" )"
+local scheme="$( url_scheme "$BACKUP_URL" )"
+local path="$( url_path "$BACKUP_URL" )"
 local opath="$( backup_path "$scheme" "$path" )"
 
 # Destination partition is not present, try to recreate.
@@ -63,22 +64,49 @@ overall failure of restore."
             fi
         fi
 
-        # TODO: @gozora add gpt support
         LogPrint "Creating partition layout on $BLOCKCLONE_SAVE_MBR_DEV"
 
-        # This will fail if BLOCKCLONE_SAVE_MBR_DEV is mounted
-        sfdisk $BLOCKCLONE_SAVE_MBR_DEV < \
-        $opath/$BLOCKCLONE_PARTITIONS_CONF_FILE
+        # Which tool restores the layout is decided by what was saved, so no
+        # additional configuration variable is needed: 350_save_partitions.sh
+        # writes an 'sfdisk -d' text dump for msdos labelled disks, whose
+        # first line is "label: dos", and an 'sgdisk -b' binary backup for
+        # GPT disks.
+        #
+        # This distinction cannot be skipped by always calling sfdisk,
+        # because sfdisk does not fail on the binary file -- it reports
+        # ">>> line 1: unsupported command", leaves the disk untouched and
+        # exits 0, so StopIfError does not trigger and the restore continues
+        # against a disk that still has no partitions.
+        if grep -q -m1 '^label:' \
+            "$opath/$BLOCKCLONE_PARTITIONS_CONF_FILE" 2>/dev/null ; then
 
-        StopIfError "Failed to restore partition layout"
+            # This will fail if BLOCKCLONE_SAVE_MBR_DEV is mounted
+            sfdisk $BLOCKCLONE_SAVE_MBR_DEV < \
+            $opath/$BLOCKCLONE_PARTITIONS_CONF_FILE
 
-        LogPrint "Copying bootstrap code to $BLOCKCLONE_SOURCE_DEV"
+            StopIfError "Failed to restore partition layout"
 
-        dd if=$opath/$BLOCKCLONE_MBR_FILE of=$BLOCKCLONE_SAVE_MBR_DEV \
-        bs=446 count=1
+            LogPrint "Copying bootstrap code to $BLOCKCLONE_SOURCE_DEV"
 
-        StopIfError \
-        "Failed to copy bootstrap code area to $BLOCKCLONE_SAVE_MBR_DEV"
+            dd if=$opath/$BLOCKCLONE_MBR_FILE of=$BLOCKCLONE_SAVE_MBR_DEV \
+            bs=446 count=1
+
+            StopIfError \
+            "Failed to copy bootstrap code area to $BLOCKCLONE_SAVE_MBR_DEV"
+        else
+            # 'sgdisk -l' writes back the protective MBR, both GPT headers
+            # and the partition entry array, so the disk GUID and the
+            # partition GUIDs are restored along with the sizes.
+            sgdisk -l "$opath/$BLOCKCLONE_PARTITIONS_CONF_FILE" \
+            "$BLOCKCLONE_SAVE_MBR_DEV"
+
+            StopIfError "Failed to restore GPT partition layout"
+
+            # No bootstrap code area is saved for GPT disks, see
+            # 350_save_partitions.sh. The boot loader lives in the EFI System
+            # Partition, which has to be restored as a partition of its own.
+            Log "GPT disk, no bootstrap code area to copy"
+        fi
 
         # This might be useless nowadays
         partprobe $BLOCKCLONE_SAVE_MBR_DEV

@@ -17,8 +17,14 @@ cp $v "$VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE" "$opath"
 StopIfError "Failed to copy \
 $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE to $opath"
 
-LogPrint "Copying $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"
+# The bootstrap code area is only saved for msdos labelled disks, so on a GPT
+# disk there is no such file and nothing in the MBR gap worth copying.
+if [ -f "$VAR_DIR/layout/$BLOCKCLONE_MBR_FILE" ]; then
+    LogPrint "Copying $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"
 
-cp $v "$VAR_DIR/layout/$BLOCKCLONE_MBR_FILE" "$opath"
+    cp $v "$VAR_DIR/layout/$BLOCKCLONE_MBR_FILE" "$opath"
 
-StopIfError "Failed to copy $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"
+    StopIfError "Failed to copy $VAR_DIR/layout/$BLOCKCLONE_MBR_FILE to $opath"
+else
+    Log "No bootstrap code area saved, not copying $BLOCKCLONE_MBR_FILE"
+fi
