@@ -180,7 +180,7 @@ Across the whole pipeline, `BACKUP=NBU`:
   every available backup because none of them collected TIR information.
 * `bprestore` reporting a non-zero return code: ReaR treats every non-zero code as a failure.
   Check the restore job's log on the NetBackup primary for details. The copied per-file log
-  (`bplog.restore*` in the recovered system's home directory) only lists individual restore
+  (`bprestore.log` in the recovered system's home directory) only lists individual restore
   steps, not the overall job status.
 * Cross restore failing with NetBackup exit status 135: the source client hasn't been authorized
   as an altname of the destination client on the primary.

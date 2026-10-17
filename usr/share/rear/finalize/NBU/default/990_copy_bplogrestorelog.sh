@@ -5,5 +5,5 @@
 
 mkdir -p $v "$TARGET_FS_ROOT/$ROOT_HOME_DIR"
 LogPrintIfError "Failed to create $TARGET_FS_ROOT/$ROOT_HOME_DIR."
-cp -f $v "$TMP_DIR"/bplog.restore* "$TARGET_FS_ROOT/$ROOT_HOME_DIR/"
-LogPrintIfError "Failed to copy $TMP_DIR/bplog.restore* to $TARGET_FS_ROOT/$ROOT_HOME_DIR."
+cp -f $v /usr/openv/netbackup/logs/user_ops/root/logs/bprestore.log "$TARGET_FS_ROOT/$ROOT_HOME_DIR/"
+LogPrintIfError "Failed to copy /usr/openv/netbackup/logs/user_ops/root/logs/bprestore.log to $TARGET_FS_ROOT/$ROOT_HOME_DIR."

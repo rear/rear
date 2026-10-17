@@ -51,7 +51,7 @@ while read -r nbu_chain_line ; do
 done < <( "$nbu_bpclimagelist" -Listseconds -client "${NBU_CLIENT_SOURCE}" -e ${edate} $NBU_TIR_FLAG 2>/dev/null )
 test -n "$sdate" || Error "No full NetBackup backup found at or before '$edate' for client ${NBU_CLIENT_SOURCE}, cannot do Point-In-Time Restore."
 
-bprestore_args="-B -H -L $TMP_DIR/bplog.restore -R $TMP_DIR/nbu_change_file -t 0 -w 0 -s ${sdate} -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list $NBU_TIR_FLAG"
+bprestore_args="-B -H -L /usr/openv/netbackup/logs/user_ops/root/logs/bprestore.log -R $TMP_DIR/nbu_change_file -t 0 -w 0 -s ${sdate} -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list $NBU_TIR_FLAG"
 
 test -n "$NBU_TIR_FLAG" && nbu_tir_status="enabled"
 
