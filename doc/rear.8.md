@@ -46,7 +46,7 @@ The complete list of backup methods (*BACKUP=...*) is:
 * *FDRUPSTREAM* FDR/Upstream
 * *GALAXY11* Commvault Galaxy 11 / Commvault Simpana
 * *NBKDC* NovaStor DataCenter
-* *NBU* Veritas NetBackup / Symantec NetBackup
+* *NBU* Cohesity NetBackup
 * *NETFS* ReaR built-in backup and restore via `rsync` or `tar` to a network file system or to a locally attached backup disk (USB, eSATA, ...)
 * *NFS4SERVER* NFS4 server to push data *to* the rescue system
 * *NSR* Dell EMC NetWorker / EMC NetWorker / Legato NetWorker

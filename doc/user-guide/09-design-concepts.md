@@ -65,7 +65,7 @@ The configuration must define the `BACKUP` and `OUTPUT` methods. Valid choices a
 |FDRUPSTREAM | BACKUP  | FDR/Upstream                            | done
 |GALAXY11    | BACKUP  | Commvault Galaxy 11 / Commvault Simpana | done
 |NBKDC       | BACKUP  | NovaStor DataCenter                     | done
-|NBU         | BACKUP  | Veritas NetBackup / Symantec NetBackup  | done
+|NBU         | BACKUP  | Cohesity NetBackup                      | done
 |NETFS       | BACKUP  | ReaR built-in backup and restore via rsync or tar to a network file system or to a locally attached backup disk (USB, eSATA, ...)| done
 |NFS4SERVER  | BACKUP  | NFS4 server to push data to the rescue system| done
 |NSR         | BACKUP  | Dell EMC NetWorker / EMC NetWorker / Legato NetWorker| done
