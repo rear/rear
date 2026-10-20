@@ -1305,9 +1305,6 @@ function apply_layout_mappings() {
         fi
     done < "$replacement_file"
 
-    # Local nested helper functions must be 'unset' because bash does not support 'local function ...'
-    # cf. https://unix.stackexchange.com/questions/104755/how-can-i-create-a-local-function-in-my-bashrc
-    # and https://github.com/rear/rear/pull/3647#issuecomment-5951434875
     unset -f add_replacement has_replacement get_replacement
     
     # It is the responsibility of the caller of this apply_layout_mappings function what to do when it failed
