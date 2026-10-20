@@ -54,30 +54,6 @@ local grub2_installed_disks
 local part bootparts
 local disk disks bootdisk
 
-function bios_grub_install ()
-{
-    local grub2_install_device="$1"
-
-    if is_true $USING_UEFI_BOOTLOADER ; then
-        # If running under UEFI, we need to specify the target explicitly, otherwise grub-install thinks
-        # that we are installing the EFI bootloader.
-        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install --target=i386-pc $grub2_install_device" ; then
-            LogPrintError "Failed to install GRUB2 for BIOS boot (target i386-pc) on $bootdisk"
-            # purely informational test that may help to explain the reason for the error
-            if ! test -d "$TARGET_FS_ROOT/boot/$grub_name/i386-pc" ; then
-                LogPrintError "GRUB2 module dir for BIOS boot (boot/$grub_name/i386-pc in $TARGET_FS_ROOT) does not exist, is GRUB2 for BIOS (target i386-pc) installed?"
-            fi
-            return 1
-        fi
-    else
-        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
-            LogPrintError "Failed to install GRUB2 on $grub2_install_device"
-            return 1
-        fi
-    fi
-    return 0
-}
-
 # Skip if another bootloader was already installed:
 # In this case NOBOOTLOADER is not true,
 # cf. finalize/default/050_prepare_checks.sh
@@ -107,6 +83,37 @@ if ! test -d "$TARGET_FS_ROOT/boot/$grub_name" ; then
         return 1
     fi
 fi
+
+# See https://github.com/rear/rear/commit/226d652cfb64d422aed0551b80a00173a795c5c6
+# finalize/Linux-i386/660_install_grub2.sh installs GRUB2 for legacy BIOS boot into the disks(s) MBR(s).
+# When using EFI, this can be still used in a hybrid BIOS/UEFI boot scenario,
+# but we need to pass --target=i386-pc to grub-install in this case,
+# otherwise it will attempt to install the EFI GRUB, not the BIOS GRUB.
+# See also output/USB/Linux-i386/300_create_grub.sh
+# and https://github.com/rear/rear/pull/3145
+function bios_grub_install ()
+{
+    local grub2_install_device="$1"
+
+    if is_true $USING_UEFI_BOOTLOADER ; then
+        # If running under UEFI, we need to specify the target explicitly, otherwise grub-install thinks
+        # that we are installing the EFI bootloader.
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install --target=i386-pc $grub2_install_device" ; then
+            LogPrintError "Failed to install GRUB2 for BIOS boot (target i386-pc) on $bootdisk"
+            # purely informational test that may help to explain the reason for the error
+            if ! test -d "$TARGET_FS_ROOT/boot/$grub_name/i386-pc" ; then
+                LogPrintError "GRUB2 module dir for BIOS boot (boot/$grub_name/i386-pc in $TARGET_FS_ROOT) does not exist, is GRUB2 for BIOS (target i386-pc) installed?"
+            fi
+            return 1
+        fi
+    else
+        if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-install $grub2_install_device" ; then
+            LogPrintError "Failed to install GRUB2 on $grub2_install_device"
+            return 1
+        fi
+    fi
+    return 0
+}
 
 # Generate GRUB configuration file anew to be on the safe side (this could be even mandatory in MIGRATION_MODE):
 if ! chroot $TARGET_FS_ROOT /bin/bash --login -c "$grub_name-mkconfig -o /boot/$grub_name/grub.cfg" ; then
@@ -146,6 +153,7 @@ if test "$GRUB2_INSTALL_DEVICES" ; then
     is_false $grub2_install_failed && NOBOOTLOADER=''
     # return even if it failed to install GRUB2 on one of the specified GRUB2_INSTALL_DEVICES
     # because then the user gets an explicit WARNING via finalize/default/890_finish_checks.sh
+    unset -f bios_grub_install
     is_true $NOBOOTLOADER && return 1 || return 0
 fi
 
@@ -223,6 +231,7 @@ for disk in $disks ; do
     fi
 done
 
+unset -f bios_grub_install
 is_true $NOBOOTLOADER || return 0
 if is_true $USING_UEFI_BOOTLOADER ; then
     LogPrintError "Failed to install GRUB2 for BIOS boot - you may have to manually install it to preserve the hybrid BIOS/UEFI boot support, otherwise only UEFI boot will work"
