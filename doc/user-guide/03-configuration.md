@@ -117,7 +117,7 @@ console and/or its REST API, ReaR only prepares and starts the local Cohesity ag
 Use FDR/Upstream
 
 * BACKUP=NBU:
-Use Symantec NetBackup programs
+Use Cohesity NetBackup programs
 
 * BACKUP=NSR:
 Use EMC NetWorker (Legato)
