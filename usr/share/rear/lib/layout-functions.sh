@@ -1304,6 +1304,9 @@ function apply_layout_mappings() {
             LogPrintError "Failed to apply layout mappings to $file_to_migrate for $original (probably no mapping for $original in $MAPPING_FILE)"
         fi
     done < "$replacement_file"
+
+    unset -f add_replacement has_replacement get_replacement
+    
     # It is the responsibility of the caller of this apply_layout_mappings function what to do when it failed
     # (e.g. error out, retry, show a user dialog, or whatever is appropriate in the caller's environment):
     is_true $apply_layout_mappings_succeeded && return 0 || return 1
