@@ -77,7 +77,7 @@ overall failure of restore."
         # ">>> line 1: unsupported command", leaves the disk untouched and
         # exits 0, so StopIfError does not trigger and the restore continues
         # against a disk that still has no partitions.
-        if grep -q -m1 '^label:' \
+        if grep -q -m1 -E '^(label:|unit: sectors)' \
             "$opath/$BLOCKCLONE_PARTITIONS_CONF_FILE" 2>/dev/null ; then
 
             # This will fail if BLOCKCLONE_SAVE_MBR_DEV is mounted
