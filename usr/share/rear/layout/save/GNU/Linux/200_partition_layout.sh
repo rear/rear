@@ -18,6 +18,9 @@ version_newer "$parted_version" 1.8.2 && FEATURE_PARTED_MACHINEREADABLE=y
 # Use FEATURE_PARTED_OLDNAMING if parted version is older than 1.6.23:
 version_newer "$parted_version" 1.6.23 || FEATURE_PARTED_OLDNAMING=y
 
+# Disks skipped because of unsupported partition table type (used by later layout scripts):
+: > "$VAR_DIR/layout/skipped_unsupported_disks"
+
 # Extract partitioning information of device $1 (full device path)
 # format : part <partition size(bytes)> <partition start(bytes)> <partition type|name> <flags> /dev/<partition>
 extract_partitions() {
@@ -116,19 +119,20 @@ extract_partitions() {
         disk_label=$(grep -E "Partition Table|Disk label" $TMP_DIR/parted | cut -d ":" -f "2" | tr -d " ")
     fi
     # Ensure $disk_label is valid to determine the partition name/type in the next step at 'declare type'
-    # cf. https://github.com/rear/rear/issues/2801#issuecomment-1122015129
-    # When a partition type is reported by parted that is not in the supported list
-    # it must error out because our current code here in 200_partition_layout.sh
-    # does not work with partition types that are not in the supported list
-    # cf. https://github.com/rear/rear/pull/2803#issuecomment-1124800884
-    if ! [[ "$disk_label" = "msdos" || "$disk_label" = "gpt" || "$disk_label" = "gpt_sync_mbr" || "$disk_label" = "dasd" ]] ; then
+    # Unsupported labels cannot be recreated by ReaR (cf. issues #2801 #2803).
+    # When SKIP_UNSUPPORTED_PARTITION_TABLES is enabled (default), skip silently.
+    # When a disk is in EXCLUDE_COMPONENTS, skip as well (cf. pull request #3455).
+    if ! is_partition_table_type "$disk_label" ; then
         if IsInArray "$device" "${EXCLUDE_COMPONENTS[@]}" ; then
-            DebugPrint "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
-        else
-            Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+            DebugPrint "Unsupported partition table '$disk_label' on $device (listed in EXCLUDE_COMPONENTS)"
+            return 0
         fi
+        if is_true "$SKIP_UNSUPPORTED_PARTITION_TABLES" ; then
+            LogPrint "Skipping partitions on $device: unsupported partition table '$disk_label'"
+            return 0
+        fi
+        Error "Unsupported partition table '$disk_label' on $device (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
     fi
-
 
     cp $TMP_DIR/partitions $TMP_DIR/partitions-data
 
@@ -464,9 +468,27 @@ Log "Saving disks and their partitions"
                     LogPrintError "Ignoring $blockd: $validation_error"
                     continue
                 fi
-                disktype=$(parted -s $devname print | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
-                test $disktype || Error "Invalid 'disk $devname' entry (no partition table type for '$devname')"
-                if [ "$disktype" != "dasd" ]; then
+                disktype=$(parted -s $devname print 2>/dev/null | grep -E "Partition Table|Disk label" | cut -d ":" -f "2" | tr -d " ")
+		# Empty when parted/grep fails. 
+                test $disktype || disktype="unknown"
+		# Skip for unsupported disk types.
+		if ! [[ "$disktype" = "msdos" || "$disktype" = "gpt" || "$disktype" = "gpt_sync_mbr" || "$disktype" = "dasd" ]] ; then
+                 if IsInArray "$devname" "${EXCLUDE_COMPONENTS[@]}" ; then
+                     LogPrint "Skipping $devname: listed in EXCLUDE_COMPONENTS (unsupported partition table '$disktype')"
+                     echo "# Skipped disk $devname $devsize $disktype (EXCLUDE_COMPONENTS, unsupported partition table)"
+                     echo "$devname" >> "$VAR_DIR/layout/skipped_unsupported_disks"
+                     continue
+                 fi
+                 if is_true "$SKIP_UNSUPPORTED_PARTITION_TABLES" ; then
+                     LogPrint "Skipping $devname: unsupported partition table '$disktype' (SKIP_UNSUPPORTED_PARTITION_TABLES)"
+                     echo "# Skipped disk $devname $devsize $disktype (unsupported partition table, not managed by ReaR)"
+                     echo "$devname" >> "$VAR_DIR/layout/skipped_unsupported_disks"
+                     continue
+                 else
+                     Error "Unsupported partition table '$disktype' on $devname (must be one of 'msdos' 'gpt' 'gpt_sync_mbr' 'dasd')"
+                 fi
+                fi
+		if [ "$disktype" != "dasd" ]; then
                     echo "# Disk $devname"
                     echo "# Format: disk <devname> <size(bytes)> <partition label type>"
                     echo "disk $devname $devsize $disktype"
