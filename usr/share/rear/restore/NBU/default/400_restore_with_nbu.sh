@@ -1,9 +1,7 @@
 # 400_restore_with_nbu.sh
 
 # Run the actual 'bprestore' of the selected filesystem restore point.
-# Walk the catalog backward from the chosen end time to find the
-# nearest full backup, so the restore chain is correct instead of
-# replaying every backup ever taken. Restore with True Image Restore
+# Restore from the nearest full backup before the chosen end time. Restore with True Image Restore
 # ('bprestore -T') when NBU_TRUE_IMAGE_RESTORE is enabled.
 
 # Populate files 'bprestore' will use. No need to handle mount points individually.
@@ -14,11 +12,14 @@ echo "/" > $TMP_DIR/restore_fs_list || Error "Cannot write $TMP_DIR/restore_fs_l
 for nbu_pseudofs in /dev /run /proc /sys ; do
     echo "!${nbu_pseudofs}" >> $TMP_DIR/restore_fs_list
 done
+# Folders the operator excluded for a Partial client restore
+# (verify/NBU/default/500_request_pit_restore_parameters.sh):
+for nbu_skipped in "${NBU_RESTORE_EXCLUDES[@]}" ; do
+    echo "!${nbu_skipped}" >> $TMP_DIR/restore_fs_list
+done
 
-local edate sdate bprestore_args rc
-local nbu_chain_line nbu_chain_date nbu_chain_time nbu_chain_epoch nbu_target_epoch
+local edate sdate bprestore_args rc nbu_skipped
 local nbu_tir_status="disabled"
-local nbu_bpclimagelist=/usr/openv/netbackup/bin/bpclimagelist
 local nbu_bprestore=/usr/openv/netbackup/bin/bprestore
 
 # "bpclimagelist -T" lists only backups with True Image Restore info, and
@@ -32,24 +33,9 @@ local nbu_bprestore=/usr/openv/netbackup/bin/bprestore
 test -n "$NBU_ENDTIME" || Error "No NetBackup catalog entry available to restore from, cannot do NetBackup Point-In-Time Restore."
 edate="$NBU_ENDTIME"
 
-# 'bprestore' with only -e defaults -s to 01/01/1970, which replays every
-# image ever taken. Walk the catalog newest-first and stop at the nearest
-# full backup to get -s.
-nbu_target_epoch=$( date -d "$edate" '+%s' ) || Error "Cannot parse selected restore point in time '$edate'."
-sdate=""
-# $edate stays unquoted below: -e needs date and time as two arguments.
-while read -r nbu_chain_line ; do
-    [[ "$nbu_chain_line" =~ ^([0-9]{2}/[0-9]{2}/[0-9]{4})[[:space:]]+([0-9]{2}:[0-9]{2}:[0-9]{2}) ]] || continue
-    nbu_chain_date="${BASH_REMATCH[1]}"
-    nbu_chain_time="${BASH_REMATCH[2]}"
-    nbu_chain_epoch=$( date -d "$nbu_chain_date $nbu_chain_time" '+%s' ) || continue
-    test "$nbu_chain_epoch" -le "$nbu_target_epoch" || continue
-    if [[ "$nbu_chain_line" == *"Full Backup"* ]] ; then
-        sdate="$nbu_chain_date $nbu_chain_time"
-        break
-    fi
-done < <( "$nbu_bpclimagelist" -Listseconds -client "${NBU_CLIENT_SOURCE}" -e ${edate} $NBU_TIR_FLAG 2>/dev/null )
-test -n "$sdate" || Error "No full NetBackup backup found at or before '$edate' for client ${NBU_CLIENT_SOURCE}, cannot do Point-In-Time Restore."
+# NBU_STARTTIME is the nearest full backup at or before the end time (500_request_pit_restore_parameters.sh).
+sdate="$NBU_STARTTIME"
+test -n "$sdate" || Error "No full NetBackup backup start time available, cannot do Point-In-Time Restore."
 
 bprestore_args="-B -H -L /usr/openv/netbackup/logs/user_ops/root/logs/bprestore.log -R $TMP_DIR/nbu_change_file -t 0 -w 0 -s ${sdate} -e ${edate} -C ${NBU_CLIENT_SOURCE} -D ${NBU_CLIENT_NAME} -f $TMP_DIR/restore_fs_list $NBU_TIR_FLAG"
 
@@ -65,5 +51,8 @@ if [ $rc -eq 0 ] ; then
 else
     LogPrintError "'bprestore' failed (return code = $rc). Check the restore job's log on the NetBackup Primary server for details."
     LogPrintError "Carefully verify the restored system before relying on it to be fully operational."
+fi
+if test ${#NBU_RESTORE_EXCLUDES[@]} -gt 0 ; then
+    UserOutput "Partial client restore: these folders were not restored and must be restored in a separate step: ${NBU_RESTORE_EXCLUDES[*]}"
 fi
 
