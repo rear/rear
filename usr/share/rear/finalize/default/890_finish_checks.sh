@@ -1,9 +1,14 @@
-# report about checks being done
+# Inform the user when the bootloader installation was not successful
+# except on XEN PV that has an external boot loader:
 
 if ls -l /sys/block/*/ | grep -q xen ; then
-    # if some disks are xen related then assume this is a XEN PV VM which boots externally
-    LogPrint "This looks like a XEN PV system, ignoring boot loader issues"
-elif test "$NOBOOTLOADER" ; then
+    # If some disks are XEN related assume this is a XEN PV VM which boots externally
+    # cf. https://github.com/rear/rear/commit/6d529feb3c580ebd4c60d134dbba86b2e7585042
+    LogPrint "Ignoring boot loader issues: Assuming a XEN PV VM which boots externally (found 'xen' in /sys/block/*/)"
+    return 0
+fi
+
+if test "$NOBOOTLOADER" ; then
     LogPrint "WARNING:
 For this system
 $OS_VENDOR_VERSION on $ARCH (based on $OS_MASTER_VENDOR_VERSION_ARCH)
@@ -24,5 +29,4 @@ You can use 'chroot $TARGET_FS_ROOT bash --login'
 to change into the recovered system and
 manually install a boot loader therein.
 "
-
 fi
