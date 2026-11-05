@@ -7,12 +7,9 @@
 # point in time applies to all filesystems, used later as the
 # 'bprestore' end time. True Image Restore (TIR) provides the actual
 # accuracy needed for a correct Point-In-Time restore.
-# Then ask for a Complete client restore (everything from the backup image,
-# the default) or a Partial client restore (everything except the top-level
-# folders of / the operator excludes). Excluded folders are passed to
-# 'bprestore' as '!' exclusions, so anything not listed (e.g. the
-# /bin -> usr/bin symlinks) is still restored. /dev, /run, /proc and /sys
-# are always excluded.
+# Then ask for a complete backup image restore (the default, without excludes)
+# or a partial backup image restore (with excludes of folders and paths of /),
+# which 400_restore_with_nbu.sh passes to 'bprestore' as '!' entries.
 
 NBU_ENDTIME=""
 NBU_STARTTIME=""
@@ -30,6 +27,7 @@ local nbu_top_paths=() nbu_top_locked=() nbu_top_skip=()
 local nbu_pseudofs="" nbu_is_locked="" nbu_token="" nbu_from=0 nbu_to=0 nbu_number=0
 local nbu_selection_valid="" nbu_target_epoch="" nbu_stamp_epoch=""
 local nbu_bplist=/usr/openv/netbackup/bin/bplist
+local nbu_extra_paths=() nbu_rejected=() nbu_candidates=() nbu_path="" nbu_candidate="" nbu_other="" nbu_skip_it="" nbu_confirmed=""
 
 # List the source client's catalog backups so the operator can pick one.
 # No policy-type filter: 'bpclimagelist -t' is the backup type, not the
@@ -98,7 +96,9 @@ fi
 # until the input is valid, or the user pressed only ENTER to restore the
 # most recent available backup:
 while true ; do
-    answer=$( UserInput -I NBU_RESTORE_PIT -r -p "Enter a catalog number or date and time (mm/dd/yyyy HH:MM:SS), or press ENTER" )
+    REPLY=""
+    read -t $WAIT_SECS -r -p "Enter a catalog number or date and time (mm/dd/yyyy HH:MM:SS), or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+    answer="$REPLY"
     # When the user pressed only ENTER, default to the newest backup
     # (catalog entry 1, newest first), unless there is no catalog to pick
     # from at all, in which case leave this script to restore the most
@@ -157,31 +157,27 @@ for (( nbu_catalog_index = 0 ; nbu_catalog_index < ${#nbu_catalog_lines[@]} ; nb
 done
 test -n "$NBU_STARTTIME" || Error "No full NetBackup backup found at or before '$NBU_ENDTIME' for client $NBU_CLIENT_SOURCE, cannot do Point-In-Time Restore."
 
-UserOutput "Restore mode:"
-UserOutput "  1) Complete client restore (default, everything from the backup image)"
-UserOutput "  2) Partial client restore (you select the folders of / to exclude)"
-UserOutput ""
 while true ; do
-    answer=$( UserInput -I NBU_RESTORE_MODE -r -p "Enter 1 or 2, or press ENTER for a Complete client restore" )
-    case "$answer" in
-        ""|1) nbu_restore_mode="complete" ; break ;;
-        2) nbu_restore_mode="partial" ; break ;;
+    REPLY=""
+    read -t $WAIT_SECS -r -p "Enter PARTIAL for a list of top-level folders with the option to define excludes
+or press ENTER to restore everything included in the backup image [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+    case "${REPLY^^}" in
+        "") nbu_restore_mode="complete" ; break ;;
+        PARTIAL) nbu_restore_mode="partial" ; break ;;
     esac
-    LogPrintError "Invalid restore mode '$answer' specified."
+    LogPrintError "Invalid input '$REPLY', enter PARTIAL or press ENTER."
 done
 
-if test "$nbu_restore_mode" = "complete" ; then
-    UserOutput "Complete client restore selected."
-    return 0
-fi
+test "$nbu_restore_mode" = "complete" && return 0
 
+UserOutput ""
 # Same options as the 'bprestore' call in 400_restore_with_nbu.sh.
 # -R 1 lists only the top level of /.
 LogPrint "Listing the top-level folders of / in the backup of $NBU_CLIENT_SOURCE..."
 nbu_bplist_output=$( "$nbu_bplist" -t 0 -s ${NBU_STARTTIME} -e ${NBU_ENDTIME} -C "$NBU_CLIENT_SOURCE" $NBU_TIR_FLAG -R 1 -l / 2>&1 )
 nbu_bplist_rc=$?
 if test $nbu_bplist_rc -ne 0 ; then
-    LogPrintError "'bplist' failed (return code = $nbu_bplist_rc), falling back to a Complete client restore."
+    LogPrintError "'bplist' failed (return code = $nbu_bplist_rc), falling back to a complete backup image restore."
     return 0
 fi
 
@@ -199,7 +195,7 @@ while read -r nbu_top_path ; do
 done < $TMP_DIR/nbu_top_paths
 
 if test ${#nbu_top_paths[@]} -eq 0 ; then
-    LogPrintError "'bplist' returned no top-level folders, falling back to a Complete client restore."
+    LogPrintError "'bplist' returned no top-level folders, falling back to a complete backup image restore."
     return 0
 fi
 
@@ -213,8 +209,6 @@ for (( nbu_top_index = 0 ; nbu_top_index < ${#nbu_top_paths[@]} ; nbu_top_index+
 done
 
 UserOutput ""
-UserOutput "Top-level folders of / in the backup of $NBU_CLIENT_SOURCE:"
-UserOutput ""
 for (( nbu_top_index = 0 ; nbu_top_index < ${#nbu_top_paths[@]} ; nbu_top_index++ )) ; do
     nbu_top_number=$( printf '%3d' $(( nbu_top_index + 1 )) )
     if test -n "${nbu_top_locked[nbu_top_index]}" ; then
@@ -224,18 +218,50 @@ for (( nbu_top_index = 0 ; nbu_top_index < ${#nbu_top_paths[@]} ; nbu_top_index+
     fi
 done
 UserOutput ""
-UserOutput "All folders are restored unless you exclude them. Enter the numbers to EXCLUDE, e.g. '1 3 5-8'."
-UserOutput "Press only ENTER to exclude nothing (Complete client restore)."
+UserOutput "All folders are restored unless you exclude them. Enter the numbers and/or paths to exclude,"
+UserOutput "e.g. '1 3 5-8 /var/lib/mysql'. Press only ENTER to exclude nothing (complete backup image restore)."
 UserOutput ""
 UserOutput "If critical folders or file systems (e.g. /boot /etc /usr /var) are excluded,"
 UserOutput "the restored system may not boot or may not be fully usable."
 
 while true ; do
-    answer=$( UserInput -I NBU_RESTORE_PATHS_SELECTION -r -p "Enter the numbers of the folders to exclude, or press ENTER" )
+    REPLY=""
+    read -t $WAIT_SECS -r -p "Enter the numbers and/or paths of the folders to exclude, or press ENTER [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+    answer="$REPLY"
+    NBU_RESTORE_EXCLUDES=()
     nbu_top_skip=()
+    nbu_extra_paths=()
+    nbu_rejected=()
     nbu_selection_valid="yes"
     test -z "$answer" && break
     for nbu_token in ${answer//,/ } ; do
+        if [[ "$nbu_token" == /* ]] ; then
+            # A path: collapse repeated slashes, drop the trailing one, then test it
+            # against the backup image ('bplist' returns 0 only for an existing path).
+            nbu_path="$nbu_token"
+            while [[ "$nbu_path" == *//* ]] ; do nbu_path="${nbu_path//\/\//\/}" ; done
+            nbu_path="${nbu_path%/}"
+            if test -z "$nbu_path" ; then
+                nbu_rejected+=( "$nbu_token (the whole of / cannot be excluded)" )
+                continue
+            fi
+            nbu_skip_it=""
+            for nbu_pseudofs in /dev /run /proc /sys ; do
+                if [[ "$nbu_path" == "$nbu_pseudofs" || "$nbu_path" == "$nbu_pseudofs"/* ]] ; then
+                    nbu_skip_it="yes"
+                fi
+            done
+            if test -n "$nbu_skip_it" ; then
+                nbu_rejected+=( "$nbu_path (always excluded)" )
+                continue
+            fi
+            if "$nbu_bplist" -t 0 -s ${NBU_STARTTIME} -e ${NBU_ENDTIME} -C "$NBU_CLIENT_SOURCE" $NBU_TIR_FLAG -R 0 "$nbu_path" &>/dev/null ; then
+                nbu_extra_paths+=( "$nbu_path" )
+            else
+                nbu_rejected+=( "$nbu_path (not found in the backup image)" )
+            fi
+            continue
+        fi
         if [[ "$nbu_token" =~ ^([0-9]+)-([0-9]+)$ ]] ; then
             nbu_from="${BASH_REMATCH[1]}"
             nbu_to="${BASH_REMATCH[2]}"
@@ -258,22 +284,56 @@ while true ; do
             nbu_top_skip[nbu_number-1]="yes"
         done
     done
-    test -n "$nbu_selection_valid" && break
-    LogPrintError "Invalid selection '$answer'. Use numbers or ranges from the list above, not the always excluded folders."
-done
+    if test -z "$nbu_selection_valid" ; then
+        LogPrintError "Invalid selection '$answer'. Use numbers, ranges or absolute paths, not the always excluded folders."
+        continue
+    fi
+    for nbu_candidate in "${nbu_rejected[@]}" ; do
+        LogPrintError "Ignored: $nbu_candidate"
+    done
 
-for (( nbu_top_index = 0 ; nbu_top_index < ${#nbu_top_paths[@]} ; nbu_top_index++ )) ; do
-    test -n "${nbu_top_locked[nbu_top_index]}" && continue
-    test -n "${nbu_top_skip[nbu_top_index]}" || continue
-    NBU_RESTORE_EXCLUDES+=( "${nbu_top_paths[nbu_top_index]}" )
+    # Numbered folders plus validated paths, without duplicates and without
+    # paths below another excluded path.
+    nbu_candidates=()
+    for (( nbu_top_index = 0 ; nbu_top_index < ${#nbu_top_paths[@]} ; nbu_top_index++ )) ; do
+        test -n "${nbu_top_locked[nbu_top_index]}" && continue
+        test -n "${nbu_top_skip[nbu_top_index]}" && nbu_candidates+=( "${nbu_top_paths[nbu_top_index]}" )
+    done
+    nbu_candidates+=( "${nbu_extra_paths[@]}" )
+    for nbu_candidate in "${nbu_candidates[@]}" ; do
+        nbu_skip_it=""
+        for nbu_other in "${nbu_candidates[@]}" ; do
+            test "$nbu_other" = "$nbu_candidate" && continue
+            [[ "$nbu_candidate" == "$nbu_other"/* ]] && nbu_skip_it="yes"
+        done
+        for nbu_other in "${NBU_RESTORE_EXCLUDES[@]}" ; do
+            test "$nbu_other" = "$nbu_candidate" && nbu_skip_it="yes"
+        done
+        test -n "$nbu_skip_it" || NBU_RESTORE_EXCLUDES+=( "$nbu_candidate" )
+    done
+
+    # Everything typed was rejected, ask again instead of silently restoring everything:
+    if test ${#NBU_RESTORE_EXCLUDES[@]} -eq 0 && test ${#nbu_rejected[@]} -gt 0 ; then
+        continue
+    fi
+    test ${#NBU_RESTORE_EXCLUDES[@]} -eq 0 && break
+
+    UserOutput ""
+    UserOutput "Partial backup image restore, these folders will NOT be restored: ${NBU_RESTORE_EXCLUDES[*]}"
+    nbu_confirmed=""
+    while true ; do
+        REPLY=""
+        read -t $WAIT_SECS -r -p "Press ENTER to proceed or enter REPEAT to change the selection [$WAIT_SECS secs]: " 0<&6 1>&7 2>&8
+        case "${REPLY^^}" in
+            "") nbu_confirmed="yes" ; break ;;
+            REPEAT) break ;;
+        esac
+        LogPrintError "Invalid input '$REPLY', press ENTER or enter REPEAT."
+    done
+    test -n "$nbu_confirmed" && break
 done
 
 if test ${#NBU_RESTORE_EXCLUDES[@]} -eq 0 ; then
     UserOutput ""
-    UserOutput "No folders excluded, doing a Complete client restore."
-    return 0
+    UserOutput "No folders excluded, doing a complete backup image restore."
 fi
-
-UserOutput ""
-UserOutput "Partial client restore, these folders will NOT be restored: ${NBU_RESTORE_EXCLUDES[*]}"
-UserOutput ""

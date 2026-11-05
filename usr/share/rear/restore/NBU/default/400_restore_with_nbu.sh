@@ -12,7 +12,7 @@ echo "/" > $TMP_DIR/restore_fs_list || Error "Cannot write $TMP_DIR/restore_fs_l
 for nbu_pseudofs in /dev /run /proc /sys ; do
     echo "!${nbu_pseudofs}" >> $TMP_DIR/restore_fs_list
 done
-# Folders the operator excluded for a Partial client restore
+# Folders the operator excluded for a partial backup image restore
 # (verify/NBU/default/500_request_pit_restore_parameters.sh):
 for nbu_skipped in "${NBU_RESTORE_EXCLUDES[@]}" ; do
     echo "!${nbu_skipped}" >> $TMP_DIR/restore_fs_list
@@ -53,6 +53,7 @@ else
     LogPrintError "Carefully verify the restored system before relying on it to be fully operational."
 fi
 if test ${#NBU_RESTORE_EXCLUDES[@]} -gt 0 ; then
-    UserOutput "Partial client restore: these folders were not restored and must be restored in a separate step: ${NBU_RESTORE_EXCLUDES[*]}"
+    UserOutput "Partial backup image restore performed with folders excluded from restore:"
+    UserOutput "${NBU_RESTORE_EXCLUDES[*]}"
 fi
 
