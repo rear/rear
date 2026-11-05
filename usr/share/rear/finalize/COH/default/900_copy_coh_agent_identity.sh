@@ -30,7 +30,11 @@ if ! test -s "$TARGET_FS_ROOT$coh_agent_cfg" ; then
 fi
 
 restored_hostname="$( sed -n 's/^[[:space:]]*hostname:[[:space:]]*"\([^"]*\)".*/\1/p' "$TARGET_FS_ROOT$coh_agent_cfg" | head -n1 )"
-current_hostname="$( hostname )" || Error "Failed to determine current hostname"
+if ! current_hostname="$( hostname )" ; then
+    LogPrintError "WARNING: Failed to determine the current hostname. Skipping the Cohesity agent identity copy."
+    LogPrintError "The Cohesity agent on the recovered system may need to be registered again after reboot."
+    return 0
+fi
 
 if test "${restored_hostname,,}" != "${current_hostname,,}" ; then
     LogPrint "The hostname in the restored $coh_agent_cfg (${restored_hostname:-<unknown>}) differs from the current hostname ($current_hostname)."
@@ -58,6 +62,6 @@ done
 if ! $copy_failed && test -s "$TARGET_FS_ROOT$coh_agent_cfg" ; then
     LogPrint "Cohesity agent identity copied. No further registration is needed after reboot."
 else
-    LogPrintError "The Cohesity agent identity was not copied completely."
+    LogPrintError "WARNING: The Cohesity agent identity was not copied completely."
     LogPrintError "The Cohesity agent on the recovered system may need to be registered again after reboot."
 fi
