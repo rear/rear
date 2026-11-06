@@ -419,6 +419,18 @@ find_disk_and_multipath() {
     is_true "$AUTOEXCLUDE_MULTIPATH" || find_multipath "$1" ${2+"$2"}
 }
 
+# Return 0 when $1 is a partition table type ReaR can save and recreate.
+is_partition_table_type () {
+    case "$1" in
+        (msdos|gpt|gpt_sync_mbr|dasd)
+            return 0
+            ;;
+        (*)
+            return 1
+            ;;
+    esac
+}
+
 find_partition() {
     get_parent_components "$1" "part" ${2+"$2"}
 }
