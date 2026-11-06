@@ -241,8 +241,6 @@ OS family and major version.
 
 ### Limits
 
-* The network of the recovery system needs DHCP (`USE_DHCLIENT=y`) or settings in
-  `/etc/rear/mappings/*`. Both are untested with generic images.
 * The disks of the new host should match the saved layout. Otherwise ReaR switches to migration
   mode and asks for input.
 
