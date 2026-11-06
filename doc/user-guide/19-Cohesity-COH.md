@@ -30,7 +30,7 @@ cluster in deduplicated, compressed, encrypted, on immutable snapshots.
 The `BACKUP=COH` method for ReaR supports bare metal recovery of Linux systems that are
 protected as physical servers by Cohesity DataProtect. It has been validated against a live
 Cohesity cluster, recovering successfully both when the recovery host keeps the original
-hostname/IP and when it comes up with different network settings.
+hostname and when it comes up with a different hostname.
 
 The Cohesity agent that runs on a protected physical server has no local command to list or
 restore backups: the agent only accepts connections from the Cohesity cluster, it does not pull
@@ -42,9 +42,9 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
   agent's `command_path.sh` looks up at startup, so the agent can be started again during
   recovery.
 * `rear recover` rebuilds the disk layout as usual, then checks whether this recovery host's
-  hostname and IP address(es) still match what is recorded in the copied
+  hostname still matches what is recorded in the copied
   `/etc/cohesity-agent/agent.cfg`:
-  * If they **differ** (e.g. a different host, or DHCP assigned a new address), the Cohesity
+  * If they **differ** (e.g. a different host), the Cohesity
     agent identity is reset automatically: `agent.cfg`, `server_cert`, and the telemetry
     `hostuuid` are renamed with a `_rear` suffix (not deleted, so nothing is lost) so the agent
     starts up unregistered. This is mandatory and requires no confirmation - the stale identity
@@ -72,8 +72,16 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
 2. Install and register the Cohesity agent on the physical server as directed by Cohesity's
    documentation, and confirm the server is protected by a Cohesity Protection Group. Either
    File Level or Block Based Backup can be used to protect the server.
-3. Test ReaR by running `rear -v mkrescue`.
-4. Keep the resulting rescue image (ISO or other `OUTPUT_URL`) available for recovery, e.g. by
+3. Optionally tune the following variables in `local.conf` or `site.conf`:
+
+   | Variable | Default | Purpose |
+   |---|---|---|
+   | `COPY_AS_IS_COH` | `/etc/cohesity-agent /opt/cohesity /var/cohesity` | Agent installation, config and state copied into the rescue image. |
+   | `COPY_AS_IS_EXCLUDE_COH` | `/opt/cohesity/agent/data/agent/tmp/* /opt/cohesity/agent/data/logs/*` | Agent temp files and logs left out of the rescue image. |
+   | `REQUIRED_PROGS_COH` | `linux_agent_exec host kill losetup lsof nproc wget whereis whoami` | Programs the agent needs at runtime in the rescue system. |
+   | `COH_LD_LIBRARY_PATH` | `/opt/cohesity/agent/software/crux/bin/dlls_for_linking` | Library search path for the agent's bundled libraries during `mkrescue`. Only needs changing if the agent is installed somewhere nonstandard. |
+4. Test ReaR by running `rear -v mkrescue`.
+5. Keep the resulting rescue image (ISO or other `OUTPUT_URL`) available for recovery, e.g. by
    also protecting the host filesystem containing `/var/lib/rear/output/` with Cohesity
    DataProtect, or by copying the rescue image off the host through your usual process.
 
@@ -81,11 +89,11 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
 
 1. Boot the recovery target from the ReaR rescue image.
 2. Run `rear recover`.
-3. ReaR compares the hostname/IP recorded in `agent.cfg` against this host's current values and
+3. ReaR compares the hostname recorded in `agent.cfg` against this host's current hostname and
    logs what it detected:
-   * **Same hostname/IP as the original system:** the existing agent identity is kept unless you
+   * **Same hostname as the original system:** the existing agent identity is kept unless you
      confirm the optional prompt to reset it anyway.
-   * **Different hostname/IP:** the agent identity is reset automatically (no prompt) - `rear
+   * **Different hostname:** the agent identity is reset automatically (no prompt) - `rear
      recover` logs that this is required and proceeds.
 4. Once ReaR reports the Cohesity agent has started:
    * If the identity was **kept**, go to the Cohesity Data Cloud console (or use its REST API)
@@ -102,7 +110,12 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
      filesystems' contents won't be browsable/selectable for restore.
 5. Monitor the restore to completion in the Cohesity Data Cloud console and/or via the REST API.
 6. Back in the ReaR recovery shell, type `exit` to let `rear recover` continue.
-7. Let `rear recover` finish (bootloader installation, cleanup), then reboot.
+7. If the identity was **reset** and the hostname in the restored `agent.cfg` matches the current
+   hostname, ReaR copies the new agent identity (`agent.cfg`, `server_cert`, `hostuuid`) to the
+   restored system, replacing the restored copies, so no further registration is needed after
+   the first boot. If the hostnames differ, nothing is copied and the agent needs to be
+   registered again after reboot.
+8. Let `rear recover` finish (bootloader installation, cleanup), then reboot.
 
 ## Known Issues
 
