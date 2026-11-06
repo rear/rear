@@ -12,7 +12,6 @@ if [ ! -b "$BLOCKCLONE_SAVE_MBR_DEV" ]; then
 fi
 
 # This layout will be later used if BLOCKCLONE_STRICT_PARTITIONING="yes"
-# TODO: @gozora add gpt support
 local label=$(parted $BLOCKCLONE_SAVE_MBR_DEV print | \
 grep "Partition Table" | awk -F ": " '{print $2}')
 
@@ -35,12 +34,23 @@ case "$label" in
 
         StopIfError "Failed to save bootstrap code area"
     ;;
-    #~ ("gpt")
-        #~ sgdisk -b $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE \
-        #~ $BLOCKCLONE_SAVE_MBR_DEV
-        #~
-        #~ StopIfError "Failed to save partition layout"
-    #~ ;;
+    ("gpt")
+        Log "Saving strict GPT partition layout"
+
+        # 'sgdisk -b' saves the protective MBR, the primary and backup GPT
+        # headers and the partition entry array into a single file, so the
+        # disk GUID and every partition GUID are preserved. That matters
+        # because a UEFI boot configuration can refer to the partition it
+        # boots from by GUID.
+        sgdisk -b $VAR_DIR/layout/$BLOCKCLONE_PARTITIONS_CONF_FILE \
+        $BLOCKCLONE_SAVE_MBR_DEV
+
+        StopIfError "Failed to save partition layout"
+
+        # There is deliberately no bootstrap code area to save here: on a GPT
+        # disk the boot loader is a file in the EFI System Partition, not code
+        # in the MBR gap, so $BLOCKCLONE_MBR_FILE is not written in this case.
+    ;;
     (*)
         BugError "Unknown partition table on $BLOCKCLONE_SAVE_MBR_DEV"
     ;;
