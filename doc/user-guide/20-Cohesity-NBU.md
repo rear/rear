@@ -95,6 +95,7 @@ Across the whole pipeline, `BACKUP=NBU`:
    |---|---|---|
    | `NBU_TRUE_IMAGE_RESTORE` | `true` | Requires True Image Restore data on backups used for restore, and passes `-T` to `bplist`/`bpclimagelist`/`bprestore`. Set to `false` only if the backup policy does not collect TIR information. Restores will then union every file backed up in the window instead of reproducing the exact point in time. |
    | `NBU_ALLOW_SERVER_AS_CLIENT` | `false` | Downgrades the primary/media-server safety check from a fatal error to a warning, allowing `rear mkbackup`/`recover` to proceed against a host that is itself a NetBackup server. |
+   | `NBU_RESTORE_SAVED_LAYOUT` | `false` | Fetches the client's own disk layout from its NetBackup backup during `rear recover` and uses it instead of the layout stored in the recovery image. Used with generic recovery images, see [Generic recovery image](#generic-recovery-image). |
    | `NBU_LD_LIBRARY_PATH` | `/usr/openv/lib:/usr/openv/netbackup/sec/at/lib:/usr/openv/lib/boost` | Library search path needed for NetBackup's own binaries to run during `mkbackup`/`mkrescue`. Only needs changing if the client installs NetBackup libraries somewhere nonstandard. |
 
    There is deliberately no `NBU_SERVER` setting in `default.conf`: the primary server is read
@@ -137,14 +138,113 @@ Across the whole pipeline, `BACKUP=NBU`:
    Enter a number to select one, enter an exact date and time as `mm/dd/yyyy HH:MM:SS`, or press
    ENTER to restore the most recent backup. If the catalog can't be queried, ReaR falls back to
    asking for a date and time directly.
-8. ReaR restores the data with `bprestore`, automatically restoring the full backup chain needed
-   to reach the selected point in time. Any non-zero return code is reported as a failure, but
+8. ReaR asks whether to restore everything in the backup image or only part of it. Press ENTER
+   for a complete backup image restore, or enter `PARTIAL` for a partial one:
+   * ReaR lists the top-level folders of `/` in the selected backup.
+   * Enter the numbers (for example `1 3 5-8`) and/or absolute paths (for example
+     `/var/lib/mysql`) of the folders to exclude. Each path is checked against the backup
+     image, and a path that is not found is ignored. Press only ENTER to exclude nothing.
+   * ReaR shows the final exclude list. Press ENTER to proceed or enter `REPEAT` to change it.
+
+   `/dev`, `/run`, `/proc` and `/sys` are never restored, because the running recovery system
+   provides them. Excluding critical folders such as `/boot`, `/etc`, `/usr` or `/var` can leave
+   the restored system unbootable. A partial restore is useful to skip large data volumes that
+   are not needed to boot and can be restored later.
+9. ReaR restores the data with `bprestore`, automatically restoring the full backup chain needed
+   to reach the selected point in time, without the excluded folders. ReaR lists the excluded
+   folders when the restore is done. Any non-zero return code is reported as a failure, but
    recovery continues so you can inspect the system. Check the restore job's log on the
    NetBackup primary and verify the restored system carefully before rebooting.
-9. ReaR restores the freshly enrolled certificate, CA trust store, and credential cache onto the
+10. ReaR restores the freshly enrolled certificate, CA trust store, and credential cache onto the
    recovered disk (skipped on a cross restore), copies the `bprestore` log into the recovered
    system for later reference, then finishes the usual bootloader installation and cleanup
    steps. Reboot once `rear recover` completes.
+
+## Generic recovery image
+
+### Why
+
+By default `rear mkrescue` builds one recovery image per server, because each image carries
+that server's disk layout. For a large number of clients that means many images to build,
+store and keep current. A generic recovery image avoids this:
+
+* **Disk space:** one image per NetBackup primary replaces one image per server.
+* **Prepare time:** no per-server image build. A server only needs a small layout file saved
+  next to its normal backup.
+* **Maintenance:** refresh one image when the NetBackup client version changes.
+
+The disk layout is not stored in the image. It is fetched from the server's own NetBackup
+backup when `rear recover` runs.
+
+### How it works
+
+On each client, an ongoing job saves the disk layout:
+
+* Cron runs `rear savelayout`. It writes `/var/lib/rear/layout/disklayout.conf` and
+  `/var/lib/rear/layout/config/*`.
+* The regular file backup carries these files. Make sure the backup policy includes
+  `/var/lib/rear/layout`.
+
+During `rear recover` with `NBU_RESTORE_SAVED_LAYOUT=true`, after the source client and the
+point in time are chosen:
+
+1. ReaR checks with `bplist` that `disklayout.conf` is in the backup of the source client for
+   the selected time window. If it is not, `rear recover` stops with an error.
+2. ReaR restores `disklayout.conf` (and `layout/config` if present) with `bprestore` into a
+   scratch directory. True Image Restore is not used for these files.
+3. Only after a successful restore, ReaR replaces the layout in `/var/lib/rear/layout` with the
+   restored one. If the restore fails, the layout of the image stays untouched.
+4. The usual recovery continues: volumes are recreated, NetBackup restores `/`, and the
+   bootloader is installed.
+
+The layout and the files come from the same backup and point in time, so they stay consistent.
+The layout is written to its normal place, so ReaR's disk size comparison decides whether
+migration mode is needed. If the disks match, no extra prompts appear. To use the layout of the
+image instead, set `NBU_RESTORE_SAVED_LAYOUT=false`.
+
+### What a generic image is
+
+A recovery image that is not tied to the disk layout of one host. It contains the rescue system,
+the NetBackup client, and the client's `bp.conf` with the primary's `SERVER` entries. It does not
+contain certificates or a client-specific layout.
+
+Build one image per primary, because the `SERVER` entries are part of the image. Alternatively,
+edit `SERVER` in `bp.conf` when ReaR pauses for it at the start of `rear recover`. The rescue
+system also carries the kernel and libraries of the build host, so expect to need one image per
+OS family and major version.
+
+### Build
+
+1. Use a reference host that is attached to the target primary and has the NetBackup client
+   version you want.
+2. Set the following in `/etc/rear/site.conf` on that host:
+
+   ```
+   BACKUP=NBU
+   OUTPUT=ISO
+   OUTPUT_URL=nfs://<server>/<share>
+   NBU_RESTORE_SAVED_LAYOUT=true
+   ```
+
+3. Run `rear mkrescue`.
+4. Keep the image on the share. Rebuild it when the NetBackup client version changes.
+
+### Use
+
+1. Make sure the client ran `rear savelayout` before its last backup.
+2. Boot the rebuilt or new host from the generic image. Its hostname must be the client's name,
+   or the source client must be authorized as an altname of the host on the primary.
+3. Run `rear recover` and follow the steps in [Recovery](#recovery). Enter the certificate token
+   when asked, then choose the source client and point in time.
+4. For unattended runs, set `MIGRATION_MODE=false` or `USER_INPUT_*`. A disk size mismatch then
+   stops the run instead of prompting.
+
+### Limits
+
+* The network of the recovery system needs DHCP (`USE_DHCLIENT=y`) or settings in
+  `/etc/rear/mappings/*`. Both are untested with generic images.
+* The disks of the new host should match the saved layout. Otherwise ReaR switches to migration
+  mode and asks for input.
 
 ## Known Issues
 
