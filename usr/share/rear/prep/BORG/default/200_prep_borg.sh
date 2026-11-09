@@ -9,7 +9,7 @@
 # Excluding other non alphanumeric characters is not really necessary,
 # however it looks safer to me.
 # We added - and : to the allowed list within the archive names.
-if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9\-:] ]] \
+if [[ $BORGBACKUP_ARCHIVE_PREFIX =~ [^a-zA-Z0-9:-] ]] \
   || [[ -z $BORGBACKUP_ARCHIVE_PREFIX ]]; then
     Error "BORGBACKUP_ARCHIVE_PREFIX must be alphanumeric non-empty value only"
 fi
