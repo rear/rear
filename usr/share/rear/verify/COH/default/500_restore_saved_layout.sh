@@ -41,8 +41,7 @@ layout. Type 'exit' to abort the recovery.
     if test -n "$coh_layout_file" ; then
         break
     fi
-    UserOutput ""
-    UserOutput "ERROR: disklayout.conf was not found under $coh_saved_dir. Check the Cohesity recovery job and try again."
+    LogPrintError "disklayout.conf was not found under $coh_saved_dir. Check the Cohesity recovery job and try again."
 done
 
 coh_saved_layout_dir="$( dirname $coh_layout_file )"
