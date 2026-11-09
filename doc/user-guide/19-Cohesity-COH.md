@@ -108,6 +108,12 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
      just `/`. If any of the source filesystems were excluded from indexing, disable the
      **"Browse on Indexed Data"** option in the file/folder selection, otherwise those
      filesystems' contents won't be browsable/selectable for restore.
+   * With `COH_RESTORE_SAVED_LAYOUT="true"` (generic recovery images), ReaR first asks you to
+     restore this client's saved disk layout (run `rear savelayout` before the backup). Start a
+     File & Folder recovery and select the folder `/var/lib/rear/layout`, which must contain a
+     `disklayout.conf` file. Restore it into the path ReaR shows, then press ENTER to let ReaR
+     verify it. ReaR continues only once the file is there, otherwise it asks again. Type `exit`
+     to abort.
 5. Monitor the restore to completion in the Cohesity Data Cloud console and/or via the REST API.
 6. Back in the ReaR recovery shell, type `exit` to let `rear recover` continue.
 7. If the identity was **reset** and the hostname in the restored `agent.cfg` matches the current
