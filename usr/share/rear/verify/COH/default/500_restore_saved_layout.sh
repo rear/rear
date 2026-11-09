@@ -29,10 +29,9 @@ restore. It must contain a disklayout.conf file.
 Restore the data into: $coh_saved_dir
 
 The restored files can end up in a subdirectory of that path. Wait until the
-Cohesity recovery job has finished and press ENTER to verify the restored disk
-layout. Type 'exit' to abort the recovery.
+Cohesity recovery job has finished.
 "
-    coh_choice="$( UserInput -I COH_SAVED_LAYOUT_RESTORE -t 0 -D 'check' )"
+    coh_choice="$( UserInput -I COH_SAVED_LAYOUT_RESTORE -t 0 -p "Press ENTER to verify the restored disk layout or type 'exit' to abort the recovery." -D 'verify' )"
     if test "$coh_choice" = "exit" ; then
         Error "Aborted by the user, the saved disk layout was not restored. Set COH_RESTORE_SAVED_LAYOUT=false to use the disk layout of this recovery image instead."
     fi
