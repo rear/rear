@@ -76,7 +76,7 @@ data on its own. Because of this, `BACKUP=COH` works as follows:
 
    | Variable | Default | Purpose |
    |---|---|---|
-   | `COPY_AS_IS_COH` | `/etc/cohesity-agent /opt/cohesity /var/cohesity` | Agent installation, config and state copied into the rescue image. |
+   | `COPY_AS_IS_COH` | `/etc/cohesity-agent /opt/cohesity/agent /opt/cohesity/mount_paths /var/cohesity` | Agent installation, config and state copied into the rescue image. |
    | `COPY_AS_IS_EXCLUDE_COH` | `/opt/cohesity/agent/data/agent/tmp/* /opt/cohesity/agent/data/logs/*` | Agent temp files and logs left out of the rescue image. |
    | `REQUIRED_PROGS_COH` | `linux_agent_exec host kill losetup lsof nproc wget whereis whoami` | Programs the agent needs at runtime in the rescue system. |
    | `COH_LD_LIBRARY_PATH` | `/opt/cohesity/agent/software/crux/bin/dlls_for_linking` | Library search path for the agent's bundled libraries during `mkrescue`. Only needs changing if the agent is installed somewhere nonstandard. |
