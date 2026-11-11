@@ -1,5 +1,6 @@
 # 400_restore_with_coh.sh
-# Purpose: Hand off the actual data restore to the Cohesity Data Cloud console
+
+# Hand off the actual data restore to the Cohesity Data Cloud console
 # and/or its REST API, then wait for confirmation before continuing 'rear recover'.
 
 LogPrint "
@@ -8,7 +9,7 @@ Cohesity Data Cloud console and/or its REST API now.
 
 Restore the data into: $TARGET_FS_ROOT
 
-If this recovery host has a different IP address than the original system,
+If this recovery host has a different hostname than the original system,
 you may need to re-register the Cohesity agent with the cluster before the
 restore can proceed (see the previous 'verify' step for details).
 

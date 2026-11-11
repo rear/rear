@@ -1,5 +1,8 @@
 # 400_prep_coh.sh
-# Prepare stuff for Cohesity DataProtect
+
+# Wire COH into the rear backup-prep stage. Add the COH COPY_AS_IS and
+# COPY_AS_IS_EXCLUDE file lists and the required programs. Point the backup
+# tool library search path at the libraries bundled with the Cohesity agent.
 
 COPY_AS_IS+=( "${COPY_AS_IS_COH[@]}" )
 COPY_AS_IS_EXCLUDE+=( "${COPY_AS_IS_EXCLUDE_COH[@]}" )
