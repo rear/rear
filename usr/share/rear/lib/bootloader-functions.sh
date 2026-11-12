@@ -504,7 +504,7 @@ function make_syslinux_config {
 }
 
 # Create configuration file for elilo
-function create_ebiso_elilo_conf {
+function create_elilo_conf {
 cat << EOF
 timeout = 300
 default = "Relax-and-Recover (no Secure Boot)"

@@ -16,14 +16,9 @@ test -x "$ISO_MKISOFS_BIN" || Error "No executable ISO_MKISOFS_BIN '$ISO_MKISOFS
 # The isolinux directory is used so that the x86_64 EFI scripts can be symlinked directly.
 [[ ! -d $TMP_DIR/isofs/isolinux ]] && mkdir $v -m 755 $TMP_DIR/isofs/isolinux >&2
 
-# kernel and initrd are already included in virtual image of ISO if ebiso is used
-if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $(basename ${UEFI_BOOTLOADER}) = "elilo.efi" ]]; then
-    Log "ebiso is used where kernel and initrd are already included in virtual image of ISO, skipping copying kernel and initrd"
-else
-    Log "Copying kernel and initrd"
-    cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
-    cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
-fi
+Log "Copying kernel and initrd"
+cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
+cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 
 #ISO_FILES+=( $TMP_DIR/kernel $TMP_DIR/$REAR_INITRD_FILENAME )
 # in case the user populates this array manually we must not forget to copy

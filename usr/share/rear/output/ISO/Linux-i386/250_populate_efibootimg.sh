@@ -41,31 +41,7 @@ if test -f "$SECURE_BOOT_BOOTLOADER" ; then
     cp $v $second_stage_UEFI_bootloader_files $efi_boot_tmp_dir/ || Error "Failed to copy second stage bootloader files for Shim"
 fi
 
-# FIXME: Do we need to test if we are ebiso at all?
-#        Copying kernel should happen for any uefi mkiso tool with elilo.
-if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
-    # See https://github.com/rear/rear/issues/758 why 'test' is used here:
-    uefi_bootloader_basename=$( basename "$UEFI_BOOTLOADER" )
-    if test -f "$SECURE_BOOT_BOOTLOADER" -o "$uefi_bootloader_basename" = "elilo.efi" ; then
-        # if shim is used, bootloader can be actually anything (also elilo)
-        # named as grub*.efi (follow-up loader is shim compile time option)
-        # http://www.rodsbooks.com/efi-bootloaders/secureboot.html#initial_shim
-        # if shim is used, bootloader can be actually also elilo
-        # elilo is not smart enough to look for them outside ...
-        Log "Copying kernel"
-        # copy initrd and kernel inside efi_boot image as
-        cp -pL $v $KERNEL_FILE $efi_boot_tmp_dir/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE' to $efi_boot_tmp_dir/kernel"
-        cp $v $TMP_DIR/$REAR_INITRD_FILENAME $efi_boot_tmp_dir/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME' into $efi_boot_tmp_dir"
-        create_ebiso_elilo_conf > $efi_boot_tmp_dir/elilo.conf
-        # We need to set the GRUB environment variable 'root' to a reasonable default/fallback value
-        # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk
-        # but neither kernel nor initrd are located on the ramdisk but on the device where the recovery system was booted from.
-        # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
-        # Set GRUB2_SET_ROOT_COMMAND if not specified by the user:
-        contains_visible_char "$GRUB2_SET_ROOT_COMMAND" || GRUB2_SET_ROOT_COMMAND="set root=cd0"
-        create_grub2_cfg /isolinux/kernel /isolinux/$REAR_INITRD_FILENAME > $efi_boot_tmp_dir/grub.cfg
-    fi
-fi
+
 
 if [[ -n "$(type -p grub)" ]]; then
     cat > $efi_boot_tmp_dir/BOOT$EFI_ARCH_UPPER.conf << EOF
