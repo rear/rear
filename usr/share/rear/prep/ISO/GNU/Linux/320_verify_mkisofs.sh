@@ -3,9 +3,8 @@
 #
 # In default.conf ISO_MKISOFS_BIN is to check what there is in the path with
 # xorrisofs used as the preferred method for generating the iso image
-# and mkisofs and genisoimage as second and third option
-# but for UEFI bootable systems 'ISO_MKISOFS_BIN=/usr/bin/ebiso' is used.
-test -x "$ISO_MKISOFS_BIN" || Error "Could not find program to make ISO9660 filesystem. Install 'xorrisofs', 'mkisofs', 'genisoimage' or 'ebiso' or specify ISO_MKISOFS_BIN (currently '$ISO_MKISOFS_BIN')"
+# and mkisofs and genisoimage as second and third option.
+test -x "$ISO_MKISOFS_BIN" || Error "Could not find program to make ISO9660 filesystem. Install 'xorrisofs', 'mkisofs', 'genisoimage' or specify ISO_MKISOFS_BIN (currently '$ISO_MKISOFS_BIN')"
 DebugPrint "Using '$ISO_MKISOFS_BIN' to create ISO filesystem images"
 
 # Include 'udf' module which is required if backup archive is >= 4GiB and mkisofs/genisoimage is used:
@@ -58,20 +57,8 @@ fi
 #   output/ISO/Linux-ia64/800_create_isofs.sh
 # does not specify '-iso-level 3'
 # so on IA-64 (Intel Itanium architecture) there is probably a 2GiB file size limit.
-# Also 'ebiso --help' does not mention 'allow-limited-size'.
 if $ISO_MKISOFS_BIN --help 2>&1 >/dev/null | grep -qw -- -allow-limited-size ; then
     ISO_MKISOFS_OPTS+=" -allow-limited-size"
-fi
-
-# ebiso has a 2GiB file size limit cf. https://github.com/gozora/ebiso/issues/12
-# so an actual ISO_FILE_SIZE_LIMIT value must be set that is not greater than 2GiB:
-if test "ebiso" = "$( basename $ISO_MKISOFS_BIN )" ; then
-    # For ebiso the ISO_FILE_SIZE_LIMIT test must not be skipped with ISO_FILE_SIZE_LIMIT=0
-    # because it would be disastrous when e.g. a backup.tar.gz in the ISO becomes bigger than 2GiB
-    # that gets corrupted in the ISO so the backup is lost and restore via "rear recover" cannot work:
-    is_positive_integer $ISO_FILE_SIZE_LIMIT || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is not set accordingly"
-    # 2 GiB =  2 * 1024 * 1024 * 1024 bytes = 2147483648 bytes:
-    test $ISO_FILE_SIZE_LIMIT -le 2147483648 || Error "ebiso has a 2GiB file size limit but ISO_FILE_SIZE_LIMIT is greater than 2GiB"
 fi
 
 # vim: set et ts=4 sw=4:
