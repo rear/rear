@@ -52,7 +52,7 @@ fi
 test "$( find /boot -maxdepth 1 -iname efi -type d )" || return 0
 
 # Next step is to get the EFI (Extensible Firmware Interface) system partition (ESP):
-local esp_proc_mounts_line=()
+local esp_proc_mounts_lines=""
 # The output of
 #   grep -E ' /boot/efi | /boot ' /proc/mounts
 # may look like the following examples
@@ -65,25 +65,33 @@ local esp_proc_mounts_line=()
 # and https://github.com/rear/rear/issues/2095#issuecomment-481739166
 # The ESP could be mounted on /boot/efi or on /boot.
 # First try /boot/efi:
-esp_proc_mounts_line=( $( grep ' /boot/efi ' /proc/mounts || echo false ) )
-if is_false $esp_proc_mounts_line ; then
+esp_proc_mounts_lines=$( grep ' /boot/efi ' /proc/mounts || echo false )
+if is_false "$esp_proc_mounts_lines" ; then
     # If nothing is mounted on /boot/efi try /boot:
-    esp_proc_mounts_line=( $( grep ' /boot ' /proc/mounts || echo false ) )
-    if is_false $esp_proc_mounts_line ; then
+    esp_proc_mounts_lines=$( grep ' /boot ' /proc/mounts || echo false )
+    if is_false "$esp_proc_mounts_lines" ; then
         DebugPrint "No EFI system partition found (nothing mounted on /boot/efi or /boot)"
         return
     fi
 fi
 
 # The ESP filesystem type must be vfat (under Linux):
-if ! test "vfat" = "${esp_proc_mounts_line[2]}" ; then
-    DebugPrint "No 'vfat' EFI system partition found (${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} is type ${esp_proc_mounts_line[2]})"
+local vfat_found=false device mountpoint fstype
+while read -r device mountpoint fstype _ ; do
+    if test "vfat" = "$fstype" ; then
+        vfat_found=true
+        break
+    fi
+    DebugPrint "No 'vfat' EFI system partition found ($device on $mountpoint is type $fstype)"
+done <<<"$esp_proc_mounts_lines"
+
+if is_false "$vfat_found" ; then
     return 0
 fi
 
 # When we are still here we have a filesystem type 'vfat' mounted on /boot/efi or on /boot.
 # In this case we assume what is mounted there actually is a EFI system partition (ESP)
 # so we assume it is safe to turn on USING_UEFI_BOOTLOADER=1
-DebugPrint "Found EFI system partition ${esp_proc_mounts_line[0]} on ${esp_proc_mounts_line[1]} type ${esp_proc_mounts_line[2]}"
+DebugPrint "Found EFI system partition $device on $mountpoint type $fstype"
 USING_UEFI_BOOTLOADER=1
 LogPrint "Using UEFI Boot Loader for Linux (USING_UEFI_BOOTLOADER=1)"
