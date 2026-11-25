@@ -200,6 +200,30 @@ generate_layout_dependencies() {
                 add_dependency "$type:$mp" "$dev"
                 add_component "$type:$mp" "$type"
 
+                local fstype
+                fstype=$(echo "$remainder" | cut -d " " -f "3")
+                # We need to add dependencies for all devices if a Btrfs filesystem
+                # is created on top of multiple block devices.
+                if [ "$fstype" = "btrfs" ]; then
+                    local option
+                    for option in $remainder; do
+                        case "$option" in
+                            (devices=*)
+                                local devices=${option#devices=}
+                                set_separator ","
+                                local device
+                                for device in $devices; do
+                                    # Skip duplication
+                                    if [ "$device" != "$dev" ]; then
+                                        add_dependency "$type:$mp" "$device"
+                                    fi
+                                done
+                                restore_separator
+                                ;;
+                        esac
+                    done
+                fi
+
                 # find dependencies on other filesystems
                 while read dep_type bd dep_mp junk; do
                     if [ "$dep_mp" != "/" ] ; then
