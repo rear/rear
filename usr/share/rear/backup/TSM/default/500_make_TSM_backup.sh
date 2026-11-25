@@ -57,9 +57,8 @@ done
 LogUserOutput ""
 LogUserOutput "Starting Incremental Backup with TSM [ ${include_list[@]} ]"
 LogUserOutput "You can follow the backup with [ tail -f ${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log ]"
-LC_ALL=${LANG_RECOVER} dsmc incremental \
--verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" \
-"${include_list[@]}" > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
+test "$TSM_DSMC_OPTFILE" && TSM_DSMC_BACKUP_OPTIONS+=( -optfile="$TSM_DSMC_OPTFILE" )
+LC_ALL=${LANG_RECOVER} dsmc incremental -verbose -tapeprompt=no "${TSM_DSMC_BACKUP_OPTIONS[@]}" "${include_list[@]}" > "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log"
 dsmc_exit_code=$?
 check_TSM_dsmc_return_code $dsmc_exit_code
 
@@ -69,7 +68,11 @@ test $dsmc_exit_code -eq 12 && Error "Error during TSM backup... Check your conf
 if cp $v "${TMP_DIR}/${BACKUP_PROG_ARCHIVE}.log" "${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"; then
     LogUserOutput "TSM Backup log available: ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log"
     LogUserOutput "Adding TSM log file to the backup"
-    dsmc incremental ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log
+    if test "$TSM_DSMC_OPTFILE" ; then
+        dsmc incremental -optfile="$TSM_DSMC_OPTFILE" ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log
+    else
+        dsmc incremental ${backup_tsm_log}/${BACKUP_PROG_ARCHIVE}.log
+    fi
     dsmc_exit_code=$?
 
     check_TSM_dsmc_return_code $dsmc_exit_code
