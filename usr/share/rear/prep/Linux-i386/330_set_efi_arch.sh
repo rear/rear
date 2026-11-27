@@ -17,7 +17,6 @@ case "$REAL_MACHINE" in
     (i686|i586|i386)
         # all these behave exactly like i386.
         # ia32 is another name for i386, used by EFI
-        # (but ia64 is not x86_64 aka amd64, it is the architecture of Itanium)
         EFI_ARCH=ia32
         GRUB2_IMAGE_FORMAT=i386-efi
         ;;

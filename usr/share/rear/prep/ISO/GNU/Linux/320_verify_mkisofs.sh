@@ -54,8 +54,6 @@ fi
 #   output/ISO/Linux-i386/830_create_iso_image_EFISTUB.sh
 #   output/ISO/Linux-ppc64le/820_create_iso_image.sh
 # specify '-iso-level 3' only
-#   output/ISO/Linux-ia64/800_create_isofs.sh
-# does not specify '-iso-level 3'
 # so on IA-64 (Intel Itanium architecture) there is probably a 2GiB file size limit.
 if $ISO_MKISOFS_BIN --help 2>&1 >/dev/null | grep -qw -- -allow-limited-size ; then
     ISO_MKISOFS_OPTS+=" -allow-limited-size"

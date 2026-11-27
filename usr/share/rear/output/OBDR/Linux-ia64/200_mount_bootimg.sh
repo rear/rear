@@ -1,1 +1,0 @@
-../../ISO/Linux-ia64/200_mount_bootimg.sh

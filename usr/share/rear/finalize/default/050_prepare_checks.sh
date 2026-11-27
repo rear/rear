@@ -13,7 +13,6 @@ NOBOOTLOADER=1
 # Currently (February 2024) the used BOOTLOADER values (grep for '$BOOTLOADER') are:
 #   GRUB  for GRUB Legacy
 #   GRUB2 for GRUB 2
-#   ELILO for elilo
 #   LILO  for lilo
 #   GRUB2-EFI for GRUB 2, EFI version
 #   EFI   for any EFI bootloader, dummy value

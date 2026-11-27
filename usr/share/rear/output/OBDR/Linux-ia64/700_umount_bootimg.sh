@@ -1,1 +1,0 @@
-../../ISO/Linux-ia64/700_umount_bootimg.sh

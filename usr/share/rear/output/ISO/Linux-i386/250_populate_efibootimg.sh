@@ -4,7 +4,6 @@
 is_true $USING_UEFI_BOOTLOADER || return 0
 
 # Use 260_populate_efistub.sh instead.
-# There much of Grub/Elilo code here exclude it in menaningfull way.
 is_true $EFI_STUB && return 0
 
 local boot_dir="/boot"

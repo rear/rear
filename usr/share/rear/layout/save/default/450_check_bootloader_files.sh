@@ -25,9 +25,6 @@ case $used_bootloader in
     (LILO)
         CHECK_CONFIG_FILES+=( /[e]tc/lilo.conf )
         ;;
-    (ELILO)
-        CHECK_CONFIG_FILES+=( /[e]tc/elilo.conf )
-        ;;
     (PPC)
         # PPC arch bootloader can be :
         #  - LILO : SLES < 12

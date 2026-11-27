@@ -25,7 +25,7 @@ local symlink_target=""
 local restored_file=""
 # the funny [] around the first letter make sure that shopt -s nullglob removes this file from the list if it does not exist
 # the files without a [] are mandatory, like fstab FIXME: but below there is [e]tc/fstab not etc/fstab - why?
-for restored_file in [e]tc/elilo.conf \
+for restored_file in \
                      [e]tc/fstab
 do
     # Silently skip directories and file not found:
