@@ -9,7 +9,7 @@ There is plenty of ways how EFISTUB can be setup on source system but for the st
 
 - active Linux kernel must be compiled with **CONFIG_EFI_STUB=y**
 - active Linux kernel and initrd are located directly on **vfat** partition
-- **no intermediate boot loader** (ELILO, Grub, systemd-boot, ...) is in use and OS is booted directly from UEFI boot menu
+- **no intermediate boot loader** (Grub, systemd-boot, ...) is in use and OS is booted directly from UEFI boot menu
 - systemd-boot binary (for booting of ReaR recovery system) is available on system (usually as part of Systemd)
 - currently works only with **OUTPUT=ISO**
 
@@ -99,7 +99,7 @@ Test system was running under VirtualBox host with following configuration:
 ## Migration from GRUB2 to EFISTUB on SLES12 SP2
 WARNING: Do not start migration to EFISTUB until you are familiar with all the eventualities. It might happen that you end up with un-bootable system. Most of the time it is possible to fix un-bootable system, but some deeper knowledge might be required to succeed.
 
-When prerequisites are fulfilled one can use ReaR EFISTUB code to migrate system from intermediate boot loaders like GRUB, ELILO to EFISTUB.
+When prerequisites are fulfilled one can use ReaR EFISTUB code to migrate system from intermediate boot loaders like GRUB to EFISTUB.
 For the demonstration purposes I've tried migration from GRUB2 to EFISTUB on SLES12 SP2.
 
 * OS version

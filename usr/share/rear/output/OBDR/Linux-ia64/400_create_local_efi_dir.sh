@@ -1,1 +1,0 @@
-../../ISO/Linux-ia64/400_create_local_efi_dir.sh

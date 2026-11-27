@@ -48,8 +48,6 @@ fi
 
 if is_true $USING_UEFI_BOOTLOADER ; then
     # set to 1 means using UEFI
-    # SLES uses elilo instead of grub-efi; we will return if that is the case (and do not add a ReaR rescue entry)
-    [[ "${UEFI_BOOTLOADER##*/}" = "elilo.efi" ]] && return
     grub_conf="`dirname $UEFI_BOOTLOADER`/grub.conf"
 else
     grub_conf=$(readlink -f /boot/grub/menu.lst)

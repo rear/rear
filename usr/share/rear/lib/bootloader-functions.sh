@@ -503,21 +503,6 @@ function make_syslinux_config {
 # End of function make_syslinux_config
 }
 
-# Create configuration file for elilo
-function create_elilo_conf {
-cat << EOF
-timeout = 300
-default = "Relax-and-Recover (no Secure Boot)"
-
-image = kernel
-    label = "Relax-and-Recover (no Secure Boot)"
-    initrd = $REAR_INITRD_FILENAME
-EOF
-    [[ -n $KERNEL_CMDLINE ]] && cat << EOF
-    append = "$KERNEL_CMDLINE"
-EOF
-}
-
 function get_root_disk_UUID {
     # SLES12 SP1 boot throw kernel panic without root= set
     # cf. https://github.com/rear/rear/commit/b81693f27a41482ed89da36a9af664fe808f8186

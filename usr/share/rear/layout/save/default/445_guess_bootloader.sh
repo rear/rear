@@ -122,8 +122,6 @@ fi
 if is_true $USING_UEFI_BOOTLOADER ; then
     if is_grub2_installed ; then
         echo "GRUB2-EFI" >$bootloader_file
-    elif test -f /sbin/elilo ; then
-        echo "ELILO" >$bootloader_file
     else
         # There is an EFI bootloader, we don't know which one exactly.
         # The value "EFI" is a bit redundant with USING_UEFI_BOOTLOADER=1,

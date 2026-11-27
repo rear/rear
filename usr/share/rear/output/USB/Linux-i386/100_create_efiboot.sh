@@ -94,63 +94,55 @@ cp -L $v "$KERNEL_FILE" "$efi_dst/kernel" || Error "Failed to copy KERNEL_FILE '
 # Copy initrd:
 cp -L $v "$TMP_DIR/$REAR_INITRD_FILENAME" "$efi_dst/$REAR_INITRD_FILENAME" || Error "Failed to copy initrd to $efi_dst/$REAR_INITRD_FILENAME"
 
-# Configure elilo for EFI boot:
-if test "$uefi_bootloader_basename" = "elilo.efi" ; then
-    Log "Configuring elilo for EFI boot"
-    # Create config for elilo
-    DebugPrint "Creating $efi_dst/elilo.conf"
-    create_elilo_conf > $efi_dst/elilo.conf
 # Configure GRUB for EFI boot:
-else
-    has_binary grub-install grub2-install || Error "Unknown EFI bootloader (no grub-install or grub2-install found)"
-    # Choose right grub binary, cf. https://github.com/rear/rear/issues/849
-    local grub_install_binary="grub-install"
-    has_binary grub2-install && grub_install_binary="grub2-install"
-    # Determine the GRUB version.
-    # Because substr() for awk did not work as expected for this case here
-    # 'cut' is used (awk '{print $NF}' prints the last column which is the version).
-    # Only the first character of the version should be enough (at least for now).
-    # Example output (on openSUSE Leap 15.2)
-    # # grub2-install --version
-    # grub2-install (GRUB2) 2.04
-    # # grub2-install --version | awk '{print $NF}' | cut -c1
-    # 2
-    local grub_version
-    grub_version=$( $grub_install_binary --version | awk '{print $NF}' | cut -c1 )
-    case $grub_version in
-        (0)
-            DebugPrint "Configuring legacy GRUB for EFI boot"
-            cat > $efi_dst/BOOT${EFI_ARCH_UPPER}.conf << EOF
+has_binary grub-install grub2-install || Error "Unknown EFI bootloader (no grub-install or grub2-install found)"
+# Choose right grub binary, cf. https://github.com/rear/rear/issues/849
+local grub_install_binary="grub-install"
+has_binary grub2-install && grub_install_binary="grub2-install"
+# Determine the GRUB version.
+# Because substr() for awk did not work as expected for this case here
+# 'cut' is used (awk '{print $NF}' prints the last column which is the version).
+# Only the first character of the version should be enough (at least for now).
+# Example output (on openSUSE Leap 15.2)
+# # grub2-install --version
+# grub2-install (GRUB2) 2.04
+# # grub2-install --version | awk '{print $NF}' | cut -c1
+# 2
+local grub_version
+grub_version=$( $grub_install_binary --version | awk '{print $NF}' | cut -c1 )
+case $grub_version in
+    (0)
+        DebugPrint "Configuring legacy GRUB for EFI boot"
+        cat > $efi_dst/BOOT${EFI_ARCH_UPPER}.conf << EOF
 default=0
 timeout=5
 title Relax-and-Recover (no Secure Boot)
 initrd $efi_dir/$REAR_INITRD_FILENAME
 EOF
-        ;;
-        (2)
-            DebugPrint "Configuring GRUB2 for EFI boot"
-            # We need to set the GRUB environment variable 'root' to the partition device with label $efi_label (hardcoded "REAR-EFI")
-            # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk but neither kernel
-            # nor initrd are located on the ramdisk but on the partition device with label $efi_label.
-            # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
-            # Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
-            contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
-            # Create config for GRUB2:
-            create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
-            # Create BOOTX86.efi but only if we are NOT secure booting.
-            # We are not able to create signed boot loader
-            # so we need to reuse existing one.
-            # See issue #1374
-            # build_boot_efi () can be safely used for other scenarios.
-            if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
-                build_boot_efi $efi_dst/BOOT$EFI_ARCH_UPPER.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
-            fi
-        ;;
-        (*)
-            Error "GRUB version '$grub_version' is neither '0' (legacy GRUB) nor '2' (GRUB 2)"
-        ;;
-    esac
-fi
+    ;;
+    (2)
+        DebugPrint "Configuring GRUB2 for EFI boot"
+        # We need to set the GRUB environment variable 'root' to the partition device with label $efi_label (hardcoded "REAR-EFI")
+        # because GRUB's default 'root' (or GRUB's 'root' identification heuristics) would point to the ramdisk but neither kernel
+        # nor initrd are located on the ramdisk but on the partition device with label $efi_label.
+        # GRUB2_SET_ROOT_COMMAND and/or GRUB2_SEARCH_ROOT_COMMAND is needed by the create_grub2_cfg() function.
+        # Set GRUB2_SEARCH_ROOT_COMMAND if not specified by the user:
+        contains_visible_char "$GRUB2_SEARCH_ROOT_COMMAND" || GRUB2_SEARCH_ROOT_COMMAND="search --no-floppy --set=root --label $efi_label"
+        # Create config for GRUB2:
+        create_grub2_cfg $efi_dir/kernel $efi_dir/$REAR_INITRD_FILENAME > $efi_dst/grub.cfg
+        # Create BOOTX86.efi but only if we are NOT secure booting.
+        # We are not able to create signed boot loader
+        # so we need to reuse existing one.
+        # See issue #1374
+        # build_boot_efi () can be safely used for other scenarios.
+        if ! test -f "$SECURE_BOOT_BOOTLOADER" ; then
+            build_boot_efi $efi_dst/BOOT$EFI_ARCH_UPPER.efi $efi_dst/grub.cfg "/boot" "$UEFI_BOOTLOADER"
+        fi
+    ;;
+    (*)
+        Error "GRUB version '$grub_version' is neither '0' (legacy GRUB) nor '2' (GRUB 2)"
+    ;;
+esac
 
 # Cleanup of EFI temporary mount point:
 local what_is_mounted="EFI partition '$efi_part' on '$efi_mpt'"
