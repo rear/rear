@@ -30,7 +30,6 @@ Optionally, some use-cases require other tools:
  - mkisofs or genisoimage (for ISO output support)
  - syslinux (for ISO or USB output support)
  - syslinux-extlinux (for USB support)
- - ebiso (for SLES UEFI booting)
 
 In some cases having newer versions of tools may provide better support:
 

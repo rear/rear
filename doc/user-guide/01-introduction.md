@@ -85,7 +85,6 @@ Relax-and-Recover has a wide range of features:
  - USB ext3/ext4 support
  - GRUB[2] bootloader re-implementation
  - UEFI support
- - ebiso support (needed by SLES UEFI ISO booting)
  - Add Relax-and-Recover entry to local GRUB configuration (optional)
  - Nagios and webmin integration
  - Syslinux boot menu

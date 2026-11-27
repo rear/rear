@@ -99,7 +99,7 @@ if test "$uefi_bootloader_basename" = "elilo.efi" ; then
     Log "Configuring elilo for EFI boot"
     # Create config for elilo
     DebugPrint "Creating $efi_dst/elilo.conf"
-    create_ebiso_elilo_conf > $efi_dst/elilo.conf
+    create_elilo_conf > $efi_dst/elilo.conf
 # Configure GRUB for EFI boot:
 else
     has_binary grub-install grub2-install || Error "Unknown EFI bootloader (no grub-install or grub2-install found)"

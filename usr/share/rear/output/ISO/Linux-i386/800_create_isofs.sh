@@ -8,14 +8,9 @@
 # check that we have mkisofs
 test -x "$ISO_MKISOFS_BIN" || Error "No executable ISO_MKISOFS_BIN '$ISO_MKISOFS_BIN'"
 
-# kernel and initrd are already included in virtual image of ISO if ebiso is used
-if [[ $(basename $ISO_MKISOFS_BIN) = "ebiso" && $(basename ${UEFI_BOOTLOADER}) = "elilo.efi" ]]; then
-    Log "ebiso is used where kernel and initrd are already included in virtual image of ISO, skipping copying kernel and initrd"
-else
-    Log "Copying kernel and initrd"
-    cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
-    cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
-fi
+Log "Copying kernel and initrd"
+cp -pL $v $KERNEL_FILE $TMP_DIR/isofs/isolinux/kernel || Error "Failed to copy KERNEL_FILE '$KERNEL_FILE'"
+cp $v $TMP_DIR/$REAR_INITRD_FILENAME $TMP_DIR/isofs/isolinux/$REAR_INITRD_FILENAME || Error "Failed to copy initrd '$REAR_INITRD_FILENAME'"
 
 # Copy overlay squashfs if present (created by pack/GNU/Linux/500_create_rear_overlay.sh)
 if test -f "$TMP_DIR/rear-overlay.sqsh" ; then
